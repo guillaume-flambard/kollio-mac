@@ -56,6 +56,7 @@ project outruns its proof.
 | A page locator shows no passage rather than a wrong one | `SourceChipTests` | L3 |
 | A verification is recorded only with an observation | `SourceChipTests` | L3 |
 | A chosen passage becomes the quote and the locator, verbatim | `SourceChipTests` | L3 |
+| A CSV is previewed as columns, from the revision on record | `SourceChipTests` | L3 |
 
 ## What is owed to a person
 
@@ -85,6 +86,11 @@ These cannot be automated here, and no line of code substitutes for them.
   engine, took 35 seconds and started failing on a Mac with a usable model. Fixed
   by pinning the engine in every test; recorded because it is the failure mode
   this project is most likely to repeat.
+- A citation test picked "the last citation", which was order-dependent by accident:
+  the list is sorted by citation id and a new citation's id is a UUID, so the test
+  passed, then failed, then passed again. It now finds the citation by its line
+  range, and passes three runs out of three. A test that cannot fail is worthless and
+  a test that fails at random is worse, because it trains you to re-run.
 - A test for an impossible selection used an inverted range, `3..<1`. That is a
   trap in Swift rather than a value that can be passed and refused, so the test took
   the whole test process down with it. The case cannot exist, and the test now says

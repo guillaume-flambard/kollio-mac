@@ -466,7 +466,9 @@ struct PassagePickerView: View {
                 .font(TypeScale.metadata.weight(.semibold))
                 .foregroundStyle(theme.textSecondary)
 
-            if lines.isEmpty {
+            if let table = model.table(for: sourceID) {
+                tablePreview(table)
+            } else if lines.isEmpty {
                 // The source is on record but has no readable text. Saying so beats
                 // offering an empty list to select from.
                 Text(L10n.citationNoPassage)
@@ -476,19 +478,7 @@ struct PassagePickerView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
-                            Text(line.isEmpty ? " " : line)
-                                .font(TypeScale.metadata)
-                                .foregroundStyle(theme.textPrimary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, Space.xs)
-                                .padding(.vertical, 2)
-                                .background(
-                                    selection.contains(index)
-                                        ? theme.accentSurface
-                                        : Color.clear
-                                )
-                                .contentShape(Rectangle())
-                                .onTapGesture { toggle(index) }
+                            lineRow(line, index: index)
                         }
                     }
                 }
@@ -496,6 +486,16 @@ struct PassagePickerView: View {
             }
 
             HStack {
+                Button {
+                    model.openInReader(sourceID)
+                } label: {
+                    Label(L10n.sourceOpenInReader, systemImage: "doc.text.magnifyingglass")
+                        .font(TypeScale.metadata)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(theme.accent)
+                .help(L10n.sourceOpenInReaderHint)
+
                 Text(L10n.citationSelectHint)
                     .font(TypeScale.metadata)
                     .foregroundStyle(theme.textSecondary)
@@ -518,6 +518,62 @@ struct PassagePickerView: View {
                 .shadow(color: .black.opacity(theme.isDark ? 0.38 : 0.13), radius: 14, y: 6)
         )
         .onExitCommand { model.readingSourceID = nil }
+    }
+
+    private func lineRow(_ line: String, index: Int) -> some View {
+        Text(line.isEmpty ? " " : line)
+            .font(TypeScale.metadata)
+            .foregroundStyle(theme.textPrimary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, Space.xs)
+            .padding(.vertical, 2)
+            .background(selection.contains(index) ? theme.accentSurface : Color.clear)
+            .contentShape(Rectangle())
+            .onTapGesture { toggle(index) }
+    }
+
+    /// A table is shown as a table: headers, then rows, capped.
+    ///
+    /// A CSV read correctly and then displayed as raw commas is technically honest
+    /// and practically useless, and the whole reason the parser handles quoted
+    /// fields is that the columns are the point.
+    private func tablePreview(_ table: CSVTable) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 0) {
+                ForEach(Array(table.headers.enumerated()), id: \.offset) { _, header in
+                    Text(header)
+                        .font(TypeScale.metadata.weight(.semibold))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, Space.xs)
+                        .padding(.vertical, 2)
+                }
+            }
+            .background(theme.surfaceSubtle)
+            ForEach(Array(table.rows.prefix(20).enumerated()), id: \.offset) { _, row in
+                HStack(spacing: 0) {
+                    ForEach(Array(table.headers.indices), id: \.self) { column in
+                        Text(row.indices.contains(column) ? row[column] : "")
+                            .font(TypeScale.metadata)
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, Space.xs)
+                            .padding(.vertical, 2)
+                    }
+                }
+                .background(theme.surfaceSubtle.opacity(0.5))
+            }
+            if table.rows.count > 20 {
+                // Capped, and it says so. A file with a hundred thousand rows does
+                // not get to fill a card on the canvas.
+                Text(L10n.citationTableCapped(table.rows.count))
+                    .font(TypeScale.metadata)
+                    .foregroundStyle(theme.textSecondary)
+                    .padding(.horizontal, Space.xs)
+                    .padding(.vertical, 2)
+            }
+        }
+        .frame(height: 200)
+        .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
     }
 
     private func toggle(_ index: Int) {

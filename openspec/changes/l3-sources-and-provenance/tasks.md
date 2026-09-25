@@ -55,7 +55,16 @@ stated on every line rather than blurred.
       `SourceChipTests`
 - [x] An out-of-range, empty or unknown selection cites nothing. An inverted range
       cannot be refused because it traps in Swift, which the test now says.
-- [ ] A native reader for a long PDF, and a CSV preview in the interface.
+- [x] A CSV is previewed as columns with headers, not as raw commas, and the cap is
+      stated with the real row count. `SourceChipTests`
+- [x] The preview is parsed from the revision on record, never re-read from disk.
+      `SourceChipTests`
+- [x] A file opens in the system reader (QuickLook) beside the canvas, so a long
+      PDF is a document Apple already builds rather than a worse viewer written
+      here. `SourcePreviewPanel`
+- [ ] The QuickLook panel is not covered by a test: it is a system panel and
+      asserting on it would only test Apple. Its absence is stated rather than
+      covered by a pretend test.
 - [x] Opening a citation back at its passage, from the exact revision it was read
       against, beside the claim. `SourceChipTests`
 - [x] Recording a verification from the interface, and only with an observation:
@@ -63,7 +72,9 @@ stated on every line rather than blurred.
 - [x] A page locator shows no passage rather than a slice of joined text that would
       point at the wrong place. `SourceChipTests`
 - [x] A citation on a superseded revision says so in the interface.
-- [ ] Import and extraction: text, Markdown, PDF, CSV, image. **Not started.**
+- [x] Import and extraction by kind: text, Markdown, PDF, CSV, image. A link is
+      never fetched and an image is never understood without being asked.
+      `SourceReaderTests`
 - [ ] A context view lists sources and quotes, reading only from the ledger.
 - [ ] A knowledge view is derived, never authored twice.
 - [ ] Retrieval returns its result *and* its absence.

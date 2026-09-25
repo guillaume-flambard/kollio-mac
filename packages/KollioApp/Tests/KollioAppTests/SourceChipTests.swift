@@ -314,7 +314,8 @@ struct SourceChipTests {
         // Lines 0 and 1 chosen: the quote is those lines exactly, not a summary of
         // them and not a retyped version that drifted.
         #expect(model.citePassage(of: sourceID, lines: 0..<2, to: claim))
-        let newest = try #require(model.document.sources.citations(supporting: claim).last)
+        let newest = try #require(model.document.sources.citations(supporting: claim)
+            .first { $0.locator.lineRange == 0..<2 })
         #expect(newest.quote == "Signup today.\nIt takes nine steps.")
         #expect(newest.locator.lineRange == 0..<2)
     }
@@ -327,7 +328,13 @@ struct SourceChipTests {
 
         // Opening the new citation shows exactly what was selected, which is the
         // property the whole picker exists for.
-        let detail = try #require(model.citations(of: claim).last)
+        //
+        // Found by its line range rather than by position: the list is ordered by
+        // citation id, and a new citation's id is a UUID, so "the last one" was
+        // whichever the sort happened to produce. It passed, then failed, then
+        // passed again.
+        let detail = try #require(model.citations(of: claim)
+            .first { $0.citation.locator.lineRange == 2..<3 })
         #expect(detail.passage == "Three would do.")
         #expect(detail.citation.quote == "Three would do.")
         #expect(detail.isCurrentRevision)
@@ -363,5 +370,51 @@ struct SourceChipTests {
         // Nothing to select is the honest state, and the picker says so rather than
         // showing an empty list that looks broken.
         #expect(model.lines(of: id).isEmpty)
+    }
+
+    // MARK: Previewing a table
+
+    /// A model with a CSV attached, whose columns contain a comma and a quote.
+    private func modelWithCSV() throws -> (KollioModel, SourceID) {
+        var model = model()
+        let url = directory.appendingPathComponent("export.csv")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try Data("name,note\n\"Rivera, Ana\",\"said \"\"yes\"\"\"\nOkafor,plain\n".utf8)
+            .write(to: url)
+        let read = try #require(model.attachSource(at: url, to: claim))
+        return (model, SourceID("source:" + String(read.digest.prefix(16))))
+    }
+
+    @Test("A CSV is previewed as columns, not as raw commas")
+    func csvIsPreviewedAsATable() throws {
+        let (model, sourceID) = try modelWithCSV()
+        let table = try #require(model.table(for: sourceID))
+        #expect(table.headers == ["name", "note"])
+        #expect(table.rows.count == 2)
+        // The cell that contains the comma is one cell. Shown as raw text it would
+        // look like two columns, which is the exact misreading the parser exists to
+        // prevent.
+        #expect(table.rows[0][0] == "Rivera, Ana")
+        #expect(table.rows[0][1] == "said \"yes\"")
+    }
+
+    @Test("The preview comes from the revision on record, not from the file")
+    func previewDoesNotReReadTheFile() throws {
+        var (model, sourceID) = try modelWithCSV()
+        #expect(model.table(for: sourceID)?.rows.count == 2)
+
+        // The file changes underneath. A preview that re-read the disk would show
+        // text the document never recorded, and a citation made from it would
+        // describe something the document never saw.
+        let url = directory.appendingPathComponent("export.csv")
+        try Data("name,note\nA,one\nB,two\nC,three\n".utf8).write(to: url)
+        #expect(model.table(for: sourceID)?.rows.count == 2)
+    }
+
+    @Test("A source that is not a table has no table preview")
+    func nonCSVHasNoTable() throws {
+        var model = try modelWithCitation()
+        let sourceID = try #require(model.citations(of: claim).first?.citation.sourceID)
+        #expect(model.table(for: sourceID) == nil)
     }
 }

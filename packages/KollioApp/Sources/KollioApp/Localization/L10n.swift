@@ -73,6 +73,12 @@ public enum L10n {
     public static var citationSuperseded: String { callAsFunction("citations.superseded") }
     public static var citationNoPassage: String { callAsFunction("citations.noPassage") }
     public static var citationsEmpty: String { callAsFunction("citations.empty") }
+    public static var sourceOpenInReader: String { callAsFunction("source.openInReader") }
+    public static var sourceOpenInReaderHint: String { callAsFunction("source.openInReaderHint") }
+    /// %lld is how many rows the file really has, so the cap is not a mystery.
+    public static func citationTableCapped(_ rows: Int) -> String {
+        String(format: callAsFunction("citations.tableCapped"), rows)
+    }
     public static func sourceAttached(_ title: String) -> String {
         String(format: callAsFunction("source.attached"), title)
     }

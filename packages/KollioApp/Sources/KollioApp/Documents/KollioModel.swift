@@ -437,6 +437,21 @@ public final class KollioModel {
     // MARK: Sources
     // MARK: Citations
 
+    /// The system's reader, for a file too long to read as text on the canvas.
+    ///
+    /// Held by the model rather than by a view so that opening and closing it is
+    /// one decision in one place, and so the same file cannot be opened twice from
+    /// two different cards.
+    @MainActor public let sourcePreview = SourcePreviewPanel()
+
+    /// Opens the person's own file in the system reader, beside the canvas.
+    public func openInReader(_ sourceID: SourceID) {
+        guard let locator = document.sources.source(sourceID)?.locator,
+              let url = URL(string: locator)
+        else { return }
+        sourcePreview.present(url)
+    }
+
     /// A source open for reading, so a passage can be chosen from it.
     ///
     /// The text comes from the revision on record, never re-read from disk: what a
@@ -447,6 +462,20 @@ public final class KollioModel {
     public func lines(of sourceID: SourceID) -> [String] {
         guard let text = document.sources.source(sourceID)?.latest?.extraction.text else { return [] }
         return text.components(separatedBy: .newlines)
+    }
+
+    /// The source as a table, parsed from the text on record.
+    ///
+    /// Parsed from the revision rather than from the file on disk, for the same
+    /// reason the lines are: what is shown has to be what the document believes it
+    /// read. A file that changed underneath must not silently change a preview.
+    public func table(for sourceID: SourceID) -> CSVTable? {
+        guard let source = document.sources.source(sourceID),
+              source.kind == .csv,
+              let text = source.latest?.extraction.text,
+              let parsed = try? CSVTable.parse(text)
+        else { return nil }
+        return parsed
     }
 
     /// Cites a passage of a source, from the revision currently on record.

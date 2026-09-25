@@ -1402,6 +1402,60 @@
           }
         }
       }
+    },
+    "source.openInReader": {
+      "comment": "Opens the file in the system reader, beside the canvas.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in reader"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir dans le lecteur"
+          }
+        }
+      }
+    },
+    "source.openInReaderHint": {
+      "comment": "Why the system reader rather than a viewer written here.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open this file in the system reader, without leaving the canvas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir ce fichier dans le lecteur système, sans quitter le canvas"
+          }
+        }
+      }
+    },
+    "citations.tableCapped": {
+      "comment": "A table is shown up to a cap. %lld is the real number of rows, so the cap is not a mystery.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Showing the first rows of %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premières lignes sur %lld"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

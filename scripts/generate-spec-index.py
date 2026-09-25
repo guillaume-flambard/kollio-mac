@@ -96,9 +96,10 @@ STATUS_NOTES = {
     "CTX-02": ("automatedVerified",
                "AC01 a CSV with quotes, commas and newlines parses correctly; AC02 a PDF with no "
                "text layer is marked as having no text; AC03 a pasted link is never fetched. "
-               "SourceReaderTests. Plus the ledger rules in SourceLedgerTests, and a file chooser "
-               "that reads and attaches in one transaction: SourceChipTests. Still missing: a "
-               "native reader for a long PDF, and a CSV preview in the interface."),
+               "SourceReaderTests. A file is chosen, read and attached in one transaction, a CSV "
+               "is previewed as columns from the revision on record, and a chosen file opens in "
+               "the system reader: SourceChipTests, SourcePreviewPanel. Still missing: a page "
+               "locator that can be pointed at a passage, and OCR as an explicit action."),
     "CTX-03": ("automatedVerified",
                "A citation keeps its revision, is refused towards anything absent, and cannot be "
                "verified without an observation and an author. Intelligence is refused these "
