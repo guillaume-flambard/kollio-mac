@@ -20,6 +20,11 @@ struct SourceChipTests {
         )
     }
 
+    /// One directory per test instance, so a file written and a file read are in
+    /// the same place.
+    private let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appendingPathComponent("kollio-chip-\(UUID().uuidString)")
+
     private let claim = ObjectID("object:sarah-csv")
     private let other = ObjectID("object:sarah-hypothesis")
 
@@ -149,4 +154,72 @@ struct SourceChipTests {
             Issue.record("the citation should be flagged for review")
         }
     }
+
+    // MARK: Attaching a file the person chose
+
+    @Test("A chosen file is read and attached in one action")
+    func attachingAChosenFile() throws {
+        var model = model()
+        let url = directory.appendingPathComponent("brief.txt")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try Data("Signup takes nine steps today.".utf8).write(to: url)
+
+        let read = try #require(model.attachSource(at: url, to: claim))
+        #expect(read.extraction.isUsable)
+        // The source is in the document, with a recorded revision, and nothing was
+        // copied into it.
+        let source = try #require(
+            model.document.sources.source(SourceID("source:" + String(read.digest.prefix(16))))
+        )
+        #expect(source.locator == url.absoluteString)
+        #expect(source.attempts.count == 1)
+        #expect(model.document.sources.source(source.id)?.extraction.isUsable == true)
+    }
+
+    @Test("A file with no text is attached, and the chip says so")
+    func attachingAFileWithNoText() throws {
+        var model = model()
+        let url = directory.appendingPathComponent("empty.txt")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try Data("   ".utf8).write(to: url)
+
+        let read = try #require(model.attachSource(at: url, to: claim))
+        // Attached, honestly labelled, and not announced as read.
+        if case .noText = read.extraction {} else {
+            Issue.record("an empty file must be reported as having no text")
+        }
+        let id = SourceID("source:" + String(read.digest.prefix(16)))
+        #expect(model.document.sources.source(id) != nil)
+        #expect(model.document.sources.source(id)?.extraction.isUsable == false)
+    }
+
+    @Test("A file that cannot be read attaches nothing")
+    func unreadableFileAttachesNothing() throws {
+        var model = model()
+        let before = model.document
+        #expect(model.attachSource(at: URL(fileURLWithPath: "/nowhere/missing.txt"), to: claim) == nil)
+        // Nothing partial: the read happens before any command, so a failure cannot
+        // leave a source with no revision.
+        #expect(model.document.sources.sources.isEmpty)
+        #expect(model.document == before)
+        #expect(model.status != nil)
+    }
+
+    @Test("The same file twice is one source with two revisions, not two sources")
+    func sameFileTwice() throws {
+        var model = model()
+        let url = directory.appendingPathComponent("brief.md")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try Data("First version.".utf8).write(to: url)
+        let first = try #require(model.attachSource(at: url, to: claim))
+
+        try Data("Second version.".utf8).write(to: url)
+        let second = try #require(model.attachSource(at: url, to: claim))
+
+        // The id comes from the content, so a changed file is a new source rather
+        // than a second copy pretending to be the first.
+        #expect(first.digest != second.digest)
+        #expect(model.document.sources.sources.count == 2)
+    }
+
 }

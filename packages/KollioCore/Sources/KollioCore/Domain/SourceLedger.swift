@@ -67,8 +67,18 @@ public struct SourceReference: Codable, Hashable, Sendable, Identifiable {
         self.createdAt = createdAt
     }
 
-    /// The revision a new citation should be read against: the latest one.
-    public var latest: SourceRevision? { revisions.last }
+    /// The revision a new citation should be read against.
+    ///
+    /// This is the last *usable* revision when there is one, and the last recorded
+    /// attempt otherwise. A failed import is kept in the history and is not this, so
+    /// "read against the current version" and "the most recent thing that happened"
+    /// do not quietly become the same thing.
+    public var latest: SourceRevision? {
+        revisions.last(where: { $0.extraction.isUsable }) ?? revisions.last
+    }
+
+    /// Every attempt, including the ones that produced nothing.
+    public var attempts: [SourceRevision] { revisions }
 
     /// What the chip on the canvas says about this source: importing, ready,
     /// partial, unsupported, missing, or simply not read yet. A source with no
@@ -281,9 +291,19 @@ public struct SourceLedger: Codable, Hashable, Sendable {
 
     /// Records a newly imported revision and marks what it affects.
     ///
-    /// A failed extraction does not become the current revision: the previous good
-    /// version stays active, because a broken import is not a reason to lose the
-    /// text a claim was based on.
+    /// Two rules pull in opposite directions here, and both come from the
+    /// specification:
+    ///
+    /// - CTX-02 wants a chip that can say `noText` or `unsupported`, which means the
+    ///   attempt has to be **recorded**. Refusing to store it would leave the chip
+    ///   with nothing honest to show.
+    /// - CTX-07 wants a failed extraction to leave the good version active, so a
+    ///   broken import cannot quietly replace the text a claim was based on.
+    ///
+    /// Both hold if the attempt is always kept and only *currentness* is decided
+    /// separately: a revision that produced no text becomes the current one only
+    /// when there is nothing usable before it. On a source read once successfully,
+    /// a later scan replaces nothing.
     @discardableResult
     public mutating func importRevision(
         _ revision: SourceRevision,
@@ -292,22 +312,18 @@ public struct SourceLedger: Codable, Hashable, Sendable {
         guard var source = sources[sourceID] else {
             return .rejected(.unknownSource)
         }
-        guard case .ready = revision.extraction else {
-            return .rejected(.extractionFailed(revision.extraction))
-        }
         let previousLatest = source.latest
+        let previousUsable = previousLatest?.extraction.isUsable ?? false
+        let becomesCurrent = revision.extraction.isUsable || previousUsable == false
+
         source.revisions.append(revision)
         sources[sourceID] = source
 
-        // Citations made against the previous latest now point at a revision that
-        // is no longer the current one. They keep pointing where they always
-        // pointed, and are flagged instead of moved.
-        // A verified citation is flagged exactly like an unverified one. The
-        // observation really happened, so the record of it is not erased, but the
-        // thing that was observed is no longer the current version of the source,
-        // and a check that is left looking current is a check nobody repeats.
+        // Citations made against a revision that is no longer the one being read now
+        // keep pointing where they always pointed, and are flagged instead of moved.
+        // Only a revision that actually became current can supersede another.
         var flagged: [CitationID] = []
-        if let previousLatest {
+        if becomesCurrent, let previousLatest, previousUsable {
             for (id, citation) in citations
             where citation.sourceID == sourceID
                 && citation.revisionID == previousLatest.id {
@@ -319,19 +335,31 @@ public struct SourceLedger: Codable, Hashable, Sendable {
                 flagged.append(id)
             }
         }
-        return .imported(revision: revision, previousLatest: previousLatest, needsReview: flagged)
+        return .imported(
+            revision: revision,
+            previousLatest: previousLatest,
+            needsReview: flagged,
+            becameCurrent: becomesCurrent
+        )
     }
 
     public enum SourceImportOutcome: Hashable, Sendable {
-        case imported(revision: SourceRevision, previousLatest: SourceRevision?, needsReview: [CitationID])
+        case imported(
+            revision: SourceRevision,
+            previousLatest: SourceRevision?,
+            needsReview: [CitationID],
+            /// False when the attempt was recorded but a usable earlier revision
+            /// stays the one being read.
+            becameCurrent: Bool
+        )
         case rejected(SourceImportRejection)
     }
 
+    /// The only way an import is refused is a source that is not there. A file that
+    /// could not be read is not a rejection: it is a recorded attempt that did not
+    /// become the current version, which is a different and more useful thing.
     public enum SourceImportRejection: Hashable, Sendable {
         case unknownSource
-        /// The extraction did not produce usable text, so the previous revision
-        /// stays active and nothing was replaced.
-        case extractionFailed(SourceReference.Extraction)
     }
 
     // MARK: Citing

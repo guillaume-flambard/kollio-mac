@@ -145,7 +145,7 @@ struct SourceLedgerTests {
         let outcome = ledger.importRevision(
             revision("rev:2", 2, text: "Signup takes three steps."), for: "source:brief"
         )
-        if case .imported(_, _, let needsReview) = outcome {
+        if case .imported(_, _, let needsReview, _) = outcome {
             #expect(needsReview == ["citation:1"])
         } else {
             Issue.record("the second import should report what it affected")
@@ -188,32 +188,61 @@ struct SourceLedgerTests {
         }
     }
 
-    @Test("A failed extraction leaves the good version active")
+    @Test("A failed extraction is recorded, and the good version stays current")
     func failedExtractionKeepsThePreviousVersion() {
         var ledger = SourceLedger()
         ledger.add(source())
         _ = ledger.importRevision(revision("rev:1", 1), for: "source:brief")
         _ = ledger.cite(Citation(
-            id: "citation:1", claimID: ObjectID("object:ctx"), sourceID: "source:brief", revisionID: "rev:1",
+            id: "citation:1", claimID: ObjectID("object:ctx"),
+            sourceID: "source:brief", revisionID: "rev:1",
             locator: SourceLocator(page: 1), quote: "nine steps"
         ))
 
         // An image-only PDF is the real case: the import runs, and gets no text.
-        let broken = SourceRevision(
+        let scanned = SourceRevision(
             id: "rev:2", sequence: 2,
             extraction: .noText(reason: "the PDF has no text layer"),
             digest: "sha256:rev2"
         )
-        let outcome = ledger.importRevision(broken, for: "source:brief")
-        if case .rejected(.extractionFailed) = outcome {} else {
-            Issue.record("an extraction that produced no text must be rejected")
-        }
+        let outcome = ledger.importRevision(scanned, for: "source:brief")
 
-        // The good version is still there, still current, and the citation is not
-        // flagged because nothing actually changed.
-        #expect(ledger.source("source:brief")?.revisions.count == 1)
+        // The attempt is kept, because "we read it and there is no text" is a fact
+        // the chip has to be able to show.
+        if case .imported(_, _, _, let becameCurrent) = outcome {
+            #expect(becameCurrent == false)
+        } else {
+            Issue.record("a failed extraction must still be recorded")
+        }
+        #expect(ledger.source("source:brief")?.attempts.count == 2)
+        // And the good version is still the one a new citation reads against, so a
+        // broken import cannot replace the text a claim was based on.
         #expect(ledger.source("source:brief")?.latest?.id == "rev:1")
+        #expect(ledger.source("source:brief")?.extraction.isUsable == true)
+        // Nothing moved, so nothing is flagged.
         #expect(ledger.citation("citation:1")?.status == .unverified)
+    }
+
+    @Test("A first import that yields no text still becomes the current revision")
+    func firstFailedExtractionIsCurrent() {
+        var ledger = SourceLedger()
+        ledger.add(source())
+        // With nothing usable before it, the attempt is the best information there
+        // is. The chip then says "no text" instead of "not read yet", which is the
+        // difference between a fact and an absence.
+        let scanned = SourceRevision(
+            id: "rev:1", sequence: 1,
+            extraction: .noText(reason: "the PDF has no text layer"),
+            digest: "sha256:rev1"
+        )
+        let outcome = ledger.importRevision(scanned, for: "source:brief")
+        if case .imported(_, _, _, let becameCurrent) = outcome {
+            #expect(becameCurrent)
+        } else {
+            Issue.record("the first attempt should be recorded as the current one")
+        }
+        #expect(ledger.source("source:brief")?.latest?.id == "rev:1")
+        #expect(ledger.source("source:brief")?.extraction.isUsable == false)
     }
 
     @Test("An image-only PDF says it has no text instead of pretending")

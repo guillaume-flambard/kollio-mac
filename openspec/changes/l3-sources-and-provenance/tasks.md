@@ -41,10 +41,16 @@ stated on every line rather than blurred.
 - [x] An image is digested and nothing else: no description, no OCR.
 - [x] An empty file, a non-UTF-8 file and an unreadable kind are each reported as
       what they are, never as an empty success.
-- [ ] A file chooser, so a person can attach a source from the interface.
-      **Not started**: the reader exists and nothing calls it.
+- [x] A file chooser in the contextual actions of a claim. `NSOpenPanel`,
+      cancellable, nothing read until a file is chosen.
+- [x] Reading the chosen file and importing its revision in one transaction, so a
+      file that cannot be read leaves nothing behind. `SourceChipTests`
+- [x] A file with no text is attached and announced as *not read*, never as a
+      successful import.
+- [x] The same file twice is two sources keyed by content, not two copies of one.
+- [x] A failed import is recorded rather than refused, so the chip can say so, and a
+      usable earlier revision stays the one being read. `SourceLedgerTests`
 - [ ] A native reader for a long PDF, and a CSV preview in the interface.
-- [ ] Reading the file the person chose and importing its revision in one action.
 - [ ] Opening a citation back at its passage.
 - [ ] Recording a verification from the interface. The command exists and is tested;
       nothing in the app calls it.

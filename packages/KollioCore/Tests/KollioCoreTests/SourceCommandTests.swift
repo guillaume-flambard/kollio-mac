@@ -81,27 +81,32 @@ struct SourceCommandTests {
         #expect(store.document.sources.source("source:brief") == nil)
     }
 
-    @Test("A failed extraction leaves the good version active and changes nothing")
-    func failedExtractionIsReported() throws {
+    @Test("A failed extraction is recorded, and the good version stays current")
+    func failedExtractionIsRecordedAndKeepsTheGoodVersion() throws {
         var store = store()
         try store.apply([
             .attachSource(.init(source: source(), provenance: .human("me"))),
             .importSourceRevision(.init(sourceID: "source:brief", revision: revision(), provenance: .human("me")))
         ])
-        let good = store.document
 
+        // The attempt is applied, not refused: the chip has to be able to say "we
+        // read it and there is no text", which needs the fact to exist.
         let scanned = SourceRevision(
             id: "rev:2", sequence: 2,
             extraction: .noText(reason: "no text layer"), digest: "sha256:def"
         )
-        #expect(throws: DocumentError.sourceExtractionFailed("source:brief")) {
+        #expect(throws: Never.self) {
             try store.apply([.importSourceRevision(.init(
                 sourceID: "source:brief", revision: scanned, provenance: .human("me")
             ))])
         }
-        // Nothing moved: the previous good version is still the whole story.
-        #expect(store.document == good)
-        #expect(store.document.sources.source("source:brief")?.latest?.id == "rev:1")
+
+        // Both attempts are on record, and the usable one is still the one a new
+        // citation reads against, so a broken import replaced nothing.
+        let stored = try #require(store.document.sources.source("source:brief"))
+        #expect(stored.attempts.count == 2)
+        #expect(stored.latest?.id == "rev:1")
+        #expect(stored.extraction.isUsable)
     }
 
     @Test("A citation needs a claim to attach to")

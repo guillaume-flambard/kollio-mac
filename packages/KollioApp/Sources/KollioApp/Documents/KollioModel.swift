@@ -246,6 +246,10 @@ public final class KollioModel {
 
     public var document: KollioDocument { session.document }
 
+    /// How a chosen file is read. Injectable so a test can hand over a file it made
+    /// itself rather than reaching for the user's disk.
+    public var sourceReader = SourceReader()
+
     public func object(_ id: ObjectID) -> ContentObject? { document.object(id) }
 
     public func text(of id: ObjectID) -> String {
@@ -431,6 +435,59 @@ public final class KollioModel {
     }
 
     // MARK: Sources
+
+    /// Reads a file the person chose and attaches it, as one transaction.
+    ///
+    /// The read happens first and the two commands are applied together, so a file
+    /// that cannot be read leaves nothing behind: no half-attached source, and no
+    /// source pointing at a revision that was never recorded. What comes back is
+    /// what was read, so a caller can say "no text in this file" instead of
+    /// reporting a success.
+    @discardableResult
+    public func attachSource(
+        at url: URL,
+        to objectID: ObjectID
+    ) -> SourceReader.Read? {
+        guard object(objectID) != nil else {
+            status = L10n.errorGeneric
+            return nil
+        }
+        let read: SourceReader.Read
+        do {
+            read = try sourceReader.read(url: url)
+        } catch {
+            status = L10n.sourceReadFailed
+            return nil
+        }
+
+        // A stable id from the content, so attaching the same file twice is a
+        // recognisable duplicate rather than a second copy of the same source.
+        let sourceID = SourceID("source:" + String(read.digest.prefix(16)))
+        let revision = SourceRevision(
+            id: SourceRevisionID("revision:" + String(read.digest.prefix(16))),
+            sequence: (document.sources.source(sourceID)?.attempts.count ?? 0) + 1,
+            extraction: read.extraction,
+            digest: read.digest
+        )
+        let reference = SourceReference(
+            id: sourceID,
+            kind: read.kind,
+            title: read.title,
+            locator: read.locator,
+            revisions: document.sources.source(sourceID)?.revisions ?? []
+        )
+        let provenance = Provenance.human(ActorID("local-user"))
+        let commands: [Command] = document.sources.source(sourceID) == nil
+            ? [.attachSource(.init(source: reference, attachedTo: objectID, provenance: provenance))]
+            : []
+        guard perform(commands + [.importSourceRevision(.init(
+            sourceID: sourceID, revision: revision, provenance: provenance
+        ))], label: L10n.undoAttachSource) else {
+            return nil
+        }
+        return read
+    }
+
 
     /// What a source chip says about one resource cited by an object.
     ///

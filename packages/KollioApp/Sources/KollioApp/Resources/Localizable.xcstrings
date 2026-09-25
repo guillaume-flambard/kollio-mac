@@ -1006,6 +1006,114 @@
           }
         }
       }
+    },
+    "source.readFailed": {
+      "comment": "The chosen file could not be read. Nothing was attached.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That file could not be read. Nothing was attached."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce fichier n’a pas pu être lu. Rien n’a été attaché."
+          }
+        }
+      }
+    },
+    "source.add": {
+      "comment": "The action that attaches a source to a claim.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a source"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter une source"
+          }
+        }
+      }
+    },
+    "source.addHint": {
+      "comment": "Why this action exists: a claim can point at a file the person chose.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attach a file this claim is based on"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attacher un fichier sur lequel repose cette affirmation"
+          }
+        }
+      }
+    },
+    "undo.attachSource": {
+      "comment": "The undo label for attaching a source.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo adding the source"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler l’ajout de la source"
+          }
+        }
+      }
+    },
+    "source.attached": {
+      "comment": "A file was attached and its text read. %@ is the file name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attached %@ and read it"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ attaché et lu"
+          }
+        }
+      }
+    },
+    "source.attachedWithoutText": {
+      "comment": "A file was attached but no text came out. %@ is the file, %2$@ the real reason. Never a success message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attached %1$@ but read no text: %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ attaché mais aucun texte lu : %2$@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

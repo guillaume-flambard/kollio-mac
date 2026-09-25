@@ -53,6 +53,16 @@ public enum L10n {
     public static var composerSetAsideHint: String { callAsFunction("composer.setAsideHint") }
 
     // Sources
+    public static var sourceReadFailed: String { callAsFunction("source.readFailed") }
+    public static var addSource: String { callAsFunction("source.add") }
+    public static var addSourceHint: String { callAsFunction("source.addHint") }
+    public static var undoAttachSource: String { callAsFunction("undo.attachSource") }
+    public static func sourceAttached(_ title: String) -> String {
+        String(format: callAsFunction("source.attached"), title)
+    }
+    public static func sourceAttachedWithoutText(_ title: String, _ reason: String) -> String {
+        String(format: callAsFunction("source.attachedWithoutText"), title, reason)
+    }
     public static func sourceChip(_ title: String) -> String { callAsFunction("source.chip") }
     public static func sourceChipCount(_ title: String, _ count: Int) -> String {
         String(format: callAsFunction("source.chipCount"), title, count)

@@ -366,17 +366,15 @@ extension DocumentStore {
         _ importRevision: ImportSourceRevision,
         in document: inout KollioDocument
     ) throws {
+        // The attempt is recorded even when it produced nothing, because "we read it
+        // and there is no text" is a fact a person needs. What must not happen is a
+        // broken import replacing a good earlier version, and the ledger decides
+        // that rather than this function.
         switch document.sources.importRevision(importRevision.revision, for: importRevision.sourceID) {
         case .imported:
             return
         case .rejected(.unknownSource):
             throw DocumentError.unknownSource(importRevision.sourceID)
-        case .rejected(.extractionFailed):
-            // A failed import leaves the previous version active and changes
-            // nothing. It is not an error the document has to record, but it is not
-            // a success either, so the caller is told rather than left to assume the
-            // file was read.
-            throw DocumentError.sourceExtractionFailed(importRevision.sourceID)
         }
     }
 

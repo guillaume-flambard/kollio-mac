@@ -73,8 +73,36 @@ struct ContextualActions: View {
             },
             LocalAction(title: L10n.setAside, hint: L10n.setAside) {
                 model.requestSetAsideReason(for: target)
+            },
+            LocalAction(title: L10n.addSource, hint: L10n.addSourceHint) {
+                chooseSource()
             }
         ]
+    }
+
+    /// Asks for a file, reads it, and attaches what came out.
+    ///
+    /// The panel is a system one and cancellable, because "not now" is a real
+    /// answer. Nothing is read until a file is actually chosen, and a file that
+    /// cannot be read leaves the document untouched and says so.
+    private func chooseSource() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.message = L10n.addSourceHint
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        guard let read = model.attachSource(at: url, to: target) else { return }
+        // The chip reports the state; the line only says the file was attached, so
+        // a scan is never announced as a successful read.
+        switch read.extraction {
+        case .ready:
+            model.status = L10n.sourceAttached(read.title)
+        case .noText(let reason), .unsupported(let reason), .partial(_, let reason):
+            model.status = L10n.sourceAttachedWithoutText(read.title, reason)
+        case .notAttempted, .pending, .missing:
+            model.status = L10n.sourceAttached(read.title)
+        }
     }
 
     private var setAsideReason: String {

@@ -65,7 +65,7 @@ Counts: 15 automatedVerified, 1 humanVerified, 55 specified. 71 features, 213 ac
 - [ ] **CAN-09** Search and navigate · `specified` · 3 AC
 - [ ] **CAN-10** Presentation and accessible reading · `specified` · 3 AC
 - [x] **CTX-02** Drop resources and read them · `automatedVerified` · 3 AC
-      AC01 a CSV with quotes, commas and newlines parses correctly; AC02 a PDF with no text layer is marked as having no text; AC03 a pasted link is never fetched. SourceReaderTests. Plus the ledger rules in SourceLedgerTests. Still missing: the file chooser that calls the reader, a native reader for long PDFs, and a CSV preview in the interface.
+      AC01 a CSV with quotes, commas and newlines parses correctly; AC02 a PDF with no text layer is marked as having no text; AC03 a pasted link is never fetched. SourceReaderTests. Plus the ledger rules in SourceLedgerTests, and a file chooser that reads and attaches in one transaction: SourceChipTests. Still missing: a native reader for a long PDF, and a CSV preview in the interface.
 - [x] **CTX-03** Cite and verify provenance · `automatedVerified` · 3 AC
       A citation keeps its revision, is refused towards anything absent, and cannot be verified without an observation and an author. Intelligence is refused these commands outright. SourceLedgerTests, SourceCommandTests. No interface to choose a passage or open a citation is built.
 - [ ] **CTX-04** Define a hypothesis or a constraint · `specified` · 3 AC

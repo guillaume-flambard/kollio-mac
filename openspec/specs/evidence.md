@@ -50,6 +50,8 @@ project outruns its proof.
 | AC01 a CSV with quotes and newlines parses correctly | `SourceReaderTests` | L3 |
 | AC02 a PDF with no text layer says so | `SourceReaderTests` | L3 |
 | AC03 a pasted link is never fetched | `SourceReaderTests` | L3 |
+| A chosen file is read and attached in one transaction | `SourceChipTests` | L3 |
+| A file with no text is attached and labelled, not announced as read | `SourceChipTests` | L3 |
 
 ## What is owed to a person
 
@@ -79,6 +81,12 @@ These cannot be automated here, and no line of code substitutes for them.
   engine, took 35 seconds and started failing on a Mac with a usable model. Fixed
   by pinning the engine in every test; recorded because it is the failure mode
   this project is most likely to repeat.
+- `importRevision` originally **refused** an extraction that produced no text, which
+  was right for CTX-07 and wrong for CTX-02: refusing it meant the chip could never
+  show "no text", because the fact was never stored. Both hold now that the attempt
+  is always recorded and only *currentness* is decided separately. A usable earlier
+  revision stays the one being read; a first attempt that yields nothing becomes
+  current, because then it is the best information there is.
 - The CSV parser had a bug that would have corrupted every citation made from a
   table. Three separate faults, each found by a test rather than by reading: a
   trailing newline made it return an empty table and discard every row it had
