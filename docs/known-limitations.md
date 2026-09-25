@@ -127,8 +127,16 @@ Recorded 2026-09-25, on an arm64 Mac, macOS 27.0 (26A428), Xcode 27.0, SDK 27.0.
   measured call to 7.08 s. Real-model latency must therefore be measured with
   `--no-parallel`.
   What survives is the conclusion, not the number: 2.3 s is still far too slow to
-  feel interactive, nothing is streamed to the canvas, and the user waits on a
-  pending state. Streaming partial output is the fix, and it is not built.
+  feel interactive. The wait is now filled, because the answer streams: 54 progress
+  updates over 5.1 s on a real model, the rationale arriving a few words at a time.
+- **Streaming shows progress, not a forming proposal.** Only the rationale text and a
+  count of directions are shown. A half-decoded direction is never drawn on the
+  canvas, because it has no identifier, no kind the canvas can trust, and no way to be
+  validated. The ghost branch still appears all at once at the end. Streaming the
+  actual objects is not built.
+- **Streaming is proven on the on-device path only.** The remote provider does not
+  conform to `StreamingSuggestionService`, so a server round trip still waits for the
+  whole answer. The seam allows it; nobody has done it.
 - The on-device candidate is a small, fixed shape: an outcome, one sentence, and a bounded list of
   ideas. It cannot propose decisions, question existing objects, or edit a relationship's meaning,
   because the adapter does not yet convert those. This is a limitation of the conversion, not of the

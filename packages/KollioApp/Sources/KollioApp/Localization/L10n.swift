@@ -58,6 +58,10 @@ public enum L10n {
     public static var statusDiscarded: String { callAsFunction("status.discarded") }
     public static var statusSaved: String { callAsFunction("status.saved") }
     public static var statusThinking: String { callAsFunction("status.thinking") }
+    /// %lld is how many directions have arrived so far, while the answer streams.
+    public static func progressDirections(_ count: Int, languageCode: String) -> String {
+        String(format: callAsFunction("progress.directions"), count)
+    }
     public static var errorGeneric: String { callAsFunction("error.generic") }
     public static var errorSaveFailed: String { callAsFunction("error.saveFailed") }
     public static var errorLoadFailed: String { callAsFunction("error.loadFailed") }

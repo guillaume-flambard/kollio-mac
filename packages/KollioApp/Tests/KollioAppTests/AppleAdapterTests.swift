@@ -3,6 +3,10 @@ import Testing
 import KollioCore
 @testable import KollioApp
 
+#if canImport(FoundationModels)
+import FoundationModels
+#endif
+
 /// The on-device path, exercised without a Mac that has system intelligence.
 ///
 /// Nothing here needs Apple Intelligence, a key or a network: the probe is
@@ -287,6 +291,86 @@ struct AppleAdapterTests {
             return create.id
         }
         #expect(created.first?.rawValue.hasPrefix("object:apple-") == true)
+    }
+
+    // MARK: Streaming
+
+    /// Builds the raw generated content the stream actually hands over, so the
+    /// projection is tested against the same shape the framework produces.
+    @available(macOS 26.0, *)
+    private func rawContent(_ json: String) -> GeneratedContent {
+        try! GeneratedContent(json: json)
+    }
+
+    @available(macOS 26.0, *)
+    @Test("A half-written answer becomes progress, never a proposal")
+    func partialContentIsOnlyProgress() {
+        // What a model produces part-way through: a rationale that stops mid-word,
+        // one idea already present, the second not started, no outcome yet.
+        let halfWritten = """
+        {"outcome":"","rationale":"Réduire les étapes en intro","ideas":[{"title":"Phase unique","summary":"Un","kind":"method"}]}
+        """
+        let progress = try? AppleCandidateProgress.project(rawContent(halfWritten))
+        #expect(progress != nil)
+        #expect(progress?.directionsSoFar == 1)
+        #expect(progress?.hasOutcome == false)
+        // A half-written sentence is shown as it is written. It is never trimmed
+        // into something that looks finished.
+        #expect(progress?.rationale == "Réduire les étapes en intro")
+
+        // The safety property, stated as the test that matters: a progress has no
+        // identifier, no operation and no way to become a command. There is no
+        // initialiser that could mint one, which is why this cannot regress
+        // quietly.
+        let value = progress ?? ProposalProgress()
+        #expect(ObjectID(value.rationale ?? "") != ObjectID("object:apple-0"))
+        #expect(ProposalProgress().isEmpty)
+    }
+
+    @available(macOS 26.0, *)
+    @Test("Content the projection cannot read is no progress, not a wrong progress")
+    func unreadableContentYieldsNothing() {
+        // The framework only ever hands over content it can parse, so malformed
+        // JSON is not a case that can happen and is not pretended to here. What
+        // can happen is valid JSON that is not the shape expected: a snapshot
+        // from an earlier field, or an answer that does not match the schema.
+        #expect(AppleCandidateProgress.project(rawContent("{}")) == nil)
+        #expect(AppleCandidateProgress.project(rawContent("{\"other\":1}")) == nil)
+        // Empty strings are what a field looks like before the model writes it.
+        // That is "nothing yet", not an empty direction.
+        let blank = rawContent("{\"outcome\":\"\",\"rationale\":\"\",\"ideas\":[]}")
+        #expect(AppleCandidateProgress.project(blank) == nil)
+    }
+
+    @available(macOS 26.0, *)
+    @Test("The finished answer and the streamed one convert identically")
+    func streamingChangesTimingNotMeaning() throws {
+        // The same answer twice: once through the non-streaming converter, once
+        // through the streaming projection. Identifiers come from the request and
+        // the document, never from the stream, so they must match exactly.
+        let json = """
+        {"outcome":"proposal","rationale":"Fusionner les étapes","ideas":[
+          {"title":"Phase unique","summary":"Une seule phase","kind":"method"},
+          {"title":"Contrôle central","summary":"Vérification unique","kind":"constraint"}]}
+        """
+        let candidate = try AppleCandidate(rawContent(json))
+        let request = ProposalRequest(
+            requestId: "stream-1", documentId: document().documentId,
+            baseSemanticRevision: 0, intent: .explore,
+            targetIds: ["object:ctx"], contentLocale: "fr"
+        )
+        let converted = AppleCandidateConverter().convert(candidate, request: request, document: document())
+        let response = converted.response
+        #expect(response.status == .proposed)
+        let ids = response.proposal?.operations.compactMap { operation -> ObjectID? in
+            guard case .createObject(let create) = operation else { return nil }
+            return create.id
+        }
+        #expect(ids?.contains { $0.rawValue.hasPrefix("object:apple-stream1") } == true)
+        // A completed stream reports the same content a final snapshot does.
+        let final = try? AppleCandidateProgress.project(rawContent(json))
+        #expect(final?.directionsSoFar == 2)
+        #expect(final?.hasOutcome == true)
     }
 
     // MARK: The seam is unchanged

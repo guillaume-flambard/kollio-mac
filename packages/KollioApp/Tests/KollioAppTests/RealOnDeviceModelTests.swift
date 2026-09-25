@@ -95,4 +95,64 @@ struct RealOnDeviceModelTests {
             + "cannot attribute the rest. The steady state is still seconds, not "
             + "milliseconds, so streaming is required either way.")
     }
+
+    /// Streaming is the answer to a two-second wait, so it has to be shown working
+    /// on a real model rather than argued for. Three things are proved: progress
+    /// arrives more than once, the first progress is genuinely partial, and the
+    /// final proposal is the same one the non-streaming path produces.
+    @available(macOS 26.0, *)
+    @Test("A real answer streams progress, and the final proposal is unchanged")
+    func realStreaming() async throws {
+        let probe = SystemModelProbe()
+        try #require(probe.availability().isUsable, "model unavailable: \(probe.availability())")
+
+        var builder = DocumentBuilder()
+        let text = "Réduire le parcours d'inscription de neuf étapes à trois avant la fin du trimestre."
+        let ctx = builder.object("ctx", kind: .context, text, en: text, at: .zero)!
+        let document = builder.document
+        let scoped = try document.snapshot(targeting: [ctx])
+        var request = ProposalRequest(
+            requestId: "real-stream", documentId: document.documentId,
+            baseSemanticRevision: document.semanticRevision, intent: .explore,
+            targetIds: [ctx], contentLocale: "fr", snapshot: scoped
+        )
+        request.context = ContextBuilder().context(for: request, document: document)
+
+        let service = AppleLocalSuggestionService(probe: probe)
+        let collector = ProgressCollector()
+        let started = Date()
+        let response = try await service.stream(to: request, document: document) { update in
+            collector.append(update)
+        }
+        let elapsed = Date().timeIntervalSince(started)
+
+        let updates = collector.updates
+        print("REAL-STREAM-COUNT:", updates.count, "in", String(format: "%.2fs", elapsed))
+        for (index, update) in updates.enumerated().prefix(6) {
+            print("REAL-STREAM-\(index): dirs=\(update.directionsSoFar)",
+                  "outcome=\(update.hasOutcome)",
+                  "rationale=\(update.rationale ?? "-")")
+        }
+
+        // Progress must actually arrive, otherwise streaming is decoration.
+        #expect(updates.count > 1)
+        // The first one is genuinely partial: not a finished answer shown early.
+        if let first = updates.first {
+            #expect(first.directionsSoFar <= 2)
+        }
+        // And the committed answer is a real, valid proposal like any other.
+        #expect(response.status == .proposed)
+        try ProposalValidator().validate(
+            response.proposal!, against: document, scope: request.scope
+        )
+    }
+}
+
+/// Collects progress from an arbitrary task, so the test can read it afterwards.
+final class ProgressCollector: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storage: [ProposalProgress] = []
+
+    func append(_ update: ProposalProgress) { lock.withLock { storage.append(update) } }
+    var updates: [ProposalProgress] { lock.withLock { storage } }
 }

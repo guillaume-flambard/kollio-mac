@@ -167,6 +167,9 @@ struct CanvasView: View {
             if let composer = model.composer {
                 ComposerView(model: model, anchor: composer.anchorID)
             }
+            if let progress = model.progress, model.preview == nil {
+                ProposalProgressView(progress: progress, languageCode: model.languageCode)
+            }
             if let status = model.status, status.isEmpty == false {
                 StatusView(text: status)
             }
@@ -285,6 +288,75 @@ private struct NodeSizeKey: PreferenceKey {
     nonisolated(unsafe) static var defaultValue: [ObjectID: CGSize] = [:]
     static func reduce(value: inout [ObjectID: CGSize], nextValue: () -> [ObjectID: CGSize]) {
         value.merge(nextValue()) { _, new in new }
+    }
+}
+
+/// What a streaming answer looks like while it is still being written.
+///
+/// On-device generation takes a couple of seconds. This says so honestly instead
+/// of showing a spinner: the sentence the model is writing appears as it is
+/// written, and a count tells how many directions have arrived.
+///
+/// It is deliberately inert. There is nothing to click, because a half-received
+/// answer is not something a person can act on, and offering a button that
+/// appeared and then changed would be worse than offering none.
+struct ProposalProgressView: View {
+    let progress: ProposalProgress
+    let languageCode: String
+    @Environment(\.kollioTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pulse = false
+
+    var body: some View {
+        VStack {
+            Spacer()
+            VStack(alignment: .leading, spacing: Space.xs) {
+                HStack(spacing: Space.xs) {
+                    // Motion is the only signal here, so it is removed entirely
+                    // when the person has asked for less motion, leaving the text.
+                    Circle()
+                        .fill(theme.accent)
+                        .frame(width: 6, height: 6)
+                        .opacity(pulse && reduceMotion == false ? 0.25 : 1)
+                    Text(L10n.statusThinking)
+                        .font(TypeScale.metadata)
+                        .foregroundStyle(theme.textSecondary)
+                }
+                if let rationale = progress.rationale {
+                    Text(rationale)
+                        .font(TypeScale.body)
+                        .foregroundStyle(theme.textPrimary)
+                        .lineLimit(3)
+                        .multilineTextAlignment(.leading)
+                }
+                if progress.directionsSoFar > 0 {
+                    Text(
+                        L10n.progressDirections(
+                            progress.directionsSoFar,
+                            languageCode: languageCode
+                        )
+                    )
+                    .font(TypeScale.metadata)
+                    .foregroundStyle(theme.textSecondary)
+                }
+            }
+            .padding(Space.m)
+            .frame(maxWidth: 320, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: Radius.composer, style: .continuous)
+                    .fill(theme.surfacePrimary.opacity(0.94))
+                    .shadow(color: .black.opacity(0.12), radius: 10, y: 4)
+            )
+            .padding(.bottom, Space.xxl)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .allowsHitTesting(false)
+        .onAppear {
+            guard reduceMotion == false else { return }
+            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                pulse = true
+            }
+        }
     }
 }
 

@@ -21,7 +21,7 @@ import FoundationModels
 /// - **A disposable session.** The document is the memory. A session is created
 ///   per request and thrown away, so a failed, refused or cancelled generation
 ///   cannot poison the next one, and nothing leaks between documents.
-public struct AppleLocalSuggestionService: SuggestionService {
+public struct AppleLocalSuggestionService: StreamingSuggestionService {
     private let probe: any AppleModelProbing
     private let converter: AppleCandidateConverter
     /// The most recent availability, so the UI can state the real condition
@@ -122,6 +122,134 @@ public struct AppleLocalSuggestionService: SuggestionService {
         return converter.convert(response.content, request: request, document: document)
     }
     #endif
+
+    // MARK: Streaming
+
+    /// The same answer, reported while it is being written.
+    ///
+    /// The point of this is only that a person waiting two or three seconds can
+    /// see the response arriving instead of a spinner. It deliberately does not
+    /// change what may be done with the answer: a partial decode is not a
+    /// proposal, so nothing is minted and nothing is validated until the model has
+    /// finished, at which point the result goes through exactly the same converter
+    /// and the same validator as a non-streaming call.
+    public func stream(
+        to request: ProposalRequest,
+        document: KollioDocument,
+        onProgress: @Sendable (ProposalProgress) -> Void
+    ) async throws -> ProposalResponse {
+        let availability = probe.availability()
+        state.update(availability)
+        guard availability.isUsable else {
+            throw AppleModelError.unavailable(availability)
+        }
+        guard probe.supports(languageCode: request.contentLocale) else {
+            let reason = AppleModelAvailability.unsupportedLanguage(request.contentLocale)
+            state.update(reason)
+            throw AppleModelError.unavailable(reason)
+        }
+
+        let prompt = ApplePromptBuilder.build(request: request, document: document)
+        do {
+            #if canImport(FoundationModels)
+            if #available(macOS 26.0, *) {
+                let converted = try await generateStreaming(
+                    prompt: prompt,
+                    request: request,
+                    document: document,
+                    onProgress: onProgress
+                )
+                if converted.droppedIdeas > 0 || converted.droppedKinds > 0 {
+                    NSLog("Kollio apple: dropped \(converted.droppedIdeas) unusable ideas and \(converted.droppedKinds) unknown kinds")
+                }
+                return converted.response
+            }
+            #endif
+            throw AppleModelError.unavailable(.frameworkUnavailable)
+        } catch let error as AppleModelError {
+            throw error
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            throw AppleModelError.generationFailed(String(describing: error))
+        }
+    }
+
+    #if canImport(FoundationModels)
+    @available(macOS 26.0, *)
+    private func generateStreaming(
+        prompt: String,
+        request: ProposalRequest,
+        document: KollioDocument,
+        onProgress: @Sendable (ProposalProgress) -> Void
+    ) async throws -> AppleCandidateConverter.Converted {
+        let session = LanguageModelSession(instructions: ApplePromptBuilder.instructions)
+        let stream = session.streamResponse(to: prompt, generating: AppleCandidate.self)
+
+        // The stream has no final event: it simply stops, and the last snapshot is
+        // the whole answer. So the last snapshot is kept and nothing is committed
+        // until the loop has ended.
+        var lastRaw: GeneratedContent?
+        for try await snapshot in stream {
+            // Cancellation is the caller's decision, honoured between snapshots so
+            // a person who changes their mind stops the work.
+            if Task.isCancelled { throw CancellationError() }
+            lastRaw = snapshot.rawContent
+            if let progress = AppleCandidateProgress.project(snapshot.rawContent) {
+                onProgress(progress)
+            }
+        }
+
+        guard let lastRaw else {
+            // The stream ended without producing anything. That is a failure, not
+            // an empty proposal: saying nothing came back is the honest report.
+            throw AppleModelError.generationFailed("no answer produced")
+        }
+        do {
+            let candidate = try AppleCandidate(lastRaw)
+            return converter.convert(candidate, request: request, document: document)
+        } catch {
+            // The answer arrived but does not satisfy the shape. Reported as a
+            // failure, never shown as an empty branch the user must dismiss.
+            throw AppleModelError.generationFailed("answer did not match the expected shape")
+        }
+    }
+    #endif
+}
+
+/// Reduces a possibly half-decoded candidate to what is safe to show.
+///
+/// This is the whole safety story of streaming in one function: it can only ever
+/// produce a `ProposalProgress`, which carries no identifier, no command and no
+/// way to be kept.
+enum AppleCandidateProgress {
+    /// Reads a possibly half-written answer as progress, and nothing more.
+    ///
+    /// The raw generated content is used rather than the macro-generated partial
+    /// type, because this has to work at every point in the stream, including
+    /// where a field exists but holds half a word. Content that cannot be read yet
+    /// yields no progress rather than a wrong one.
+    @available(macOS 26.0, *)
+    static func project(_ raw: GeneratedContent) -> ProposalProgress? {
+        guard let data = raw.jsonString.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data),
+              let fields = object as? [String: Any] else { return nil }
+
+        // A half-written sentence ends mid-word. It is still worth showing, and it
+        // is replaced wholesale when the real answer is committed.
+        let rationale = (fields["rationale"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let outcome = (fields["outcome"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let ideas = fields["ideas"] as? [Any]
+
+        let progress = ProposalProgress(
+            rationale: (rationale?.isEmpty == false) ? rationale : nil,
+            directionsSoFar: ideas?.count ?? 0,
+            hasOutcome: (outcome?.isEmpty == false)
+        )
+        return progress.isEmpty ? nil : progress
+    }
 }
 
 public enum AppleModelError: Error, LocalizedError, Equatable {

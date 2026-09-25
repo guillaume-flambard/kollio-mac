@@ -33,6 +33,7 @@ was probed directly, not inferred from the SDK being installed.
 | **Human trackpad and pointer pass** | **Owed** |
 | **Ghost branch from the real model, captured on screen** | **Owed** |
 | Warm latency, three calls in one process | Done, real model: 2.50 s, 2.68 s, 2.29 s |
+| A streaming answer reports progress and stays non-blocking | Done, real model: 54 updates in 5.1 s |
 | **Network-disabled run after system resources exist** | **Not done**: it needs the firewall changed, which is the owner's call |
 
 The deterministic suite never touches a real model, and stays under two seconds. Reproduce the
@@ -57,8 +58,23 @@ KOLLIO_REAL_MODEL=1 swift test --package-path packages/KollioApp \
 ```
 
 What survives the correction is the conclusion rather than the figure: 2.3 s is still too slow to
-feel interactive, nothing is streamed to the canvas, and the user waits on a pending state. Streaming
-partial output is the fix, and it is not built.
+feel interactive on its own. The wait is now filled, though, because the answer streams.
+
+## The answer streams, and a progress is never a proposal
+
+`AppleLocalSuggestionService` now conforms to `StreamingSuggestionService`, so the sentence the model
+is writing appears as it is written. Measured on a real model: **54 progress updates over 5.1 s**, the
+rationale growing a few words at a time. The proposal is still minted once, at the end, and goes
+through the same converter and the same `ProposalValidator` as before.
+
+The rule that makes this safe is that a progress carries no identifier, no operation and no way to
+become a command. `ProposalProgress` has no initialiser that could mint one, so a half-received answer
+cannot become something the user could keep. It is cleared the moment the request ends, whatever the
+outcome, including a cancellation.
+
+`StreamingSuggestionService` is an **additional** capability. The seam stays `SuggestionService`, and a
+source that cannot stream simply does not conform, so the offline engine and the remote provider are
+unaffected.
 
 ## Where the code is
 

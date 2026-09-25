@@ -790,6 +790,24 @@
           }
         }
       }
+    },
+    "progress.directions": {
+      "comment": "How many directions have arrived while a proposal is still being written. Phrased as a labelled count so it stays correct at any number in both languages, rather than needing a plural form this catalog does not carry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Directions so far: %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Directions reçues : %lld"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -98,6 +98,11 @@ public final class KollioModel {
     public var frames: [ObjectID: Rect] = [:]
     public var preview: ProposalPreview?
     public var isThinking = false
+    /// How far a streaming answer has got. It is display only: a progress carries
+    /// no identifier and cannot be kept, so it is never a preview and never
+    /// reaches the command system. It is cleared the moment the request ends,
+    /// whatever the outcome.
+    public var progress: ProposalProgress?
     public var status: String?
     public var composer: ComposerState?
     public var languageCode: String = KollioModel.systemLanguage
@@ -437,19 +442,34 @@ public final class KollioModel {
             contentLocale: languageCode
         )
         do {
-            let response = try await service.respond(to: request, document: document)
+            let response: ProposalResponse
+            if let streaming = service as? any StreamingSuggestionService {
+                // A source that can stream is asked to stream. The answer is
+                // identical; the only difference is that the person sees it
+                // arriving instead of waiting on a spinner for seconds.
+                response = try await streaming.stream(to: request, document: document) { [weak self] update in
+                    Task { @MainActor in self?.progress = update }
+                }
+            } else {
+                response = try await service.respond(to: request, document: document)
+            }
+            progress = nil
             handle(response, anchor: id)
             return true
         } catch is CancellationError {
             // A cancelled request publishes nothing. The draft and the context
-            // stay exactly as they were.
+            // stay exactly as they were, and no half-received answer is left on
+            // screen pretending to be progress towards something.
+            progress = nil
             return false
         } catch let error as AppleModelError {
             // The real reason, in the user's language, and no substitution: the
             // context is untouched and the demo engine is not quietly used.
+            progress = nil
             status = error.errorDescription
             return false
         } catch {
+            progress = nil
             status = L10n.errorGeneric
             return false
         }

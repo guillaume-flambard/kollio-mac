@@ -31,6 +31,9 @@ project outruns its proof.
 | A real model produced a valid proposal, FR and EN | `RealOnDeviceModelTests` | L2 |
 | The running app holds no network socket | `netstat` against the app's pid | L2 |
 | Steady-state latency, three calls in one process | `RealOnDeviceModelTests`, `--no-parallel` | L2 |
+| A real answer streams, and progress is not a proposal | `RealOnDeviceModelTests.realStreaming` | L2 |
+| A half-written answer yields progress only, never commands | `AppleAdapterTests` | L2 |
+| Streamed and non-streamed answers convert identically | `AppleAdapterTests` | L2 |
 | One keep undoes as one action | `VerticalSliceTests` | L2 |
 
 ## What is owed to a person
@@ -61,6 +64,13 @@ These cannot be automated here, and no line of code substitutes for them.
   engine, took 35 seconds and started failing on a Mac with a usable model. Fixed
   by pinning the engine in every test; recorded because it is the failure mode
   this project is most likely to repeat.
+- The first draft of the streaming test proved the projection against malformed
+  JSON, which the framework cannot produce: `GeneratedContent(json:)` refuses to
+  parse it. The test now covers the case that can actually happen, valid JSON in an
+  unexpected shape, rather than a fictional one.
+- The first draft of the latency test printed a verdict that separated asset
+  loading from generation and fired on a margin of one hundredth of a second. It now
+  prints the series and names no cause.
 - `ScrollCatcher` was first placed in `.background` with
   `.allowsHitTesting(false)`. That combination cannot work: SwiftUI excludes the
   subtree from hit testing, so AppKit never routes a scroll to it. The view is now

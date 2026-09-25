@@ -22,6 +22,15 @@
 - [x] One Keep undoes as one action. `swift test --filter VerticalSliceTests`
 - [x] **Warm latency: three identical calls in one process.** 2.50 s, 2.68 s, 2.29 s,
       measured serially. Mostly a per-call cost, not a large one-off asset load.
+- [x] **The answer streams, and progress is not a proposal.** 54 progress updates over
+      5.1 s on a real model, the rationale arriving a few words at a time. The
+      proposal is minted once at the end and validated exactly as before.
+      `AppleAdapterTests`, `RealOnDeviceModelTests.realStreaming`
+- [ ] **Streaming watched by a person.** The updates are proved to arrive; whether a
+      sentence growing for five seconds feels good is not a test's judgement.
+- [ ] **Streaming the branch itself, not only the sentence.** The ghost still appears
+      all at once, because a half-decoded direction has no identifier and no kind the
+      canvas can trust.
 - [ ] **A real proposal kept, set aside and reopened by a person.** Owed.
 - [ ] The `at most 3 ideas` bound and the refused-kind rule exercised against a
       real model, not only the converter.
@@ -39,5 +48,8 @@ of them share one on-device model. Every latency figure in this project must be 
 `--no-parallel`, and the earlier figure should be treated as an unconfirmed one-off, most likely the
 very first load of the model assets on the machine.
 
-The conclusion did not change, only the size of the number: streaming partial output to the canvas is
-the fix, and it is not built.
+The conclusion did not change, only the size of the number. The wait is now filled, because the answer
+streams and the sentence appears as it is written. What is still missing is streaming the branch itself:
+the ghost objects still appear all at once, because a half-decoded direction has no identifier, no kind
+the canvas can trust and no way to be validated. Showing it early would mean showing something that
+cannot be kept and might not survive the next token, which is worse than showing a sentence growing.
