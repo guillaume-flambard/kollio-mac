@@ -302,4 +302,66 @@ struct SourceChipTests {
         }
     }
 
+
+    // MARK: Choosing a passage
+
+    @Test("A chosen passage becomes the quote, verbatim")
+    func chosenPassageIsTheQuote() throws {
+        var model = try modelWithCitation()
+        let sourceID = try #require(model.citations(of: claim).first?.citation.sourceID)
+        #expect(model.lines(of: sourceID).count == 4)
+
+        // Lines 0 and 1 chosen: the quote is those lines exactly, not a summary of
+        // them and not a retyped version that drifted.
+        #expect(model.citePassage(of: sourceID, lines: 0..<2, to: claim))
+        let newest = try #require(model.document.sources.citations(supporting: claim).last)
+        #expect(newest.quote == "Signup today.\nIt takes nine steps.")
+        #expect(newest.locator.lineRange == 0..<2)
+    }
+
+    @Test("A citation from the interface lands on the lines that were chosen")
+    func pickerCitationRoundTrips() throws {
+        var model = try modelWithCitation()
+        let sourceID = try #require(model.citations(of: claim).first?.citation.sourceID)
+        #expect(model.citePassage(of: sourceID, lines: 2..<3, to: claim))
+
+        // Opening the new citation shows exactly what was selected, which is the
+        // property the whole picker exists for.
+        let detail = try #require(model.citations(of: claim).last)
+        #expect(detail.passage == "Three would do.")
+        #expect(detail.citation.quote == "Three would do.")
+        #expect(detail.isCurrentRevision)
+    }
+
+    @Test("An impossible selection cites nothing")
+    func invalidSelectionIsRefused() throws {
+        var model = try modelWithCitation()
+        let sourceID = try #require(model.citations(of: claim).first?.citation.sourceID)
+        let before = model.document.sources.citations(supporting: claim).count
+
+        // Out of range, empty, and an unknown source all fail rather than producing
+        // a citation that points nowhere.
+        //
+        // An inverted range is not tested here because it cannot exist: `3..<1` is a
+        // trap in Swift, not a value that can be passed and refused. The first
+        // version of this test used one and took the whole test process down, which
+        // is worth knowing about the language rather than the code.
+        #expect(model.citePassage(of: sourceID, lines: 2..<99, to: claim) == false)
+        #expect(model.citePassage(of: sourceID, lines: 1..<1, to: claim) == false)
+        #expect(model.citePassage(of: SourceID("source:nope"), lines: 0..<1, to: claim) == false)
+        #expect(model.document.sources.citations(supporting: claim).count == before)
+    }
+
+    @Test("A source with no text offers no lines to select")
+    func unreadableSourceHasNoLines() throws {
+        var model = model()
+        let url = directory.appendingPathComponent("empty.txt")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try Data("  ".utf8).write(to: url)
+        let read = try #require(model.attachSource(at: url, to: claim))
+        let id = SourceID("source:" + String(read.digest.prefix(16)))
+        // Nothing to select is the honest state, and the picker says so rather than
+        // showing an empty list that looks broken.
+        #expect(model.lines(of: id).isEmpty)
+    }
 }

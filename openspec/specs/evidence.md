@@ -55,6 +55,7 @@ project outruns its proof.
 | A citation opens at the lines its locator points at | `SourceChipTests` | L3 |
 | A page locator shows no passage rather than a wrong one | `SourceChipTests` | L3 |
 | A verification is recorded only with an observation | `SourceChipTests` | L3 |
+| A chosen passage becomes the quote and the locator, verbatim | `SourceChipTests` | L3 |
 
 ## What is owed to a person
 
@@ -84,6 +85,10 @@ These cannot be automated here, and no line of code substitutes for them.
   engine, took 35 seconds and started failing on a Mac with a usable model. Fixed
   by pinning the engine in every test; recorded because it is the failure mode
   this project is most likely to repeat.
+- A test for an impossible selection used an inverted range, `3..<1`. That is a
+  trap in Swift rather than a value that can be passed and refused, so the test took
+  the whole test process down with it. The case cannot exist, and the test now says
+  so rather than pretending to cover it.
 - `importRevision` originally **refused** an extraction that produced no text, which
   was right for CTX-07 and wrong for CTX-02: refusing it meant the chip could never
   show "no text", because the fact was never stored. Both hold now that the attempt

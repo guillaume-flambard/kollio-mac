@@ -353,6 +353,15 @@ struct CitationListView: View {
                             .foregroundStyle(theme.attention)
                     }
 
+                    if detail.passage != nil {
+                        HStack {
+                            Spacer(minLength: 0)
+                            ActionButton(title: L10n.citationSelectPrompt, isDefault: false) {
+                                model.readingSourceID = detail.citation.sourceID
+                            }
+                        }
+                    }
+
                     if model.verifyingCitationID == detail.id {
                         verificationComposer(for: detail)
                     } else {
@@ -423,6 +432,103 @@ struct CitationListView: View {
         switch detail.citation.status {
         case .verified: return theme.textSecondary
         case .unverified, .needsReview, .sourceMissing: return theme.attention
+        }
+    }
+}
+
+/// Choosing the lines a claim rests on.
+///
+/// The text comes from the revision on record rather than from the file on disk,
+/// so what is cited is what the document believes it read. The selection becomes
+/// the quote verbatim: a person selects a passage, they do not retype it, because a
+/// quote that differs from its source is not a quote.
+struct PassagePickerView: View {
+    let model: KollioModel
+    let sourceID: SourceID
+    let claim: ObjectID
+
+    @Environment(\.kollioTheme) private var theme
+    @State private var selection: Set<Int> = []
+
+    private var lines: [String] { model.lines(of: sourceID) }
+
+    /// The range to cite, as a contiguous run. A discontiguous selection would need
+    /// a locator the type does not have, and inventing one would be worse than
+    /// asking for a single passage.
+    private var range: Range<Int>? {
+        guard let first = selection.min(), let last = selection.max(), first <= last else { return nil }
+        return first..<(last + 1)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.s) {
+            Text(L10n.citationSelectPrompt)
+                .font(TypeScale.metadata.weight(.semibold))
+                .foregroundStyle(theme.textSecondary)
+
+            if lines.isEmpty {
+                // The source is on record but has no readable text. Saying so beats
+                // offering an empty list to select from.
+                Text(L10n.citationNoPassage)
+                    .font(TypeScale.body)
+                    .foregroundStyle(theme.textSecondary)
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
+                            Text(line.isEmpty ? " " : line)
+                                .font(TypeScale.metadata)
+                                .foregroundStyle(theme.textPrimary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, Space.xs)
+                                .padding(.vertical, 2)
+                                .background(
+                                    selection.contains(index)
+                                        ? theme.accentSurface
+                                        : Color.clear
+                                )
+                                .contentShape(Rectangle())
+                                .onTapGesture { toggle(index) }
+                        }
+                    }
+                }
+                .frame(height: 180)
+            }
+
+            HStack {
+                Text(L10n.citationSelectHint)
+                    .font(TypeScale.metadata)
+                    .foregroundStyle(theme.textSecondary)
+                Spacer(minLength: 0)
+                ActionButton(
+                    title: L10n.citationCiteSelection,
+                    isDefault: true
+                ) {
+                    guard let range else { return }
+                    model.citePassage(of: sourceID, lines: range, to: claim)
+                }
+                .disabled(range == nil)
+            }
+        }
+        .padding(Space.m)
+        .frame(width: 380, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
+                .fill(theme.surfacePrimary)
+                .shadow(color: .black.opacity(theme.isDark ? 0.38 : 0.13), radius: 14, y: 6)
+        )
+        .onExitCommand { model.readingSourceID = nil }
+    }
+
+    private func toggle(_ index: Int) {
+        // A plain click starts a passage; a second click elsewhere extends it. There
+        // is no modifier to learn and no drag to miss.
+        if selection.isEmpty || !selection.contains(index) {
+            selection = [index]
+        } else if let first = selection.min(), let last = selection.max() {
+            let low = min(first, index)
+            let high = max(last, index)
+            selection = Set(low...high)
         }
     }
 }

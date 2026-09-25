@@ -437,6 +437,51 @@ public final class KollioModel {
     // MARK: Sources
     // MARK: Citations
 
+    /// A source open for reading, so a passage can be chosen from it.
+    ///
+    /// The text comes from the revision on record, never re-read from disk: what a
+    /// person cites has to be the text the document believes it read.
+    public var readingSourceID: SourceID?
+
+    /// The lines of a source, addressable so a citation can point at one.
+    public func lines(of sourceID: SourceID) -> [String] {
+        guard let text = document.sources.source(sourceID)?.latest?.extraction.text else { return [] }
+        return text.components(separatedBy: .newlines)
+    }
+
+    /// Cites a passage of a source, from the revision currently on record.
+    ///
+    /// The quote is taken from the chosen lines rather than typed, because a quote
+    /// that differs from the source is not a quote. The locator is the range that
+    /// was actually chosen, so opening the citation later lands on the same lines.
+    @discardableResult
+    public func citePassage(
+        of sourceID: SourceID,
+        lines range: Range<Int>,
+        to claim: ObjectID
+    ) -> Bool {
+        let all = lines(of: sourceID)
+        guard range.lowerBound >= 0, range.upperBound <= all.count, range.lowerBound < range.upperBound,
+              let revision = document.sources.source(sourceID)?.latest
+        else { return false }
+        let quote = all[range].joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard quote.isEmpty == false else { return false }
+
+        let citation = Citation(
+            id: CitationID("citation:" + UUID().uuidString),
+            claimID: claim,
+            sourceID: sourceID,
+            revisionID: revision.id,
+            locator: SourceLocator(lineRange: range),
+            quote: quote
+        )
+        guard perform([.addCitation(.init(
+            citation: citation, claimID: claim, provenance: .human("local-user")
+        ))], label: L10n.undoAddCitation) else { return false }
+        readingSourceID = nil
+        return true
+    }
+
     /// The claim whose citations are open, and the one being checked.
     ///
     /// Transient, like the composer and the decision card: it appears where the

@@ -58,6 +58,10 @@ public enum L10n {
     public static var addSourceHint: String { callAsFunction("source.addHint") }
     public static var undoAttachSource: String { callAsFunction("undo.attachSource") }
     public static var undoRecordVerification: String { callAsFunction("undo.recordVerification") }
+    public static var undoAddCitation: String { callAsFunction("undo.addCitation") }
+    public static var citationSelectPrompt: String { callAsFunction("citations.selectPrompt") }
+    public static var citationSelectHint: String { callAsFunction("citations.selectHint") }
+    public static var citationCiteSelection: String { callAsFunction("citations.citeSelection") }
     public static var citationsTitle: String { callAsFunction("citations.title") }
     public static var citationVerify: String { callAsFunction("citations.verify") }
     public static var citationVerifyHint: String { callAsFunction("citations.verifyHint") }

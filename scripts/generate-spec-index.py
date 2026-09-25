@@ -104,8 +104,9 @@ STATUS_NOTES = {
                "verified without an observation and an author. Intelligence is refused these "
                "commands outright. SourceLedgerTests, SourceCommandTests. The interface opens a "
                "citation at the lines its locator names, from the revision it was read against, "
-               "and records a check only with an observation: SourceChipTests. Still missing: "
-               "choosing a passage inside the file, and opening the file itself in a reader."),
+               "records a check only with an observation, and lets a passage be chosen so the "
+               "quote is the selection verbatim: SourceChipTests. Still missing: opening the file "
+               "itself in a reader, and a page locator that can be pointed at a passage."),
     "CTX-06": ("automatedVerified",
                "The projection is built and measured on the real request path: omissions are "
                "counted, a required item is never dropped, and the budget cannot exceed the "

@@ -174,6 +174,10 @@ struct CanvasView: View {
                 CitationListView(model: model, claim: claim)
                     .position(citationListPosition(claim, viewport: viewport))
             }
+            if let source = model.readingSourceID, let claim = model.openCitationClaim {
+                PassagePickerView(model: model, sourceID: source, claim: claim)
+                    .position(passagePickerPosition(claim, viewport: viewport))
+            }
             if let progress = model.progress, model.preview == nil {
                 ProposalProgressView(progress: progress, languageCode: model.languageCode)
             }
@@ -211,6 +215,13 @@ struct CanvasView: View {
         let below = model.camera.toScreen(Position(x: frame.origin.x, y: frame.maxY + 18))
         let x = min(max(below.x, width / 2 + Space.m), viewport.width - width / 2 - Space.m)
         return CGPoint(x: x, y: min(below.y, viewport.height - 120))
+    }
+
+    /// The picker opens below the citations it serves, so the passage being chosen
+    /// and the citation it will join are on screen together.
+    private func passagePickerPosition(_ claim: ObjectID, viewport: CGSize) -> CGPoint {
+        CGPoint(x: citationListPosition(claim, viewport: viewport).x,
+                y: min(citationListPosition(claim, viewport: viewport).y + 240, viewport.height - 120))
     }
 
     /// The decision sits beside the branch it is about, clear of the branch

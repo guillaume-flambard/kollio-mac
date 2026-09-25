@@ -16,6 +16,22 @@
     "note": "Deterministic suites never require Apple Intelligence, a key or a network. Real-model evidence is opt-in and separately marked."
   },
   "capabilities": {
+    "interaction": {
+      "lot": "L0",
+      "spec": "specs/interaction.md",
+      "change": "changes/l0-design-contract",
+      "delivered": "specified",
+      "features": 0,
+      "acceptanceCriteria": 0,
+      "byStatus": {},
+      "proved": [],
+      "writtenOnly": [],
+      "owedToAPerson": [
+        "A person reads a proposal as a proposal rather than as content that already exists. No test can decide that; it is owed to a session.",
+        "A person with reduced motion enabled still understands a state change.",
+        "A person using only the keyboard reaches every contextual action."
+      ]
+    },
     "documents": {
       "lot": "L1",
       "spec": "specs/documents.md",

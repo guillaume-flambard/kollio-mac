@@ -50,6 +50,11 @@ stated on every line rather than blurred.
 - [x] The same file twice is two sources keyed by content, not two copies of one.
 - [x] A failed import is recorded rather than refused, so the chip can say so, and a
       usable earlier revision stays the one being read. `SourceLedgerTests`
+- [x] Choosing a passage inside the source: the selected lines become the quote
+      verbatim and the locator, and opening the citation returns to them.
+      `SourceChipTests`
+- [x] An out-of-range, empty or unknown selection cites nothing. An inverted range
+      cannot be refused because it traps in Swift, which the test now says.
 - [ ] A native reader for a long PDF, and a CSV preview in the interface.
 - [x] Opening a citation back at its passage, from the exact revision it was read
       against, beside the claim. `SourceChipTests`

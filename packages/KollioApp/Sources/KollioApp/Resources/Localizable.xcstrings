@@ -1330,6 +1330,78 @@
           }
         }
       }
+    },
+    "undo.addCitation": {
+      "comment": "Undo label for adding a citation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the citation"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler la citation"
+          }
+        }
+      }
+    },
+    "citations.selectPrompt": {
+      "comment": "Shown when a source is open for choosing a passage.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the lines this claim rests on"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez les lignes sur lesquelles repose cette affirmation"
+          }
+        }
+      }
+    },
+    "citations.selectHint": {
+      "comment": "Why a quote is selected rather than typed: a quote that differs is not a quote.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The citation keeps the selected text exactly as it is in the source"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La citation conserve le texte sélectionné tel quel dans la source"
+          }
+        }
+      }
+    },
+    "citations.citeSelection": {
+      "comment": "Confirms citing the selected lines.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cite these lines"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Citer ces lignes"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
