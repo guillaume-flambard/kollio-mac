@@ -26,6 +26,15 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
     /// active. Named rather than folded into a generic failure because "your file
     /// has no text layer" and "that file is gone" call for different reactions.
     case sourceExtractionFailed(SourceID)
+    /// A claim with nothing in its scope. Refused rather than treated as
+    /// "everything", because that reading would make a constraint a law of the
+    /// universe.
+    case emptyScope(ClaimID)
+    case unknownClaim(ClaimID)
+    /// An assessment on something that is not a hypothesis, or a resolution on
+    /// something that is not a constraint.
+    case wrongClaimRole(ClaimID, expected: String)
+    case duplicateClaim(ClaimID)
 
     public var description: String {
         switch self {
@@ -51,6 +60,10 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
         case .unknownSourceRevision(let source, let revision): return "Source \(source) has no revision \(revision)"
         case .unknownCitation(let id): return "Unknown citation \(id)"
         case .sourceExtractionFailed(let id): return "Source \(id) produced no readable text; the previous version stays active"
+        case .emptyScope(let id): return "Claim \(id) has an empty scope, so it would apply to everything"
+        case .unknownClaim(let id): return "Unknown claim \(id)"
+        case .wrongClaimRole(let id, let expected): return "Claim \(id) is not a \(expected)"
+        case .duplicateClaim(let id): return "Duplicate claim \(id)"
         }
     }
 }
@@ -136,6 +149,12 @@ public struct DocumentStore: Sendable {
             try recordVerification(verification, in: &document)
         case .removeSource(let remove):
             try removeSource(remove, in: &document)
+        case .assertClaim(let assertion):
+            try assertClaim(assertion, in: &document)
+        case .assessHypothesis(let assessment):
+            try assessHypothesis(assessment, in: &document)
+        case .resolveConstraint(let resolution):
+            try resolveConstraint(resolution, in: &document)
         }
     }
 
@@ -426,5 +445,73 @@ extension DocumentStore {
         // The history stays. What is lost is the ability to check quietly, and every
         // citation says so.
         document.sources.removeSourceKeepingHistory(remove.sourceID)
+    }
+
+    // MARK: - Claims
+
+    private static func assertClaim(_ assertion: AssertClaim, in document: inout KollioDocument) throws {
+        let claim = assertion.claim
+        guard document.content[claim.objectID] != nil else {
+            throw DocumentError.unknownObject(claim.objectID)
+        }
+        // Every object the claim is about has to exist, or the scope names things
+        // the document has never heard of.
+        for object in claim.scope.objectIDs where document.content[object] == nil {
+            throw DocumentError.unknownObject(object)
+        }
+        guard claim.scope.objectIDs.isEmpty == false else {
+            throw DocumentError.emptyScope(claim.id)
+        }
+        guard document.claims.claim(claim.id) == nil else {
+            throw DocumentError.duplicateClaim(claim.id)
+        }
+        var ledger = document.claims
+        ledger.upsert(claim)
+        document.claims = ledger
+    }
+
+    private static func assessHypothesis(
+        _ assessment: AssessHypothesis,
+        in document: inout KollioDocument
+    ) throws {
+        guard var claim = document.claims.claim(assessment.claimID) else {
+            throw DocumentError.unknownClaim(assessment.claimID)
+        }
+        guard claim.role == .hypothesis else {
+            throw DocumentError.wrongClaimRole(assessment.claimID, expected: "hypothesis")
+        }
+        // The evidence is required here rather than in the type alone, because a
+        // caller can build the enum by hand and `.supported` needs an observation.
+        if let evidence = assessment.assessment.evidence {
+            guard evidence.observation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
+                throw DocumentError.forbiddenOperation("an assessment needs an observation")
+            }
+        }
+        claim.assessment = assessment.assessment
+        // Assessing a hypothesis never resolves a constraint: the two stay apart.
+        var ledger = document.claims
+        ledger.upsert(claim)
+        document.claims = ledger
+    }
+
+    private static func resolveConstraint(
+        _ resolution: ResolveConstraint,
+        in document: inout KollioDocument
+    ) throws {
+        guard var claim = document.claims.claim(resolution.claimID) else {
+            throw DocumentError.unknownClaim(resolution.claimID)
+        }
+        guard claim.role == .constraint else {
+            throw DocumentError.wrongClaimRole(resolution.claimID, expected: "constraint")
+        }
+        if let evidence = resolution.resolution.evidence {
+            guard evidence.observation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
+                throw DocumentError.forbiddenOperation("a resolution needs an observation")
+            }
+        }
+        claim.resolution = resolution.resolution
+        var ledger = document.claims
+        ledger.upsert(claim)
+        document.claims = ledger
     }
 }

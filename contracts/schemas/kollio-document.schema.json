@@ -19,8 +19,8 @@
     "schemaVersion": {
       "type": "integer",
       "minimum": 1,
-      "maximum": 2,
-      "description": "2 adds the optional `sources` ledger. A file without it is a document that has no sources, not a broken one."
+      "maximum": 3,
+      "description": "2 added the optional `sources` ledger. 3 added the optional `claims` ledger. A file written before either is a document without them, not a broken one."
     },
     "documentId": {
       "type": "string"
@@ -94,6 +94,19 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/citation"
+          }
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "description": "Claims with an explicit scope and a stance. Absent before version 3.",
+      "additionalProperties": false,
+      "properties": {
+        "claims": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/claim"
           }
         }
       }
@@ -792,6 +805,217 @@
                   "type": "string"
                 }
               }
+            }
+          }
+        }
+      ]
+    },
+    "claim": {
+      "type": "object",
+      "description": "What is asserted, where it applies, and how it stands. A constraint only ever blocks inside its own scope.",
+      "required": [
+        "id",
+        "objectID",
+        "role",
+        "scope",
+        "assessment",
+        "resolution"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "objectID": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "hypothesis",
+            "constraint"
+          ]
+        },
+        "criterion": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Optional: what would count as settling it."
+        },
+        "branchObjectID": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scope": {
+          "$ref": "#/$defs/claimScope"
+        },
+        "assessment": {
+          "$ref": "#/$defs/hypothesisAssessment"
+        },
+        "resolution": {
+          "$ref": "#/$defs/constraintResolution"
+        }
+      }
+    },
+    "claimScope": {
+      "type": "object",
+      "description": "Where a claim applies. Never empty: an unscoped claim would apply to everything.",
+      "required": [
+        "id",
+        "title",
+        "objectIDs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "objectIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The objects the claim is about."
+        }
+      }
+    },
+    "evidence": {
+      "description": "An observation and an author. There is no case for a bare verdict.",
+      "type": "object",
+      "required": [
+        "observation",
+        "by",
+        "at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "observation": {
+          "type": "string"
+        },
+        "by": {
+          "type": "string"
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "hypothesisAssessment": {
+      "description": "How a hypothesis stands. There is no case meaning `true`: `supported` says something backs the claim, which is not the same as the claim being correct.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "open"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "open": {
+              "type": "object"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "supported",
+            "_0"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "supported": {
+              "type": "object"
+            },
+            "_0": {
+              "$ref": "#/$defs/evidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "contradicted",
+            "_0"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "contradicted": {
+              "type": "object"
+            },
+            "_0": {
+              "$ref": "#/$defs/evidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "refuted",
+            "_0"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "refuted": {
+              "type": "object"
+            },
+            "_0": {
+              "$ref": "#/$defs/evidence"
+            }
+          }
+        }
+      ]
+    },
+    "constraintResolution": {
+      "description": "Whether a constraint is met. `notApplicable` is a real answer and is not satisfaction.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "open"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "open": {
+              "type": "object"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "satisfied",
+            "_0"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "satisfied": {
+              "type": "object"
+            },
+            "_0": {
+              "$ref": "#/$defs/evidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "notApplicable",
+            "_0"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "notApplicable": {
+              "type": "object"
+            },
+            "_0": {
+              "$ref": "#/$defs/evidence"
             }
           }
         }

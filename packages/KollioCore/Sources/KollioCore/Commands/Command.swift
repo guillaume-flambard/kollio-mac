@@ -19,6 +19,9 @@ public enum Command: Codable, Hashable, Sendable {
     case addCitation(AddCitation)
     case recordVerification(RecordVerification)
     case removeSource(RemoveSource)
+    case assertClaim(AssertClaim)
+    case assessHypothesis(AssessHypothesis)
+    case resolveConstraint(ResolveConstraint)
 
     /// Presentation-only commands never change the meaning of the document.
     public var isSemantic: Bool {
@@ -29,7 +32,7 @@ public enum Command: Codable, Hashable, Sendable {
              .createScenario, .recordDecision, .revokeDecision,
              .addContributionToProduct, .applyProposal, .rejectProposal,
              .attachSource, .importSourceRevision, .addCitation, .recordVerification,
-             .removeSource:
+             .removeSource, .assertClaim, .assessHypothesis, .resolveConstraint:
             return true
         }
     }
@@ -53,6 +56,9 @@ public enum Command: Codable, Hashable, Sendable {
         case .addCitation: return "undo.addCitation"
         case .recordVerification: return "undo.recordVerification"
         case .removeSource: return "undo.removeSource"
+        case .assertClaim: return "undo.assertClaim"
+        case .assessHypothesis: return "undo.assessHypothesis"
+        case .resolveConstraint: return "undo.resolveConstraint"
         }
     }
 }
@@ -305,5 +311,49 @@ public struct RemoveSource: Codable, Hashable, Sendable {
     public init(sourceID: SourceID, reason: String) {
         self.sourceID = sourceID
         self.reason = reason
+    }
+}
+
+
+// MARK: - Claims
+//
+// A claim needs a scope. The command layer refuses one without, because an
+// unscoped constraint would behave as a law of the universe and quietly forbid
+// everything a person did not mean it to.
+
+public struct AssertClaim: Codable, Hashable, Sendable {
+    public var claim: Claim
+    public var provenance: Provenance
+
+    public init(claim: Claim, provenance: Provenance) {
+        self.claim = claim
+        self.provenance = provenance
+    }
+}
+
+public struct AssessHypothesis: Codable, Hashable, Sendable {
+    public var claimID: ClaimID
+    /// The new standing. Carries its own evidence, so a bare "supported" is not
+    /// expressible.
+    public var assessment: HypothesisAssessment
+    public var provenance: Provenance
+
+    public init(claimID: ClaimID, assessment: HypothesisAssessment, provenance: Provenance) {
+        self.claimID = claimID
+        self.assessment = assessment
+        self.provenance = provenance
+    }
+}
+
+public struct ResolveConstraint: Codable, Hashable, Sendable {
+    public var claimID: ClaimID
+    /// `notApplicable` is a real answer and is not satisfaction.
+    public var resolution: ConstraintResolution
+    public var provenance: Provenance
+
+    public init(claimID: ClaimID, resolution: ConstraintResolution, provenance: Provenance) {
+        self.claimID = claimID
+        self.resolution = resolution
+        self.provenance = provenance
     }
 }

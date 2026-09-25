@@ -108,6 +108,12 @@ STATUS_NOTES = {
                "records a check only with an observation, and lets a passage be chosen so the "
                "quote is the selection verbatim: SourceChipTests. Still missing: opening the file "
                "itself in a reader, and a page locator that can be pointed at a passage."),
+    "CTX-04": ("automatedVerified",
+               "AC01 a constraint only blocks within its scope; AC02 not applicable is not "
+               "satisfied; AC03 supported is not absolute truth. ClaimLedgerTests, and a scope "
+               "with nothing in it is refused rather than read as everything. Intelligence may "
+               "suggest a claim but may not record how it stands. Still missing: stating a claim, "
+               "a scope and a stance from the interface."),
     "CTX-06": ("automatedVerified",
                "The projection is built and measured on the real request path: omissions are "
                "counted, a required item is never dropped, and the budget cannot exceed the "

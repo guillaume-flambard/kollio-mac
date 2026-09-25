@@ -5,9 +5,9 @@
     "features": 71,
     "acceptanceCriteria": 213,
     "byStatus": {
-      "automatedVerified": 15,
+      "automatedVerified": 16,
       "humanVerified": 1,
-      "specified": 55
+      "specified": 54
     },
     "byLot": {
       "L1": 10,
@@ -552,7 +552,8 @@
       ],
       "section": "Context and sources",
       "lot": "L3",
-      "status": "specified"
+      "status": "automatedVerified",
+      "evidence": "AC01 a constraint only blocks within its scope; AC02 not applicable is not satisfied; AC03 supported is not absolute truth. ClaimLedgerTests, and a scope with nothing in it is refused rather than read as everything. Intelligence may suggest a claim but may not record how it stands. Still missing: stating a claim, a scope and a stance from the interface."
     },
     {
       "id": "CTX-05",

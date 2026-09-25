@@ -75,6 +75,21 @@ stated on every line rather than blurred.
 - [x] Import and extraction by kind: text, Markdown, PDF, CSV, image. A link is
       never fetched and an image is never understood without being asked.
       `SourceReaderTests`
+- [x] A claim has an explicit scope, and a claim with an empty scope is refused
+      rather than read as "everything". `ClaimLedgerTests`
+- [x] **AC01** a constraint only blocks inside its own scope.
+- [x] **AC02** not applicable is not satisfied, and blocks nothing either.
+- [x] **AC03** supported is not absolute truth: the vocabulary has no case meaning
+      "true", and every non-open verdict carries an observation and an author.
+- [x] Assessing a hypothesis and resolving a constraint are refused on each other's
+      claims, and neither ever touches the other.
+- [x] Contradictory scopes are surfaced for a person to resolve, not settled by
+      picking a winner.
+- [x] Intelligence may suggest a claim, but may not record how it stands and may not
+      arrive pre-resolved. `ClaimLedgerTests`
+- [x] The `.kollio` schema declares the claims ledger and the version is 3.
+- [ ] Stating a claim, a scope and a stance from the interface. **Not started.**
+- [ ] Asking for precision when two scopes overlap, in the interface.
 - [ ] A context view lists sources and quotes, reading only from the ledger.
 - [ ] A knowledge view is derived, never authored twice.
 - [ ] Retrieval returns its result *and* its absence.

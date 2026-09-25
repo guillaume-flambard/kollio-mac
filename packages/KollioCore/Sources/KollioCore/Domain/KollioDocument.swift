@@ -24,6 +24,9 @@ public struct KollioDocument: Codable, Hashable, Sendable {
     /// side store, so a claim and what it was based on travel together in one file
     /// and are versioned by the same revision.
     public var sources: SourceLedger
+    /// Claims with an explicit scope and a stance. Part of the document for the
+    /// same reason sources are: a claim and the ground it applies to are one thing.
+    public var claims: ClaimLedger
 
     public init(
         schemaVersion: Int = KollioDocument.currentSchemaVersion,
@@ -38,7 +41,8 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         contributions: [ActorID: ContributionRecord] = [:],
         products: [ObjectID: ProductComposition] = [:],
         presentation: Presentation = Presentation(),
-        sources: SourceLedger = SourceLedger()
+        sources: SourceLedger = SourceLedger(),
+        claims: ClaimLedger = ClaimLedger()
     ) {
         self.schemaVersion = schemaVersion
         self.documentId = documentId
@@ -53,11 +57,12 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         self.products = products
         self.presentation = presentation
         self.sources = sources
+        self.claims = claims
     }
 
     /// 2 added the `sources` ledger. A file written at version 1 has no `sources`
     /// key and decodes as a document with no sources, which is the truth about it.
-    public static let currentSchemaVersion = 2
+    public static let currentSchemaVersion = 3
 
     // MARK: - Codable
 
@@ -67,7 +72,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case schemaVersion, documentId, revision, semanticRevision, createdAt, updatedAt
         case content, relationships, decisions, contributions, products
-        case presentation, sources
+        case presentation, sources, claims
     }
 
     private struct IdKey: CodingKey {
@@ -95,6 +100,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         // Absent in a file written before sources existed, which is a document with
         // no sources rather than a corrupt one.
         sources = try container.decodeIfPresent(SourceLedger.self, forKey: .sources) ?? SourceLedger()
+        claims = try container.decodeIfPresent(ClaimLedger.self, forKey: .claims) ?? ClaimLedger()
     }
 
     private static func decodeMap<Key: KollioIdentifier, Value: Decodable>(
@@ -127,6 +133,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         try Self.encodeMap(products, into: &container, forKey: .products)
         try container.encode(presentation, forKey: .presentation)
         try container.encode(sources, forKey: .sources)
+        try container.encode(claims, forKey: .claims)
     }
 
     private static func encodeMap<Key: KollioIdentifier, Value: Encodable>(

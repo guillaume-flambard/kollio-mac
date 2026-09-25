@@ -101,6 +101,23 @@ public struct ProposalValidator: Sendable {
                 throw DocumentError.forbiddenOperation("nested applyProposal")
             case .rejectProposal:
                 throw DocumentError.forbiddenOperation("rejectProposal")
+            case .assessHypothesis, .resolveConstraint:
+                // Intelligence may suggest a claim and the role it plays, and the
+                // person corrects it. It may not record how the claim stands: a
+                // model that could mark its own hypothesis supported would be
+                // grading its own work, and one that could mark a constraint
+                // satisfied would be removing the obstacles to its own proposal.
+                // Both are a person's to say.
+                throw DocumentError.forbiddenOperation("assessing a claim is the user's to do")
+            case .assertClaim(let assertion):
+                // A suggested claim is allowed, but only as an open one. The
+                // standing is dropped rather than refused, so a proposal can carry
+                // "this looks like a constraint" without being able to assert that
+                // the constraint is met.
+                guard assertion.claim.assessment.isOpen,
+                      assertion.claim.resolution.evidence == nil else {
+                    throw DocumentError.forbiddenOperation("a proposed claim arrives open")
+                }
             case .attachSource, .importSourceRevision, .addCitation,
                  .recordVerification, .removeSource:
                 // Intelligence may propose an idea, never attach evidence to it and

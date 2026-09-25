@@ -57,6 +57,10 @@ project outruns its proof.
 | A verification is recorded only with an observation | `SourceChipTests` | L3 |
 | A chosen passage becomes the quote and the locator, verbatim | `SourceChipTests` | L3 |
 | A CSV is previewed as columns, from the revision on record | `SourceChipTests` | L3 |
+| AC01 a constraint only blocks within its scope | `ClaimLedgerTests` | L3 |
+| AC02 not applicable is not satisfied | `ClaimLedgerTests` | L3 |
+| AC03 supported is not absolute truth | `ClaimLedgerTests` | L3 |
+| Intelligence may not record how a claim stands | `ClaimLedgerTests` | L3 |
 
 ## What is owed to a person
 
@@ -86,6 +90,15 @@ These cannot be automated here, and no line of code substitutes for them.
   engine, took 35 seconds and started failing on a Mac with a usable model. Fixed
   by pinning the engine in every test; recorded because it is the failure mode
   this project is most likely to repeat.
+- A constraint that was `satisfied` still reported itself as a block, because
+  `blocks` only excluded `notApplicable`. A met constraint is not standing in the
+  way, and now it says so.
+- Two of my own assertions were theatre: one checked
+  `String(describing: HypothesisAssessment.self)` for the word "supported", which
+  says nothing about the cases. It now checks the evidence a supported assessment
+  actually carries.
+- The schema test earned its place a second time: it caught the new `claims` key
+  and the version bump to 3 before anything else noticed.
 - A citation test picked "the last citation", which was order-dependent by accident:
   the list is sorted by citation id and a new citation's id is a UUID, so the test
   passed, then failed, then passed again. It now finds the citation by its line

@@ -13,7 +13,7 @@ A view, not a source of truth. Status meanings:
 | `blockedExternal` | Blocked on a capability or authorisation. |
 | `notInCurrentRelease` | Deliberately out of this product. |
 
-Counts: 15 automatedVerified, 1 humanVerified, 55 specified. 71 features, 213 acceptance criteria.
+Counts: 16 automatedVerified, 1 humanVerified, 54 specified. 71 features, 213 acceptance criteria.
 
 ## L1 — 10 features
 
@@ -68,7 +68,8 @@ Counts: 15 automatedVerified, 1 humanVerified, 55 specified. 71 features, 213 ac
       AC01 a CSV with quotes, commas and newlines parses correctly; AC02 a PDF with no text layer is marked as having no text; AC03 a pasted link is never fetched. SourceReaderTests. A file is chosen, read and attached in one transaction, a CSV is previewed as columns from the revision on record, and a chosen file opens in the system reader: SourceChipTests, SourcePreviewPanel. Still missing: a page locator that can be pointed at a passage, and OCR as an explicit action.
 - [x] **CTX-03** Cite and verify provenance · `automatedVerified` · 3 AC
       A citation keeps its revision, is refused towards anything absent, and cannot be verified without an observation and an author. Intelligence is refused these commands outright. SourceLedgerTests, SourceCommandTests. The interface opens a citation at the lines its locator names, from the revision it was read against, records a check only with an observation, and lets a passage be chosen so the quote is the selection verbatim: SourceChipTests. Still missing: opening the file itself in a reader, and a page locator that can be pointed at a passage.
-- [ ] **CTX-04** Define a hypothesis or a constraint · `specified` · 3 AC
+- [x] **CTX-04** Define a hypothesis or a constraint · `automatedVerified` · 3 AC
+      AC01 a constraint only blocks within its scope; AC02 not applicable is not satisfied; AC03 supported is not absolute truth. ClaimLedgerTests, and a scope with nothing in it is refused rather than read as everything. Intelligence may suggest a claim but may not record how it stands. Still missing: stating a claim, a scope and a stance from the interface.
 - [ ] **CTX-05** Understand the impact of new information · `specified` · 3 AC
 - [x] **CTX-06** See and limit what intelligence will use · `automatedVerified` · 3 AC
       The projection is built and measured on the real request path: omissions are counted, a required item is never dropped, and the budget cannot exceed the model's window. ContextProjectionTests, AppleAdapterTests. The interface that shows the list to a person is not built.
