@@ -15,6 +15,9 @@ struct KollioApp: App {
                     try? await Task.sleep(for: .seconds(3))
                     await model.prepareVisualStateForReview()
                 }
+                // The delegate saves on quit. It has to be handed the same model
+                // the window is showing, or every save on quit is a silent no-op.
+                .onAppear { delegate.model = model }
                 .frame(minWidth: 720, minHeight: 480)
         }
         .defaultSize(width: 1280, height: 860)
@@ -79,12 +82,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// The macOS client owns the local document: it is saved on quit, and
     /// restored on the next launch.
-    func applicationWillTerminate(_ notification: Notification) {
-        MainActor.assumeIsolated { model?.save() }
+    ///
+    /// Both hooks are deliberate. `applicationShouldTerminate` is the one that
+    /// runs for a normal quit, and it can still refuse; the `WillTerminate`
+    /// notification is the last chance for the other paths. Neither one reports
+    /// success unless `save()` actually returned true.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        MainActor.assumeIsolated { saveOnQuit() }
+        return .terminateNow
     }
 
-    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        MainActor.assumeIsolated { model?.save() }
-        return .terminateNow
+    func applicationWillTerminate(_ notification: Notification) {
+        MainActor.assumeIsolated { saveOnQuit() }
+    }
+
+    @MainActor
+    private func saveOnQuit() {
+        guard let model else {
+            // Nothing to save is worse than a visible failure: say so rather
+            // than quitting as if the work were safe on disk.
+            NSLog("Kollio: quitting with no model attached, the document was not saved")
+            return
+        }
+        if model.save() == false {
+            NSLog("Kollio: the document could not be saved on quit: \(model.status ?? "")")
+        }
     }
 }

@@ -195,6 +195,11 @@ struct CollapsedDirectionView: View {
         .onTapGesture(count: 2) { onReopen() }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(text). \(L10n.setAside)")
-        .accessibilityHint(reason ?? "")
+        // The hint used to be the reason, which is empty when no reason was
+        // given: a screen reader user then had no way to know reopening existed.
+        // The reason stays, and the action is now a real accessibility action
+        // rather than a double-click nobody can perform.
+        .accessibilityHint(reason.map { "\($0). \(L10n.reopen)" } ?? L10n.reopen)
+        .accessibilityAction(named: L10n.reopen) { onReopen() }
     }
 }

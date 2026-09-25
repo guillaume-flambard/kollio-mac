@@ -31,7 +31,7 @@ After adding or removing a file under `packages/KollioApp/Sources`, run:
 ## Verify before believing anything
 
 ```bash
-./scripts/verify.sh     # 3 test suites (88 tests) + the Xcode app target
+./scripts/verify.sh     # 3 test suites (98 tests) + the Xcode app target
 ./scripts/run-app.sh --shot   # builds, launches, screenshots into build/
 ```
 
@@ -64,7 +64,10 @@ looks like.
 Read `docs/known-limitations.md` before promising anything. The short version:
 
 - **No pointer-level UI automation.** The model behind each gesture is tested and the states were
-  captured, but real clicks were not driven by a test. A human pass with a trackpad is still owed.
+  captured, but real clicks were not driven by a test. A human pass with a trackpad is still owed,
+  and it is now the only thing standing between the prototype and a trustworthy verdict on feel.
+- **Two-finger scrolling is not wired.** No scroll handling exists in the app. See
+  `known-limitations.md`. This is inspection, not a reproduced bug.
 - **`GroqProvider` has never run with a real key.** Do not describe its output quality.
 - **No performance measurement** of the 100 object / 200 relationship target.
 - The offline "intelligence" is a deterministic rule engine, not a model.
@@ -92,7 +95,8 @@ Read `docs/known-limitations.md` before promising anything. The short version:
 ## The next things worth doing, in this order
 
 1. A human pass with a trackpad: drag, double-click to explore, contextual buttons, pinch and scroll
-   to pan, `Cmd+0` / `Cmd+1` / `Cmd+Z` / `Cmd+S`. Report what feels wrong.
+   to pan, `Cmd+0` / `Cmd+1` / `Cmd+Z` / `Cmd+S`, then quit without `Cmd+S` and relaunch. Report what
+   feels wrong. Two-finger scroll is the specific thing to check: the code says it does nothing.
 2. Relationship selection: a label, a wider hit area than the visible stroke, and a contextual action.
 3. Performance: generate 100 objects and 200 relationships, measure pan, zoom and drag, then use the
    camera's visible rectangle to cull. Connector routing samples its curve, so this is where the

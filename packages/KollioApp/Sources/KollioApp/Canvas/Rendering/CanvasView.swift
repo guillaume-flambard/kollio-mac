@@ -73,6 +73,10 @@ struct CanvasView: View {
                         width: instance.size?.width ?? NodeLayout.estimatedSize(for: object).width,
                         onReopen: { model.reopen(object.id) }
                     )
+                    // A collapsed direction is still selectable, so the contextual
+                    // actions appear and reopening is reachable by click and by
+                    // keyboard, not only by a double-click.
+                    .onTapGesture { model.select(object.id) }
                 } else {
                     ObjectNodeView(
                         object: object,

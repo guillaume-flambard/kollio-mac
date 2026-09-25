@@ -296,25 +296,39 @@ public final class KollioModel {
     // MARK: Intelligence
 
     /// Asks the current source for a proposal and previews it as a ghost branch.
-    public func explore(_ id: ObjectID, intent: Intent = .explore) async {
-        guard !isThinking else { return }
+    ///
+    /// `instruction` carries what the person actually typed. It is optional
+    /// because a plain Explore has nothing to carry, and it is part of the
+    /// request because a sentence that never leaves the composer is a sentence
+    /// the application silently threw away.
+    @discardableResult
+    public func explore(
+        _ id: ObjectID,
+        intent: Intent = .explore,
+        instruction: String? = nil
+    ) async -> Bool {
+        guard !isThinking else { return false }
         isThinking = true
         defer { isThinking = false }
         status = nil
 
+        let trimmed = instruction?.trimmingCharacters(in: .whitespacesAndNewlines)
         let request = ProposalRequest(
             requestId: UUID().uuidString,
             documentId: document.documentId,
             baseSemanticRevision: session.semanticRevision,
             intent: intent == .explore ? .explore : .add,
             targetIds: [id],
+            instruction: (trimmed?.isEmpty == false) ? trimmed : nil,
             contentLocale: languageCode
         )
         do {
             let response = try await service.respond(to: request, document: document)
             handle(response, anchor: id)
+            return true
         } catch {
             status = L10n.errorGeneric
+            return false
         }
     }
 
@@ -482,7 +496,8 @@ public final class KollioModel {
             return
         }
         if selection.contains(id) { selection.remove(id) }
-        fitContent()
+        // The camera is deliberately left alone. Collapsing a branch is a local
+        // decision, and Cmd+0 stays the explicit way to reframe the view.
     }
 
     /// Reopen: restores the objects, the relationships and the positions.
@@ -498,7 +513,8 @@ public final class KollioModel {
             return
         }
         selection = [id]
-        fitContent()
+        // Reopening restores what was already there. It does not rearrange it,
+        // and it does not move the view either.
     }
 
     // MARK: Inline input
@@ -513,8 +529,10 @@ public final class KollioModel {
         switch composer.intent {
         case .add:
             guard !text.isEmpty else { return }
-            self.composer = nil
-            await explore(composer.anchorID, intent: .add)
+            // The draft is only cleared once the source has actually answered.
+            // A failed call leaves the sentence in place, ready to retry.
+            let sent = await explore(composer.anchorID, intent: .add, instruction: text)
+            if sent { self.composer = nil }
         case .setAside:
             self.composer = nil
             setAside(composer.anchorID, reason: text.isEmpty ? nil : text)

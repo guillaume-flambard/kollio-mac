@@ -4,6 +4,17 @@ An honest inventory. Nothing here is a surprise: this is the prototype, not the 
 
 ## Implemented and tested
 
+- The sentence typed in the inline composer reaches the intelligence source as the request's
+  instruction, and a failed call leaves the draft in the composer instead of discarding it. Tested with
+  a capturing fake source.
+- The document is saved when the app quits normally, with no Cmd+S: the app delegate is connected to
+  the model the window is showing, and both quit hooks report a failure rather than swallowing it.
+  Tested through the real delegate, and confirmed end to end by quitting the launched app and finding
+  the document on disk afterwards.
+- A local decision, set aside or reopen, leaves the camera exactly where the user left it. `Cmd+0`
+  remains the explicit reframe. Tested.
+- A collapsed direction is selectable, so its contextual "Reopen" button is reachable by click, and
+  reopening is also a named accessibility action rather than a double-click only.
 - `.kollio` document: versioned JSON, exact round-trip, stable ids, portable geometry, no renderer type
   in the file. Tested.
 - Commands, transactions, atomicity, undo and redo. Tested.
@@ -54,5 +65,10 @@ Everything in the non-goals, and also, honestly:
   been walked through with a human eye under those settings.
 - **No performance measurement.** 100 objects and 200 relationships is the stated target; nothing has
   been measured. Off-screen culling is available on the camera and unused.
+- **Two-finger scrolling is almost certainly not wired.** Code inspection found no scroll handling
+  anywhere in the app: only a drag gesture and a magnify gesture. A trackpad two-finger scroll is
+  therefore expected to do nothing, leaving panning to a click-drag on empty canvas. **Not
+  reproduced**, and not fixed in this pass: it needs a real trackpad to confirm before anything is
+  changed.
 - **No web renderer, no public SDK, no standard.** Intentional.
 - **No persistence, no accounts, no payments, no marketplace, no collaboration.** Intentional.
