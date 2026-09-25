@@ -47,6 +47,9 @@ project outruns its proof.
 | Intelligence may not attach or verify evidence | `SourceCommandTests` | L3 |
 | A chip shows the state of a claim's sources | `SourceChipTests` | L3 |
 | The codec and the published schema agree | `SourceCommandTests` | L3 |
+| AC01 a CSV with quotes and newlines parses correctly | `SourceReaderTests` | L3 |
+| AC02 a PDF with no text layer says so | `SourceReaderTests` | L3 |
+| AC03 a pasted link is never fetched | `SourceReaderTests` | L3 |
 
 ## What is owed to a person
 
@@ -76,6 +79,20 @@ These cannot be automated here, and no line of code substitutes for them.
   engine, took 35 seconds and started failing on a Mac with a usable model. Fixed
   by pinning the engine in every test; recorded because it is the failure mode
   this project is most likely to repeat.
+- The CSV parser had a bug that would have corrupted every citation made from a
+  table. Three separate faults, each found by a test rather than by reading: a
+  trailing newline made it return an empty table and discard every row it had
+  already parsed; a CRLF pair is a *single* Swift `Character`, so a Windows file
+  walked past both `case "\r"` and `case "\n"` and became one single column; and
+  an unterminated quote returned half a table that looked complete. All three are
+  fixed and each has a test named after the failure.
+- The first attempt to build a PDF fixture used a `PDFPage` with a text
+  *annotation*. That does not work and never did: annotations are not page
+  content, so `page.string` finds nothing. Building through a `CGPDFContext` is
+  what actually produces a text layer.
+- `SourceReader.read` touched the file before checking whether it was a link, so
+  an https URL failed with a file error instead of the rule that refused it. The
+  check now comes first.
 - The published `.kollio` schema had drifted twice without anything noticing: it
   declared `additionalProperties: false` while the codec had never been compared
   against it, and its `required` list demanded a top-level `provenance` that has

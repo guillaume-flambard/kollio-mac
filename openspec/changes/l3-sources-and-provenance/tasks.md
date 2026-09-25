@@ -32,8 +32,19 @@ stated on every line rather than blurred.
       version stays active. `SourceCommandTests`
 - [x] The `.kollio` schema declares the ledger, the version is bumped to 2, and a
       test fails if the codec writes a key the schema does not declare.
-- [ ] Choosing a file, reading it, and importing its text. **Not started.** The chip
-      can only report what the ledger already holds.
+- [x] A file is read from disk by kind, and says honestly what came out.
+      `SourceReaderTests`
+- [x] **AC01** a CSV with quotes, commas and newlines parses correctly.
+- [x] **AC02** a PDF with no text layer is marked as having no text.
+- [x] **AC03** a pasted link is never fetched, and the refusal happens before any
+      file access rather than surfacing as "the file could not be opened".
+- [x] An image is digested and nothing else: no description, no OCR.
+- [x] An empty file, a non-UTF-8 file and an unreadable kind are each reported as
+      what they are, never as an empty success.
+- [ ] A file chooser, so a person can attach a source from the interface.
+      **Not started**: the reader exists and nothing calls it.
+- [ ] A native reader for a long PDF, and a CSV preview in the interface.
+- [ ] Reading the file the person chose and importing its revision in one action.
 - [ ] Opening a citation back at its passage.
 - [ ] Recording a verification from the interface. The command exists and is tested;
       nothing in the app calls it.

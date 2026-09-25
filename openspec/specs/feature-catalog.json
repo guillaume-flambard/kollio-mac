@@ -3,7 +3,7 @@
   "specification": "docs/specs/SPECIFICATIONS.md",
   "counts": {
     "features": 71,
-    "acceptanceCriteria": 169,
+    "acceptanceCriteria": 213,
     "byStatus": {
       "automatedVerified": 15,
       "humanVerified": 1,
@@ -30,9 +30,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "AI-01-ACAC01",
-        "AI-01-ACAC02",
-        "AI-01-ACAC03"
+        "AI-01-AC01",
+        "AI-01-AC02",
+        "AI-01-AC03"
       ],
       "section": "Intelligence",
       "lot": "L2",
@@ -50,8 +50,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "AI-02-ACAC01",
-        "AI-02-ACAC02"
+        "AI-02-AC01",
+        "AI-02-AC02",
+        "AI-02-AC03"
       ],
       "section": "Intelligence",
       "lot": "L2",
@@ -68,8 +69,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "AI-03-ACAC01",
-        "AI-03-ACAC02"
+        "AI-03-AC01",
+        "AI-03-AC02",
+        "AI-03-AC03"
       ],
       "section": "Intelligence",
       "lot": "L2",
@@ -85,8 +87,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "AI-04-ACAC01",
-        "AI-04-ACAC02"
+        "AI-04-AC01",
+        "AI-04-AC02",
+        "AI-04-AC03"
       ],
       "section": "Intelligence",
       "lot": "L2",
@@ -102,8 +105,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "AI-05-ACAC01",
-        "AI-05-ACAC02"
+        "AI-05-AC01",
+        "AI-05-AC02",
+        "AI-05-AC03"
       ],
       "section": "Intelligence",
       "lot": "L3",
@@ -119,9 +123,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "AI-06-ACAC01",
-        "AI-06-ACAC02",
-        "AI-06-ACAC03"
+        "AI-06-AC01",
+        "AI-06-AC02",
+        "AI-06-AC03"
       ],
       "section": "Intelligence",
       "lot": "L3",
@@ -136,9 +140,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "AI-07-ACAC01",
-        "AI-07-ACAC02",
-        "AI-07-ACAC03"
+        "AI-07-AC01",
+        "AI-07-AC02",
+        "AI-07-AC03"
       ],
       "section": "Intelligence",
       "lot": "L2",
@@ -155,9 +159,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "AI-08-ACAC01",
-        "AI-08-ACAC02",
-        "AI-08-ACAC03"
+        "AI-08-AC01",
+        "AI-08-AC02",
+        "AI-08-AC03"
       ],
       "section": "Intelligence",
       "lot": "L2",
@@ -173,9 +177,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "AI-09-ACAC01",
-        "AI-09-ACAC02",
-        "AI-09-ACAC03"
+        "AI-09-AC01",
+        "AI-09-AC02",
+        "AI-09-AC03"
       ],
       "section": "Intelligence",
       "lot": "L2",
@@ -191,8 +195,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "AI-10-ACAC01",
-        "AI-10-ACAC02"
+        "AI-10-AC01",
+        "AI-10-AC02",
+        "AI-10-AC03"
       ],
       "section": "Intelligence",
       "lot": "L8",
@@ -208,8 +213,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "AI-11-ACAC01",
-        "AI-11-ACAC02"
+        "AI-11-AC01",
+        "AI-11-AC02",
+        "AI-11-AC03"
       ],
       "section": "Intelligence",
       "lot": "L3",
@@ -225,8 +231,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "AI-12-ACAC01",
-        "AI-12-ACAC02"
+        "AI-12-AC01",
+        "AI-12-AC02",
+        "AI-12-AC03"
       ],
       "section": "Intelligence",
       "lot": "L3",
@@ -241,8 +248,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CAN-01-ACAC01",
-        "CAN-01-ACAC02"
+        "CAN-01-AC01",
+        "CAN-01-AC02",
+        "CAN-01-AC03"
       ],
       "section": "Canvas",
       "lots": [
@@ -261,8 +269,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CAN-02-ACAC01",
-        "CAN-02-ACAC02"
+        "CAN-02-AC01",
+        "CAN-02-AC02",
+        "CAN-02-AC03"
       ],
       "section": "Canvas",
       "lot": "L1",
@@ -277,8 +286,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CAN-03-ACAC01",
-        "CAN-03-ACAC02"
+        "CAN-03-AC01",
+        "CAN-03-AC02",
+        "CAN-03-AC03"
       ],
       "section": "Canvas",
       "lot": "L1",
@@ -294,8 +304,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CAN-04-ACAC01",
-        "CAN-04-ACAC02"
+        "CAN-04-AC01",
+        "CAN-04-AC02",
+        "CAN-04-AC03"
       ],
       "section": "Canvas",
       "lot": "L1",
@@ -310,8 +321,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CAN-05-ACAC01",
-        "CAN-05-ACAC02"
+        "CAN-05-AC01",
+        "CAN-05-AC02",
+        "CAN-05-AC03"
       ],
       "section": "Canvas",
       "lot": "L1",
@@ -326,8 +338,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CAN-06-ACAC01",
-        "CAN-06-ACAC02"
+        "CAN-06-AC01",
+        "CAN-06-AC02",
+        "CAN-06-AC03"
       ],
       "section": "Canvas",
       "lots": [
@@ -345,8 +358,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CAN-07-ACAC01",
-        "CAN-07-ACAC02"
+        "CAN-07-AC01",
+        "CAN-07-AC02",
+        "CAN-07-AC03"
       ],
       "section": "Canvas",
       "lot": "L3",
@@ -361,9 +375,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CAN-08-ACAC01",
-        "CAN-08-ACAC02",
-        "CAN-08-ACAC03"
+        "CAN-08-AC01",
+        "CAN-08-AC02",
+        "CAN-08-AC03"
       ],
       "section": "Canvas",
       "lots": [
@@ -381,9 +395,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CAN-09-ACAC01",
-        "CAN-09-ACAC02",
-        "CAN-09-ACAC03"
+        "CAN-09-AC01",
+        "CAN-09-AC02",
+        "CAN-09-AC03"
       ],
       "section": "Canvas",
       "lot": "L3",
@@ -398,9 +412,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CAN-10-ACAC01",
-        "CAN-10-ACAC02",
-        "CAN-10-ACAC03"
+        "CAN-10-AC01",
+        "CAN-10-AC02",
+        "CAN-10-AC03"
       ],
       "section": "Canvas",
       "lot": "L3",
@@ -416,8 +430,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "COM-01-ACAC01",
-        "COM-01-ACAC02"
+        "COM-01-AC01",
+        "COM-01-AC02",
+        "COM-01-AC03"
       ],
       "section": "Commerce",
       "lots": [
@@ -436,8 +451,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "COM-02-ACAC01",
-        "COM-02-ACAC02"
+        "COM-02-AC01",
+        "COM-02-AC02",
+        "COM-02-AC03"
       ],
       "section": "Commerce",
       "lot": "L9",
@@ -452,8 +468,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "COM-03-ACAC01",
-        "COM-03-ACAC02"
+        "COM-03-AC01",
+        "COM-03-AC02",
+        "COM-03-AC03"
       ],
       "section": "Commerce",
       "lot": "L9",
@@ -468,9 +485,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CTX-01-ACAC01",
-        "CTX-01-ACAC02",
-        "CTX-01-ACAC03"
+        "CTX-01-AC01",
+        "CTX-01-AC02",
+        "CTX-01-AC03"
       ],
       "section": "Context and sources",
       "lots": [
@@ -489,8 +506,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CTX-02-ACAC01",
-        "CTX-02-ACAC02"
+        "CTX-02-AC01",
+        "CTX-02-AC02",
+        "CTX-02-AC03"
       ],
       "section": "Context and sources",
       "lots": [
@@ -498,7 +516,7 @@
       ],
       "lot": "L3",
       "status": "automatedVerified",
-      "evidence": "A reference is a pointer, a link fetches nothing, an image is not read until asked, and a file with no text says so. SourceLedgerTests, SourceCommandTests. Attaching and importing are commands. NO file import, extraction, reader or chip wiring for a chosen file is built."
+      "evidence": "AC01 a CSV with quotes, commas and newlines parses correctly; AC02 a PDF with no text layer is marked as having no text; AC03 a pasted link is never fetched. SourceReaderTests. Plus the ledger rules in SourceLedgerTests. Still missing: the file chooser that calls the reader, a native reader for long PDFs, and a CSV preview in the interface."
     },
     {
       "id": "CTX-03",
@@ -509,9 +527,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CTX-03-ACAC01",
-        "CTX-03-ACAC02",
-        "CTX-03-ACAC03"
+        "CTX-03-AC01",
+        "CTX-03-AC02",
+        "CTX-03-AC03"
       ],
       "section": "Context and sources",
       "lot": "L3",
@@ -528,8 +546,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CTX-04-ACAC01",
-        "CTX-04-ACAC02"
+        "CTX-04-AC01",
+        "CTX-04-AC02",
+        "CTX-04-AC03"
       ],
       "section": "Context and sources",
       "lot": "L3",
@@ -545,8 +564,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CTX-05-ACAC01",
-        "CTX-05-ACAC02"
+        "CTX-05-AC01",
+        "CTX-05-AC02",
+        "CTX-05-AC03"
       ],
       "section": "Context and sources",
       "lot": "L3",
@@ -561,8 +581,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CTX-06-ACAC01",
-        "CTX-06-ACAC02"
+        "CTX-06-AC01",
+        "CTX-06-AC02",
+        "CTX-06-AC03"
       ],
       "section": "Context and sources",
       "lot": "L3",
@@ -578,8 +599,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "CTX-07-ACAC01",
-        "CTX-07-ACAC02"
+        "CTX-07-AC01",
+        "CTX-07-AC02",
+        "CTX-07-AC03"
       ],
       "section": "Context and sources",
       "lot": "L3",
@@ -595,9 +617,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "DEC-01-ACAC01",
-        "DEC-01-ACAC02",
-        "DEC-01-ACAC03"
+        "DEC-01-AC01",
+        "DEC-01-AC02",
+        "DEC-01-AC03"
       ],
       "section": "Decisions and memory",
       "lots": [
@@ -616,8 +638,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "DEC-02-ACAC01",
-        "DEC-02-ACAC02"
+        "DEC-02-AC01",
+        "DEC-02-AC02",
+        "DEC-02-AC03"
       ],
       "section": "Decisions and memory",
       "lot": "L2",
@@ -633,9 +656,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "DEC-03-ACAC01",
-        "DEC-03-ACAC02",
-        "DEC-03-ACAC03"
+        "DEC-03-AC01",
+        "DEC-03-AC02",
+        "DEC-03-AC03"
       ],
       "section": "Decisions and memory",
       "lot": "L2",
@@ -651,8 +674,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "DEC-04-ACAC01",
-        "DEC-04-ACAC02"
+        "DEC-04-AC01",
+        "DEC-04-AC02",
+        "DEC-04-AC03"
       ],
       "section": "Decisions and memory",
       "lots": [
@@ -671,8 +695,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "DEC-05-ACAC01",
-        "DEC-05-ACAC02"
+        "DEC-05-AC01",
+        "DEC-05-AC02",
+        "DEC-05-AC03"
       ],
       "section": "Decisions and memory",
       "lot": "L4",
@@ -688,8 +713,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "DEC-06-ACAC01",
-        "DEC-06-ACAC02"
+        "DEC-06-AC01",
+        "DEC-06-AC02",
+        "DEC-06-AC03"
       ],
       "section": "Decisions and memory",
       "lot": "L4",
@@ -704,8 +730,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "DOC-01-ACAC01",
-        "DOC-01-ACAC02"
+        "DOC-01-AC01",
+        "DOC-01-AC02",
+        "DOC-01-AC03"
       ],
       "section": "Documents",
       "lots": [
@@ -724,8 +751,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "DOC-02-ACAC01",
-        "DOC-02-ACAC02"
+        "DOC-02-AC01",
+        "DOC-02-AC02",
+        "DOC-02-AC03"
       ],
       "section": "Documents",
       "lot": "L1",
@@ -741,8 +769,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "DOC-03-ACAC01",
-        "DOC-03-ACAC02"
+        "DOC-03-AC01",
+        "DOC-03-AC02",
+        "DOC-03-AC03"
       ],
       "section": "Documents",
       "lot": "L1",
@@ -758,8 +787,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "DOC-04-ACAC01",
-        "DOC-04-ACAC02"
+        "DOC-04-AC01",
+        "DOC-04-AC02",
+        "DOC-04-AC03"
       ],
       "section": "Documents",
       "lot": "L1",
@@ -776,9 +806,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "DOC-05-ACAC01",
-        "DOC-05-ACAC02",
-        "DOC-05-ACAC03"
+        "DOC-05-AC01",
+        "DOC-05-AC02",
+        "DOC-05-AC03"
       ],
       "section": "Documents",
       "lots": [
@@ -796,9 +826,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "DOC-06-ACAC01",
-        "DOC-06-ACAC02",
-        "DOC-06-ACAC03"
+        "DOC-06-AC01",
+        "DOC-06-AC02",
+        "DOC-06-AC03"
       ],
       "section": "Documents",
       "lot": "L4",
@@ -813,8 +843,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "DOC-07-ACAC01",
-        "DOC-07-ACAC02"
+        "DOC-07-AC01",
+        "DOC-07-AC02",
+        "DOC-07-AC03"
       ],
       "section": "Documents",
       "lot": "L4",
@@ -829,8 +860,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "DOC-08-ACAC01",
-        "DOC-08-ACAC02"
+        "DOC-08-AC01",
+        "DOC-08-AC02",
+        "DOC-08-AC03"
       ],
       "section": "Documents",
       "lot": "L4",
@@ -846,9 +878,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "EXT-01-ACAC01",
-        "EXT-01-ACAC02",
-        "EXT-01-ACAC03"
+        "EXT-01-AC01",
+        "EXT-01-AC02",
+        "EXT-01-AC03"
       ],
       "section": "Ecosystem",
       "lots": [
@@ -867,8 +899,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "EXT-02-ACAC01",
-        "EXT-02-ACAC02"
+        "EXT-02-AC01",
+        "EXT-02-AC02",
+        "EXT-02-AC03"
       ],
       "section": "Ecosystem",
       "lot": "L9",
@@ -884,8 +917,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "EXT-03-ACAC01",
-        "EXT-03-ACAC02"
+        "EXT-03-AC01",
+        "EXT-03-AC02",
+        "EXT-03-AC03"
       ],
       "section": "Ecosystem",
       "lot": "L9",
@@ -901,8 +935,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "STU-01-ACAC01",
-        "STU-01-ACAC02"
+        "STU-01-AC01",
+        "STU-01-AC02",
+        "STU-01-AC03"
       ],
       "section": "Studio",
       "lots": [
@@ -920,9 +955,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "STU-02-ACAC01",
-        "STU-02-ACAC02",
-        "STU-02-ACAC03"
+        "STU-02-AC01",
+        "STU-02-AC02",
+        "STU-02-AC03"
       ],
       "section": "Studio",
       "lot": "L7",
@@ -939,9 +974,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "STU-03-ACAC01",
-        "STU-03-ACAC02",
-        "STU-03-ACAC03"
+        "STU-03-AC01",
+        "STU-03-AC02",
+        "STU-03-AC03"
       ],
       "section": "Studio",
       "lot": "L7",
@@ -957,8 +992,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "STU-04-ACAC01",
-        "STU-04-ACAC02"
+        "STU-04-AC01",
+        "STU-04-AC02",
+        "STU-04-AC03"
       ],
       "section": "Studio",
       "lot": "L7",
@@ -973,8 +1009,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "STU-05-ACAC01",
-        "STU-05-ACAC02"
+        "STU-05-AC01",
+        "STU-05-AC02",
+        "STU-05-AC03"
       ],
       "section": "Studio",
       "lot": "L7",
@@ -989,9 +1026,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "STU-06-ACAC01",
-        "STU-06-ACAC02",
-        "STU-06-ACAC03"
+        "STU-06-AC01",
+        "STU-06-AC02",
+        "STU-06-AC03"
       ],
       "section": "Studio",
       "lot": "L7",
@@ -1006,9 +1043,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "STU-07-ACAC01",
-        "STU-07-ACAC02",
-        "STU-07-ACAC03"
+        "STU-07-AC01",
+        "STU-07-AC02",
+        "STU-07-AC03"
       ],
       "section": "Studio",
       "lot": "L7",
@@ -1024,8 +1061,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "STU-08-ACAC01",
-        "STU-08-ACAC02"
+        "STU-08-AC01",
+        "STU-08-AC02",
+        "STU-08-AC03"
       ],
       "section": "Studio",
       "lot": "L7",
@@ -1041,8 +1079,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "STU-09-ACAC01",
-        "STU-09-ACAC02"
+        "STU-09-AC01",
+        "STU-09-AC02",
+        "STU-09-AC03"
       ],
       "section": "Studio",
       "lot": "L7",
@@ -1057,8 +1096,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "TEAM-01-ACAC01",
-        "TEAM-01-ACAC02"
+        "TEAM-01-AC01",
+        "TEAM-01-AC02",
+        "TEAM-01-AC03"
       ],
       "section": "Collaboration",
       "lots": [
@@ -1077,9 +1117,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "TEAM-02-ACAC01",
-        "TEAM-02-ACAC02",
-        "TEAM-02-ACAC03"
+        "TEAM-02-AC01",
+        "TEAM-02-AC02",
+        "TEAM-02-AC03"
       ],
       "section": "Collaboration",
       "lot": "L5",
@@ -1094,9 +1134,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "TEAM-03-ACAC01",
-        "TEAM-03-ACAC02",
-        "TEAM-03-ACAC03"
+        "TEAM-03-AC01",
+        "TEAM-03-AC02",
+        "TEAM-03-AC03"
       ],
       "section": "Collaboration",
       "lot": "L5",
@@ -1111,8 +1151,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "TEAM-04-ACAC01",
-        "TEAM-04-ACAC02"
+        "TEAM-04-AC01",
+        "TEAM-04-AC02",
+        "TEAM-04-AC03"
       ],
       "section": "Collaboration",
       "lot": "L5",
@@ -1127,9 +1168,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "TEAM-05-ACAC01",
-        "TEAM-05-ACAC02",
-        "TEAM-05-ACAC03"
+        "TEAM-05-AC01",
+        "TEAM-05-AC02",
+        "TEAM-05-AC03"
       ],
       "section": "Collaboration",
       "lots": [
@@ -1148,9 +1189,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "TEAM-06-ACAC01",
-        "TEAM-06-ACAC02",
-        "TEAM-06-ACAC03"
+        "TEAM-06-AC01",
+        "TEAM-06-AC02",
+        "TEAM-06-AC03"
       ],
       "section": "Collaboration",
       "lot": "L5",
@@ -1166,9 +1207,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "TEAM-07-ACAC01",
-        "TEAM-07-ACAC02",
-        "TEAM-07-ACAC03"
+        "TEAM-07-AC01",
+        "TEAM-07-AC02",
+        "TEAM-07-AC03"
       ],
       "section": "Collaboration",
       "lot": "L5",
@@ -1184,9 +1225,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "TEAM-08-ACAC01",
-        "TEAM-08-ACAC02",
-        "TEAM-08-ACAC03"
+        "TEAM-08-AC01",
+        "TEAM-08-AC02",
+        "TEAM-08-AC03"
       ],
       "section": "Collaboration",
       "lot": "L5",
@@ -1202,8 +1243,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "TEAM-09-ACAC01",
-        "TEAM-09-ACAC02"
+        "TEAM-09-AC01",
+        "TEAM-09-AC02",
+        "TEAM-09-AC03"
       ],
       "section": "Collaboration",
       "lot": "L5",
@@ -1218,8 +1260,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "TEAM-10-ACAC01",
-        "TEAM-10-ACAC02"
+        "TEAM-10-AC01",
+        "TEAM-10-AC02",
+        "TEAM-10-AC03"
       ],
       "section": "Collaboration",
       "lot": "L5",
@@ -1235,8 +1278,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "TEAM-11-ACAC01",
-        "TEAM-11-ACAC02"
+        "TEAM-11-AC01",
+        "TEAM-11-AC02",
+        "TEAM-11-AC03"
       ],
       "section": "Collaboration",
       "lot": "L5",
@@ -1252,9 +1296,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "TEAM-12-ACAC01",
-        "TEAM-12-ACAC02",
-        "TEAM-12-ACAC03"
+        "TEAM-12-AC01",
+        "TEAM-12-AC02",
+        "TEAM-12-AC03"
       ],
       "section": "Collaboration",
       "lot": "L5",
@@ -1270,9 +1314,9 @@
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
-        "TEAM-13-ACAC01",
-        "TEAM-13-ACAC02",
-        "TEAM-13-ACAC03"
+        "TEAM-13-AC01",
+        "TEAM-13-AC02",
+        "TEAM-13-AC03"
       ],
       "section": "Collaboration",
       "lot": "L5",

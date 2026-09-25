@@ -26,6 +26,8 @@
 		FC58297587EDA09BD788229B /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5AA53ABAB9E944F1F26625 /* L10n.swift */; };
 		17B4920FF13B62C2F9AB3500 /* RemoteSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E1FC3E3575E691B54510EFF /* RemoteSuggestionService.swift */; };
 		29AA8DD5F1AB989FA6DAC299 /* ServiceConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 450FCC2FAF25328A906A4F82 /* ServiceConfiguration.swift */; };
+		4DAFF2352F8ECB94CC937E42 /* CSVTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1890109BA63EC19403BA959 /* CSVTable.swift */; };
+		7D3B1C69F370518572309708 /* SourceReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6F7FA74392B6E7F0D3C7EA /* SourceReader.swift */; };
 		0A5DB5547C54A2B2E1140E6E /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 3BBC4A255F74D2A1B53AE951 /* Localizable.xcstrings */; };
 		26C70343164791EB7E0D636E /* KollioCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8F00A5AE310737084590BBD6 /* KollioCore */; };
 		862E11B013B7E3490389CCC2 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B34B0507FE00BF36365A62E0 /* Info.plist */; };
@@ -51,6 +53,8 @@
 		4C5AA53ABAB9E944F1F26625 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = L10n.swift; path = ../../packages/KollioApp/Sources/KollioApp/Localization/L10n.swift; sourceTree = SOURCE_ROOT; };
 		8E1FC3E3575E691B54510EFF /* RemoteSuggestionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RemoteSuggestionService.swift; path = ../../packages/KollioApp/Sources/KollioApp/Networking/RemoteSuggestionService.swift; sourceTree = SOURCE_ROOT; };
 		450FCC2FAF25328A906A4F82 /* ServiceConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ServiceConfiguration.swift; path = ../../packages/KollioApp/Sources/KollioApp/Networking/ServiceConfiguration.swift; sourceTree = SOURCE_ROOT; };
+		C1890109BA63EC19403BA959 /* CSVTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CSVTable.swift; path = ../../packages/KollioApp/Sources/KollioApp/Sources/CSVTable.swift; sourceTree = SOURCE_ROOT; };
+		4E6F7FA74392B6E7F0D3C7EA /* SourceReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SourceReader.swift; path = ../../packages/KollioApp/Sources/KollioApp/Sources/SourceReader.swift; sourceTree = SOURCE_ROOT; };
 		3BBC4A255F74D2A1B53AE951 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = ../../packages/KollioApp/Sources/KollioApp/Localizable.xcstrings; sourceTree = SOURCE_ROOT; };
 		B34B0507FE00BF36365A62E0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F5BF48AA40CAD7891EB709FC /* Kollio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kollio.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -79,6 +83,7 @@
 				4346F55A2C511817ECD33BCA /* Intelligence */,
 				786FA564B216918DA2F165B6 /* Localization */,
 				D2698074F197869D93E6D480 /* Networking */,
+				0E2C2D148CD03FDE80E5926A /* Sources */,
 				B34B0507FE00BF36365A62E0 /* Info.plist */,
 				C863DA5204F95EC573510473 /* Products */,
 			);
@@ -192,6 +197,15 @@
 			name = Networking;
 			sourceTree = "<group>";
 		};
+		0E2C2D148CD03FDE80E5926A /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				4E50AD9C44636B3A4D1C0A8E /* CSVTable.swift */,
+				F7282FC390600151FD531825 /* SourceReader.swift */,
+			);
+			name = Sources;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -284,6 +298,8 @@
 				FC58297587EDA09BD788229B /* L10n.swift in Sources */,
 				17B4920FF13B62C2F9AB3500 /* RemoteSuggestionService.swift in Sources */,
 				29AA8DD5F1AB989FA6DAC299 /* ServiceConfiguration.swift in Sources */,
+				4DAFF2352F8ECB94CC937E42 /* CSVTable.swift in Sources */,
+				7D3B1C69F370518572309708 /* SourceReader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

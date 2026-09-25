@@ -94,10 +94,11 @@ STATUS_NOTES = {
     "AI-08": ("automatedVerified",
               "VerticalSliceTests: one Keep undoes as one action."),
     "CTX-02": ("automatedVerified",
-               "A reference is a pointer, a link fetches nothing, an image is not read until "
-               "asked, and a file with no text says so. SourceLedgerTests, SourceCommandTests. "
-               "Attaching and importing are commands. NO file import, extraction, reader or "
-               "chip wiring for a chosen file is built."),
+               "AC01 a CSV with quotes, commas and newlines parses correctly; AC02 a PDF with no "
+               "text layer is marked as having no text; AC03 a pasted link is never fetched. "
+               "SourceReaderTests. Plus the ledger rules in SourceLedgerTests. Still missing: "
+               "the file chooser that calls the reader, a native reader for long PDFs, and a "
+               "CSV preview in the interface."),
     "CTX-03": ("automatedVerified",
                "A citation keeps its revision, is refused towards anything absent, and cannot be "
                "verified without an observation and an author. Intelligence is refused these "
@@ -165,10 +166,13 @@ def parse() -> list[dict]:
             features.append(current)
             continue
 
-        if current is not None and "AC01" in line:
-            current["acceptanceCriteria"] = [
-                f"{current['id']}-AC{m.group(0)}" for m in ACCEPTANCE.finditer(line)
-            ]
+        # The acceptance criteria of a feature wrap across several lines, so they
+        # are accumulated in order rather than read from the line holding AC01.
+        if current is not None:
+            for m in ACCEPTANCE.finditer(line):
+                ac_id = f"{current['id']}-{m.group(0)}"
+                if ac_id not in current["acceptanceCriteria"]:
+                    current["acceptanceCriteria"].append(ac_id)
 
     return features
 

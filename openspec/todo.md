@@ -13,34 +13,34 @@ A view, not a source of truth. Status meanings:
 | `blockedExternal` | Blocked on a capability or authorisation. |
 | `notInCurrentRelease` | Deliberately out of this product. |
 
-Counts: 15 automatedVerified, 1 humanVerified, 55 specified. 71 features, 169 acceptance criteria.
+Counts: 15 automatedVerified, 1 humanVerified, 55 specified. 71 features, 213 acceptance criteria.
 
 ## L1 — 10 features
 
-- [x] **CAN-01** Navigate with trackpad and mouse · `automatedVerified` · 2 AC
+- [x] **CAN-01** Navigate with trackpad and mouse · `automatedVerified` · 3 AC
       Two-finger scroll wired via ScrollCatcher; pan is screen space at any zoom. Gesture feel still unverified by a human.
-- [ ] **CAN-02** Select and reach the actions · `specified` · 2 AC
-- [ ] **CAN-03** Move one or several instances · `specified` · 2 AC
-- [ ] **CAN-04** Edit content in place · `specified` · 2 AC
-- [ ] **CAN-05** Create, duplicate, remove · `specified` · 2 AC
+- [ ] **CAN-02** Select and reach the actions · `specified` · 3 AC
+- [ ] **CAN-03** Move one or several instances · `specified` · 3 AC
+- [ ] **CAN-04** Edit content in place · `specified` · 3 AC
+- [ ] **CAN-05** Create, duplicate, remove · `specified` · 3 AC
 - [ ] **CTX-01** Add information at a precise place · `specified` · 3 AC
-- [x] **DOC-01** First launch and restoration · `automatedVerified` · 2 AC
+- [x] **DOC-01** First launch and restoration · `automatedVerified` · 3 AC
       Covered by InitialContextTests: fresh launch, restore, unreadable reported.
-- [x] **DOC-02** Enter a context and begin · `automatedVerified` · 2 AC
+- [x] **DOC-02** Enter a context and begin · `automatedVerified` · 3 AC
       Covered by InitialContextTests: context created, preserved, persisted first.
-- [x] **DOC-03** New, open, multiple · `automatedVerified` · 2 AC
+- [x] **DOC-03** New, open, multiple · `automatedVerified` · 3 AC
       Covered by InitialContextTests: a new document gets its own save target.
-- [x] **DOC-04** Save, recovery, close · `automatedVerified` · 2 AC
+- [x] **DOC-04** Save, recovery, close · `automatedVerified` · 3 AC
       Covered by InteractionReliabilityTests through the real delegate.
 
 ## L2 — 11 features
 
 - [x] **AI-01** Availability and choice of intelligence · `automatedVerified` · 3 AC
       AppleAdapterTests: every availability state is a refusal, never a fallback.
-- [x] **AI-02** First exploration of your own context · `humanVerified` · 2 AC
+- [x] **AI-02** First exploration of your own context · `humanVerified` · 3 AC
       Real on-device generation on two non-Sarah contexts, FR and EN, through the adapter. Steady state is about 2.3 s, first call in a fresh process about 3.6 s: still too slow to feel interactive, and nothing is streamed.
-- [ ] **AI-03** Explore a branch · `specified` · 2 AC
-- [ ] **AI-04** Answer a clarification · `specified` · 2 AC
+- [ ] **AI-03** Explore a branch · `specified` · 3 AC
+- [ ] **AI-04** Answer a clarification · `specified` · 3 AC
 - [x] **AI-07** Examine and correct a proposal · `automatedVerified` · 3 AC
       AppleAdapterTests: minted ids, dropped kinds, bounded branch, noChange.
 - [x] **AI-08** Keep, set aside, or dismiss · `automatedVerified` · 3 AC
@@ -49,79 +49,79 @@ Counts: 15 automatedVerified, 1 humanVerified, 55 specified. 71 features, 169 ac
 - [ ] **CAN-08** Place proposals and organise locally · `specified` · 3 AC
 - [x] **DEC-01** Take an explicit decision · `automatedVerified` · 3 AC
       CommandTests: a decision survives save and reload.
-- [x] **DEC-02** Set aside and reopen a path · `automatedVerified` · 2 AC
+- [x] **DEC-02** Set aside and reopen a path · `automatedVerified` · 3 AC
       InteractionReliabilityTests: the camera is identical before and after.
 - [x] **DEC-03** Undo and redo without harming anyone · `automatedVerified` · 3 AC
       InteractionReliabilityTests and VerticalSliceTests: one Keep, one undo.
 
 ## L3 — 14 features
 
-- [ ] **AI-05** Compare directions without inventing scores · `specified` · 2 AC
+- [ ] **AI-05** Compare directions without inventing scores · `specified` · 3 AC
 - [ ] **AI-06** Synthesise and prepare a deliverable · `specified` · 3 AC
-- [ ] **AI-11** See a proposal's reasons and destination · `specified` · 2 AC
-- [ ] **AI-12** Manage a large context · `specified` · 2 AC
-- [ ] **CAN-06** Link, select and edit a relation · `specified` · 2 AC
-- [ ] **CAN-07** Group and fold visually · `specified` · 2 AC
+- [ ] **AI-11** See a proposal's reasons and destination · `specified` · 3 AC
+- [ ] **AI-12** Manage a large context · `specified` · 3 AC
+- [ ] **CAN-06** Link, select and edit a relation · `specified` · 3 AC
+- [ ] **CAN-07** Group and fold visually · `specified` · 3 AC
 - [ ] **CAN-09** Search and navigate · `specified` · 3 AC
 - [ ] **CAN-10** Presentation and accessible reading · `specified` · 3 AC
-- [x] **CTX-02** Drop resources and read them · `automatedVerified` · 2 AC
-      A reference is a pointer, a link fetches nothing, an image is not read until asked, and a file with no text says so. SourceLedgerTests, SourceCommandTests. Attaching and importing are commands. NO file import, extraction, reader or chip wiring for a chosen file is built.
+- [x] **CTX-02** Drop resources and read them · `automatedVerified` · 3 AC
+      AC01 a CSV with quotes, commas and newlines parses correctly; AC02 a PDF with no text layer is marked as having no text; AC03 a pasted link is never fetched. SourceReaderTests. Plus the ledger rules in SourceLedgerTests. Still missing: the file chooser that calls the reader, a native reader for long PDFs, and a CSV preview in the interface.
 - [x] **CTX-03** Cite and verify provenance · `automatedVerified` · 3 AC
       A citation keeps its revision, is refused towards anything absent, and cannot be verified without an observation and an author. Intelligence is refused these commands outright. SourceLedgerTests, SourceCommandTests. No interface to choose a passage or open a citation is built.
-- [ ] **CTX-04** Define a hypothesis or a constraint · `specified` · 2 AC
-- [ ] **CTX-05** Understand the impact of new information · `specified` · 2 AC
-- [x] **CTX-06** See and limit what intelligence will use · `automatedVerified` · 2 AC
+- [ ] **CTX-04** Define a hypothesis or a constraint · `specified` · 3 AC
+- [ ] **CTX-05** Understand the impact of new information · `specified` · 3 AC
+- [x] **CTX-06** See and limit what intelligence will use · `automatedVerified` · 3 AC
       The projection is built and measured on the real request path: omissions are counted, a required item is never dropped, and the budget cannot exceed the model's window. ContextProjectionTests, AppleAdapterTests. The interface that shows the list to a person is not built.
-- [x] **CTX-07** Update a resource without erasing history · `automatedVerified` · 2 AC
+- [x] **CTX-07** Update a resource without erasing history · `automatedVerified` · 3 AC
       A new revision flags what it supersedes without moving a citation, a failed extraction keeps the previous version active, and a removed source never deletes the claim. SourceLedgerTests, SourceCommandTests. No comparison of dependent extracts and no reassessment proposal are built.
 
 ## L4 — 7 features
 
-- [ ] **DEC-04** Build a validation experiment · `specified` · 2 AC
-- [ ] **DEC-05** Record a result and learn · `specified` · 2 AC
-- [ ] **DEC-06** Understand how you got here · `specified` · 2 AC
+- [ ] **DEC-04** Build a validation experiment · `specified` · 3 AC
+- [ ] **DEC-05** Record a result and learn · `specified` · 3 AC
+- [ ] **DEC-06** Understand how you got here · `specified` · 3 AC
 - [ ] **DOC-05** Rename, duplicate, export · `specified` · 3 AC
 - [ ] **DOC-06** Find your documents · `specified` · 3 AC
-- [ ] **DOC-07** Archive, trash, delete · `specified` · 2 AC
-- [ ] **DOC-08** Preferences and diagnostics · `specified` · 2 AC
+- [ ] **DOC-07** Archive, trash, delete · `specified` · 3 AC
+- [ ] **DOC-08** Preferences and diagnostics · `specified` · 3 AC
 
 ## L5 — 13 features
 
-- [ ] **TEAM-01** Sign in and create a workspace · `specified` · 2 AC
+- [ ] **TEAM-01** Sign in and create a workspace · `specified` · 3 AC
 - [ ] **TEAM-02** Share a private document · `specified` · 3 AC
 - [ ] **TEAM-03** Invite and join · `specified` · 3 AC
-- [ ] **TEAM-04** Apply rights and manage members · `specified` · 2 AC
+- [ ] **TEAM-04** Apply rights and manage members · `specified` · 3 AC
 - [ ] **TEAM-05** Real presence and voluntary follow · `specified` · 3 AC
 - [ ] **TEAM-06** Discuss and mention in the right place · `specified` · 3 AC
 - [ ] **TEAM-07** Contribute without overwriting the common document · `specified` · 3 AC
 - [ ] **TEAM-08** Review, request changes, accept · `specified` · 3 AC
-- [ ] **TEAM-09** Edit in parallel and resolve a conflict · `specified` · 2 AC
-- [ ] **TEAM-10** Work offline then synchronise · `specified` · 2 AC
-- [ ] **TEAM-11** Resume a session and see what changed · `specified` · 2 AC
+- [ ] **TEAM-09** Edit in parallel and resolve a conflict · `specified` · 3 AC
+- [ ] **TEAM-10** Work offline then synchronise · `specified` · 3 AC
+- [ ] **TEAM-11** Resume a session and see what changed · `specified` · 3 AC
 - [ ] **TEAM-12** Leave, revoke, keep an authorised copy · `specified` · 3 AC
 - [ ] **TEAM-13** Present together without piloting others · `specified` · 3 AC
 
 ## L7 — 9 features
 
-- [ ] **STU-01** Turn know-how into a reusable method · `specified` · 2 AC
+- [ ] **STU-01** Turn know-how into a reusable method · `specified` · 3 AC
 - [ ] **STU-02** Record a technical capability · `specified` · 3 AC
 - [ ] **STU-03** Find relevant contributions · `specified` · 3 AC
-- [ ] **STU-04** Assemble a small product · `specified` · 2 AC
-- [ ] **STU-05** Test a tool with demonstration data · `specified` · 2 AC
+- [ ] **STU-04** Assemble a small product · `specified` · 3 AC
+- [ ] **STU-05** Test a tool with demonstration data · `specified` · 3 AC
 - [ ] **STU-06** Reuse and update a contribution · `specified` · 3 AC
 - [ ] **STU-07** See authors and negotiate shares · `specified` · 3 AC
-- [ ] **STU-08** Prepare a private or public release · `specified` · 2 AC
-- [ ] **STU-09** Consult a product as an end user · `specified` · 2 AC
+- [ ] **STU-08** Prepare a private or public release · `specified` · 3 AC
+- [ ] **STU-09** Consult a product as an end user · `specified` · 3 AC
 
 ## L8 — 1 features
 
-- [ ] **AI-10** Choose a cloud destination explicitly · `specified` · 2 AC
+- [ ] **AI-10** Choose a cloud destination explicitly · `specified` · 3 AC
 
 ## L9 — 6 features
 
-- [ ] **COM-01** Buy access to a product · `specified` · 2 AC
-- [ ] **COM-02** Compute and consult revenue · `specified` · 2 AC
-- [ ] **COM-03** Support, reporting, refunds · `specified` · 2 AC
+- [ ] **COM-01** Buy access to a product · `specified` · 3 AC
+- [ ] **COM-02** Compute and consult revenue · `specified` · 3 AC
+- [ ] **COM-03** Support, reporting, refunds · `specified` · 3 AC
 - [ ] **EXT-01** Export a living document and read it on the web · `specified` · 3 AC
-- [ ] **EXT-02** Receive a proposal from another assistant · `specified` · 2 AC
-- [ ] **EXT-03** Native commands and system sharing · `specified` · 2 AC
+- [ ] **EXT-02** Receive a proposal from another assistant · `specified` · 3 AC
+- [ ] **EXT-03** Native commands and system sharing · `specified` · 3 AC

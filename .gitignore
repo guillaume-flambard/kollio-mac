@@ -7,3 +7,4 @@ build/
 .DS_Store
 # Per-user Xcode state: window layout and toolbar customisation, machine specific
 xcuserdata/
+__pycache__/

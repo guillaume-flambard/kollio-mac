@@ -22,7 +22,7 @@
       "change": "changes/l1-entry-and-canvas",
       "delivered": "implemented",
       "features": 8,
-      "acceptanceCriteria": 18,
+      "acceptanceCriteria": 24,
       "byStatus": {
         "automatedVerified": 4,
         "specified": 4
@@ -49,7 +49,7 @@
       "change": "changes/l1-entry-and-canvas",
       "delivered": "automatedVerified",
       "features": 10,
-      "acceptanceCriteria": 23,
+      "acceptanceCriteria": 30,
       "byStatus": {
         "automatedVerified": 1,
         "specified": 9
@@ -78,7 +78,7 @@
       "change": "changes/l3-sources-and-provenance",
       "delivered": "specified",
       "features": 7,
-      "acceptanceCriteria": 16,
+      "acceptanceCriteria": 21,
       "byStatus": {
         "automatedVerified": 4,
         "specified": 3
@@ -101,7 +101,7 @@
       "change": "changes/l2-living-document",
       "delivered": "automatedVerified",
       "features": 12,
-      "acceptanceCriteria": 29,
+      "acceptanceCriteria": 36,
       "byStatus": {
         "automatedVerified": 3,
         "humanVerified": 1,
@@ -134,7 +134,7 @@
       "change": "changes/l2-living-document",
       "delivered": "automatedVerified",
       "features": 6,
-      "acceptanceCriteria": 14,
+      "acceptanceCriteria": 18,
       "byStatus": {
         "automatedVerified": 3,
         "specified": 3
@@ -159,7 +159,7 @@
       "change": "changes/l5-team-identity",
       "delivered": "blockedExternal",
       "features": 13,
-      "acceptanceCriteria": 34,
+      "acceptanceCriteria": 39,
       "byStatus": {
         "specified": 13
       },
@@ -190,7 +190,7 @@
       "change": "changes/l7-studio",
       "delivered": "specified",
       "features": 9,
-      "acceptanceCriteria": 22,
+      "acceptanceCriteria": 27,
       "byStatus": {
         "specified": 9
       },
@@ -213,7 +213,7 @@
       "change": "changes/l9-ecosystem",
       "delivered": "blockedExternal",
       "features": 3,
-      "acceptanceCriteria": 6,
+      "acceptanceCriteria": 9,
       "byStatus": {
         "specified": 3
       },
@@ -234,7 +234,7 @@
       "change": "changes/l9-ecosystem",
       "delivered": "blockedExternal",
       "features": 3,
-      "acceptanceCriteria": 7,
+      "acceptanceCriteria": 9,
       "byStatus": {
         "specified": 3
       },
@@ -252,7 +252,7 @@
   },
   "totals": {
     "features": 71,
-    "acceptanceCriteria": 169,
+    "acceptanceCriteria": 213,
     "byStatus": {
       "automatedVerified": 15,
       "humanVerified": 1,
