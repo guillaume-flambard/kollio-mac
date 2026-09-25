@@ -61,6 +61,8 @@ project outruns its proof.
 | AC02 not applicable is not satisfied | `ClaimLedgerTests` | L3 |
 | AC03 supported is not absolute truth | `ClaimLedgerTests` | L3 |
 | Intelligence may not record how a claim stands | `ClaimLedgerTests` | L3 |
+| A claim's scope comes from the selection, and an empty one states nothing | `ClaimInterfaceTests` | L3 |
+| A stance needs an observation and the offered stances match the role | `ClaimInterfaceTests` | L3 |
 
 ## What is owed to a person
 

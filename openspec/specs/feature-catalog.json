@@ -553,7 +553,7 @@
       "section": "Context and sources",
       "lot": "L3",
       "status": "automatedVerified",
-      "evidence": "AC01 a constraint only blocks within its scope; AC02 not applicable is not satisfied; AC03 supported is not absolute truth. ClaimLedgerTests, and a scope with nothing in it is refused rather than read as everything. Intelligence may suggest a claim but may not record how it stands. Still missing: stating a claim, a scope and a stance from the interface."
+      "evidence": "AC01 a constraint only blocks within its scope; AC02 not applicable is not satisfied; AC03 supported is not absolute truth. ClaimLedgerTests, and a scope with nothing in it is refused rather than read as everything. Intelligence may suggest a claim but may not record how it stands. The interface states a claim with its scope taken from the current selection, and records a stance only with an observation. Still missing: asking for precision when two scopes overlap."
     },
     {
       "id": "CTX-05",

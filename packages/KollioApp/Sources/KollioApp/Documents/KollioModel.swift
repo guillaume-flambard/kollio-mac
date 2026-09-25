@@ -435,6 +435,164 @@ public final class KollioModel {
     }
 
     // MARK: Sources
+    // MARK: Claims
+
+    /// A claim being written, before it is stated.
+    ///
+    /// The scope is not typed: it is what the person has selected, or the object
+    /// they are working on. A scope is the part people get wrong, and deriving it
+    /// from a selection makes the narrow case the easy one and the sweeping case the
+    /// deliberate one.
+    public struct ClaimDraft: Equatable, Identifiable {
+        public var id = UUID()
+        public var anchor: ObjectID
+        public var role: Claim.Role
+        public var scopeObjects: Set<ObjectID>
+        public var criterion: String = ""
+
+        public init(anchor: ObjectID, role: Claim.Role, scopeObjects: Set<ObjectID>) {
+            self.anchor = anchor
+            self.role = role
+            self.scopeObjects = scopeObjects
+        }
+    }
+
+    public var claimDraft: ClaimDraft?
+
+    /// Opens the claim composer for an object.
+    ///
+    /// With several objects selected, the claim is about all of them: a person
+    /// selecting two branches and stating a constraint means "this applies to
+    /// these", which is the scoped case and should not be the fiddly one.
+    public func startClaim(role: Claim.Role, anchor: ObjectID) {
+        let scope = selection.isEmpty ? [anchor] : Array(selection)
+        claimDraft = ClaimDraft(anchor: anchor, role: role, scopeObjects: Set(scope))
+    }
+
+    /// States the drafted claim.
+    ///
+    /// Refused with a reason rather than stated loosely: a claim whose scope is
+    /// empty would be a law of the universe, and the command layer refuses it too.
+    @discardableResult
+    public func submitClaim() -> Bool {
+        guard let draft = claimDraft else { return false }
+        guard draft.scopeObjects.isEmpty == false else {
+            status = L10n.claimScopeEmpty
+            return false
+        }
+        let claim = Claim(
+            id: ClaimID("claim:" + UUID().uuidString),
+            objectID: draft.anchor,
+            role: draft.role,
+            scope: ClaimScope(
+                id: ScopeID("scope:" + UUID().uuidString),
+                title: L10n.claimScopeTitle(default: object(draft.anchor)?.text.text ?? draft.anchor.rawValue),
+                objectIDs: draft.scopeObjects
+            ),
+            criterion: draft.criterion.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? nil
+                : draft.criterion
+        )
+        guard perform([.assertClaim(.init(
+            claim: claim, provenance: .human("local-user")
+        ))], label: L10n.undoAssertClaim) else { return false }
+        claimDraft = nil
+        return true
+    }
+
+    /// The claim made on an object, if there is one.
+    public func claim(on objectID: ObjectID) -> Claim? {
+        document.claims.allClaims().first { $0.objectID == objectID }
+    }
+
+    /// The two stances in one place, so a claim can be read at a glance.
+    public func claimSummary(for objectID: ObjectID) -> ClaimSummary? {
+        guard let claim = claim(on: objectID) else { return nil }
+        return ClaimSummary(
+            id: claim.id,
+            role: claim.role,
+            scopeCount: claim.scope.objectIDs.count,
+            isAsserted: claim.isAsserted,
+            hypothesis: claim.role == .hypothesis ? claim.assessment : nil,
+            constraint: claim.role == .constraint ? claim.resolution : nil,
+            criterion: claim.criterion
+        )
+    }
+
+    /// Records a stance. Both cases need an observation, and neither one is
+    /// reachable without one.
+    @discardableResult
+    public func recordStance(_ draft: StanceDraft) -> Bool {
+        let trimmed = draft.observation.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false, let claim = claim(on: draft.anchor) else { return false }
+        // The two evidence types are separate on purpose, so a hypothesis and a
+        // constraint cannot end up sharing a verdict by accident.
+        let by = ActorID("local-user")
+        let now = Date()
+        let command: Command
+        switch claim.role {
+        case .hypothesis:
+            let assessment: HypothesisAssessment = switch draft.stance {
+            case .supported: .supported(.init(observation: trimmed, by: by, at: now))
+            case .contradicted: .contradicted(.init(observation: trimmed, by: by, at: now))
+            case .refuted: .refuted(.init(observation: trimmed, by: by, at: now))
+            case .satisfied, .notApplicable, .open: .open
+            }
+            command = .assessHypothesis(.init(
+                claimID: claim.id, assessment: assessment, provenance: .human(by)
+            ))
+        case .constraint:
+            let resolution: ConstraintResolution = switch draft.stance {
+            case .satisfied: .satisfied(.init(observation: trimmed, by: by, at: now))
+            case .notApplicable: .notApplicable(.init(observation: trimmed, by: by, at: now))
+            case .supported, .contradicted, .refuted, .open: .open
+            }
+            command = .resolveConstraint(.init(
+                claimID: claim.id, resolution: resolution, provenance: .human(by)
+            ))
+        }
+        guard perform([command], label: L10n.undoRecordStance) else { return false }
+        stanceDraft = nil
+        return true
+    }
+
+    public struct StanceDraft: Equatable, Identifiable {
+        public var id = UUID()
+        public var anchor: ObjectID
+        public var stance: Stance
+        public var observation: String = ""
+
+        public init(anchor: ObjectID, stance: Stance) {
+            self.anchor = anchor
+            self.stance = stance
+        }
+    }
+
+    /// The stances a person can take, as one vocabulary for the interface.
+    ///
+    /// Which of them apply depends on the role, and the interface only offers the
+    /// ones that do. A constraint cannot be "refuted" and a hypothesis cannot be
+    /// "satisfied": those are the two mistakes this split exists to prevent.
+    public enum Stance: String, CaseIterable, Identifiable {
+        case supported
+        case contradicted
+        case refuted
+        case satisfied
+        case notApplicable
+        case open
+
+        public var id: String { rawValue }
+
+        public static func applicable(to role: Claim.Role) -> [Stance] {
+            switch role {
+            case .hypothesis: [.open, .supported, .contradicted, .refuted]
+            case .constraint: [.open, .satisfied, .notApplicable]
+            }
+        }
+    }
+
+    public var stanceDraft: StanceDraft?
+
     // MARK: Citations
 
     /// The system's reader, for a file too long to read as text on the canvas.
@@ -1220,5 +1378,35 @@ public struct CitationDetail: Identifiable, Hashable, Sendable {
         self.passage = passage
         self.state = state
         self.isCurrentRevision = isCurrentRevision
+    }
+}
+
+
+/// A claim as the interface reads it: role, how much it covers, and how it stands.
+public struct ClaimSummary: Identifiable, Hashable, Sendable {
+    public var id: ClaimID
+    public var role: Claim.Role
+    public var scopeCount: Int
+    public var isAsserted: Bool
+    public var hypothesis: HypothesisAssessment?
+    public var constraint: ConstraintResolution?
+    public var criterion: String?
+
+    public init(
+        id: ClaimID,
+        role: Claim.Role,
+        scopeCount: Int,
+        isAsserted: Bool,
+        hypothesis: HypothesisAssessment?,
+        constraint: ConstraintResolution?,
+        criterion: String?
+    ) {
+        self.id = id
+        self.role = role
+        self.scopeCount = scopeCount
+        self.isAsserted = isAsserted
+        self.hypothesis = hypothesis
+        self.constraint = constraint
+        self.criterion = criterion
     }
 }

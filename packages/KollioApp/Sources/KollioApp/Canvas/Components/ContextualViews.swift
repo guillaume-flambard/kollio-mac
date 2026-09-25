@@ -76,6 +76,9 @@ struct ContextualActions: View {
             },
             LocalAction(title: L10n.addSource, hint: L10n.addSourceHint) {
                 chooseSource()
+            },
+            LocalAction(title: L10n.claimComposerPrompt, hint: L10n.claimScopeHint) {
+                model.startClaim(role: .hypothesis, anchor: target)
             }
         ]
     }
@@ -585,6 +588,205 @@ struct PassagePickerView: View {
             let low = min(first, index)
             let high = max(last, index)
             selection = Set(low...high)
+        }
+    }
+}
+
+
+/// Stating a claim: what it is, and what it is about.
+///
+/// The scope is the current selection, not something typed, because the scope is
+/// the part people get wrong. Making the narrow case the easy one and the sweeping
+/// case the deliberate one is the whole design of this card.
+struct ClaimComposerView: View {
+    let model: KollioModel
+
+    @Environment(\.kollioTheme) private var theme
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        if let draft = model.claimDraft {
+            VStack(alignment: .leading, spacing: Space.s) {
+                Text(L10n.claimComposerPrompt)
+                    .font(TypeScale.metadata.weight(.semibold))
+                    .foregroundStyle(theme.textSecondary)
+
+                HStack(spacing: Space.xs) {
+                    ForEach([Claim.Role.hypothesis, .constraint], id: \.rawValue) { role in
+                        Button {
+                            model.startClaim(role: role, anchor: draft.anchor)
+                        } label: {
+                            Text(label(for: role))
+                                .font(TypeScale.metadata)
+                                .padding(.horizontal, Space.s)
+                                .padding(.vertical, 3)
+                                .background(
+                                    Capsule().fill(
+                                        draft.role == role ? theme.accentSurface : theme.surfaceSubtle
+                                    )
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(draft.role == role ? theme.accent : theme.textSecondary)
+                    }
+                }
+
+                Text(L10n.claimScopeHint)
+                    .font(TypeScale.metadata)
+                    .foregroundStyle(theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                TextField(
+                    L10n.claimCriterionPlaceholder,
+                    text: Binding(
+                        get: { model.claimDraft?.criterion ?? "" },
+                        set: { model.claimDraft?.criterion = $0 }
+                    )
+                )
+                .font(TypeScale.body)
+                .focused($focused)
+
+                HStack {
+                    Spacer(minLength: 0)
+                    ActionButton(title: L10n.claimStateIt, isDefault: true) {
+                        model.submitClaim()
+                    }
+                }
+            }
+            .padding(Space.m)
+            .frame(width: 320, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
+                    .fill(theme.surfacePrimary)
+                    .shadow(color: .black.opacity(theme.isDark ? 0.38 : 0.13), radius: 14, y: 6)
+            )
+            .onExitCommand { model.claimDraft = nil }
+        }
+    }
+
+    private func label(for role: Claim.Role) -> String {
+        switch role {
+        case .hypothesis: return L10n.claimStateHypothesis
+        case .constraint: return L10n.claimStateConstraint
+        }
+    }
+}
+
+/// How a claim stands, and the only two actions that change it.
+///
+/// Every stance needs an observation, so the input is the action. There is no
+/// control that marks a claim supported, refuted, satisfied or not applicable by
+/// itself, and the list of stances offered depends on the role: a constraint cannot
+/// be refuted and a hypothesis cannot be satisfied.
+struct ClaimStanceView: View {
+    let model: KollioModel
+    let anchor: ObjectID
+
+    @Environment(\.kollioTheme) private var theme
+    @FocusState private var focused: Bool
+
+    private var summary: ClaimSummary? { model.claimSummary(for: anchor) }
+
+    var body: some View {
+        if let summary {
+            VStack(alignment: .leading, spacing: Space.xs) {
+                HStack(spacing: Space.xs) {
+                    Text(summary.role == .hypothesis
+                         ? L10n.claimStateHypothesis
+                         : L10n.claimStateConstraint)
+                        .font(TypeScale.metadata.weight(.semibold))
+                        .foregroundStyle(theme.textSecondary)
+                    // "Supported" is not truth, and the label is the difference
+                    // between a claim and a conclusion.
+                    Text(stateLabel(summary))
+                        .font(TypeScale.metadata)
+                        .foregroundStyle(summary.isAsserted ? theme.textPrimary : theme.textSecondary)
+                }
+                Text(L10n.claimScopeCount(summary.scopeCount))
+                    .font(TypeScale.metadata)
+                    .foregroundStyle(theme.textSecondary)
+                if let criterion = summary.criterion, criterion.isEmpty == false {
+                    Text(criterion)
+                        .font(TypeScale.metadata)
+                        .foregroundStyle(theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if model.stanceDraft?.anchor == anchor {
+                    VStack(alignment: .leading, spacing: Space.xs) {
+                        TextField(
+                            L10n.claimObservationPlaceholder,
+                            text: Binding(
+                                get: { model.stanceDraft?.observation ?? "" },
+                                set: { model.stanceDraft?.observation = $0 }
+                            ),
+                            axis: .vertical
+                        )
+                        .font(TypeScale.body)
+                        .focused($focused)
+                        HStack {
+                            Spacer(minLength: 0)
+                            ActionButton(title: L10n.claimRecordStance, isDefault: true) {
+                                // No draft, no record. Writing this as a forced
+                                // unwrap with a comment saying it was wrong would
+                                // have been the same bug wearing a note.
+                                guard let draft = model.stanceDraft else { return }
+                                _ = model.recordStance(draft)
+                            }
+                        }
+                    }
+                } else {
+                    HStack(spacing: Space.xs) {
+                        ForEach(KollioModel.Stance.applicable(to: summary.role)) { stance in
+                            if stance != .open {
+                                ActionButton(title: shortLabel(stance), isDefault: false) {
+                                    model.stanceDraft = .init(anchor: anchor, stance: stance)
+                                    focused = true
+                                }
+                                .font(TypeScale.metadata)
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(Space.s)
+            .frame(width: 300, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
+                    .fill(theme.surfacePrimary)
+                    .shadow(color: .black.opacity(theme.isDark ? 0.38 : 0.13), radius: 14, y: 6)
+            )
+            .onExitCommand { model.stanceDraft = nil }
+        }
+    }
+
+    private func stateLabel(_ summary: ClaimSummary) -> String {
+        if let hypothesis = summary.hypothesis {
+            switch hypothesis {
+            case .open: return L10n.claimStateOpen
+            case .supported: return L10n.claimStateSupported
+            case .contradicted: return L10n.claimStateContradicted
+            case .refuted: return L10n.claimStateRefuted
+            }
+        }
+        if let constraint = summary.constraint {
+            switch constraint {
+            case .open: return L10n.claimStateOpen
+            case .satisfied: return L10n.claimStateSatisfied
+            case .notApplicable: return L10n.claimStateNotApplicable
+            }
+        }
+        return L10n.claimStateOpen
+    }
+
+    private func shortLabel(_ stance: KollioModel.Stance) -> String {
+        switch stance {
+        case .supported: return L10n.claimStateSupported
+        case .contradicted: return L10n.claimStateContradicted
+        case .refuted: return L10n.claimStateRefuted
+        case .satisfied: return L10n.claimStateSatisfied
+        case .notApplicable: return L10n.claimStateNotApplicable
+        case .open: return L10n.claimStateOpen
         }
     }
 }

@@ -59,6 +59,29 @@ public enum L10n {
     public static var undoAttachSource: String { callAsFunction("undo.attachSource") }
     public static var undoRecordVerification: String { callAsFunction("undo.recordVerification") }
     public static var undoAddCitation: String { callAsFunction("undo.addCitation") }
+    public static var claimScopeEmpty: String { callAsFunction("claim.scopeEmpty") }
+    public static var undoAssertClaim: String { callAsFunction("undo.assertClaim") }
+    public static var undoRecordStance: String { callAsFunction("undo.recordStance") }
+    public static func claimScopeTitle(default object: String) -> String {
+        String(format: callAsFunction("claim.scopeTitle"), object)
+    }
+    public static var claimStateHypothesis: String { callAsFunction("claim.hypothesis") }
+    public static var claimStateConstraint: String { callAsFunction("claim.constraint") }
+    public static var claimStateOpen: String { callAsFunction("claim.open") }
+    public static var claimStateSupported: String { callAsFunction("claim.supported") }
+    public static var claimStateContradicted: String { callAsFunction("claim.contradicted") }
+    public static var claimStateRefuted: String { callAsFunction("claim.refuted") }
+    public static var claimStateSatisfied: String { callAsFunction("claim.satisfied") }
+    public static var claimStateNotApplicable: String { callAsFunction("claim.notApplicable") }
+    public static var claimComposerPrompt: String { callAsFunction("claim.composerPrompt") }
+    public static var claimCriterionPlaceholder: String { callAsFunction("claim.criterionPlaceholder") }
+    public static var claimScopeHint: String { callAsFunction("claim.scopeHint") }
+    public static var claimStateIt: String { callAsFunction("claim.stateIt") }
+    public static var claimObservationPlaceholder: String { callAsFunction("claim.observationPlaceholder") }
+    public static var claimRecordStance: String { callAsFunction("claim.recordStance") }
+    public static func claimScopeCount(_ count: Int) -> String {
+        String(format: callAsFunction("claim.scopeCount"), count)
+    }
     public static var citationSelectPrompt: String { callAsFunction("citations.selectPrompt") }
     public static var citationSelectHint: String { callAsFunction("citations.selectHint") }
     public static var citationCiteSelection: String { callAsFunction("citations.citeSelection") }

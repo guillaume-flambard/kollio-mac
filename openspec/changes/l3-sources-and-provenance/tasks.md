@@ -88,7 +88,13 @@ stated on every line rather than blurred.
 - [x] Intelligence may suggest a claim, but may not record how it stands and may not
       arrive pre-resolved. `ClaimLedgerTests`
 - [x] The `.kollio` schema declares the claims ledger and the version is 3.
-- [ ] Stating a claim, a scope and a stance from the interface. **Not started.**
+- [x] Stating a claim from the interface: role, criterion, and a scope taken from
+      the current selection. `ClaimInterfaceTests`
+- [x] An empty scope states nothing, says why, and keeps the draft.
+- [x] A stance needs an observation, and a refused one leaves the sentence alone.
+- [x] The stances offered depend on the role: a constraint cannot be refuted and a
+      hypothesis cannot be satisfied, and a verdict from the other vocabulary is
+      resolved to open rather than invented. `ClaimInterfaceTests`
 - [ ] Asking for precision when two scopes overlap, in the interface.
 - [ ] A context view lists sources and quotes, reading only from the ledger.
 - [ ] A knowledge view is derived, never authored twice.

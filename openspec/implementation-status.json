@@ -32,6 +32,25 @@
         "A person using only the keyboard reaches every contextual action."
       ]
     },
+    "backend": {
+      "lot": "L6",
+      "spec": "specs/backend.md",
+      "change": "changes/l6-contribute-and-sync",
+      "delivered": "specified",
+      "features": 0,
+      "acceptanceCriteria": 0,
+      "byStatus": {},
+      "proved": [],
+      "writtenOnly": [],
+      "owedToAPerson": [
+        "Two independent client sessions against one server process and one database. A shared in-memory fixture between tests does not demonstrate concurrency between clients.",
+        "A lost acknowledgement followed by an identical replay, against the real server rather than a stub."
+      ],
+      "blockedOn": [
+        "The identity decision the collaboration capability is already waiting on. The transaction contract above is written and testable without it; the identity, workspaces and ACL routes are not."
+      ],
+      "authorisation": "none: explicit authorisation required"
+    },
     "documents": {
       "lot": "L1",
       "spec": "specs/documents.md",

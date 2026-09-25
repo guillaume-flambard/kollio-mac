@@ -1456,6 +1456,348 @@
           }
         }
       }
+    },
+    "claim.scopeEmpty": {
+      "comment": "A claim with nothing in its scope would apply to everything, so it is refused.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select what this claim is about, or nothing is stated"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sélectionnez ce sur quoi porte cette affirmation, sinon rien n’est énoncé"
+          }
+        }
+      }
+    },
+    "undo.assertClaim": {
+      "comment": "Undo label for stating a claim.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the claim"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler l’affirmation"
+          }
+        }
+      }
+    },
+    "undo.recordStance": {
+      "comment": "Undo label for recording how a claim stands.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the assessment"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler l’évaluation"
+          }
+        }
+      }
+    },
+    "claim.scopeTitle": {
+      "comment": "The default title of a claim's scope. %@ is the object it is about.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À propos de %@"
+          }
+        }
+      }
+    },
+    "claim.hypothesis": {
+      "comment": "A claim that something might be true.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hypothesis"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hypothèse"
+          }
+        }
+      }
+    },
+    "claim.constraint": {
+      "comment": "A claim that something limits what can be done.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Constraint"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contrainte"
+          }
+        }
+      }
+    },
+    "claim.open": {
+      "comment": "Nobody has taken a position yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouverte"
+          }
+        }
+      }
+    },
+    "claim.supported": {
+      "comment": "Something backs it. Not the same as true.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supported"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soutenue"
+          }
+        }
+      }
+    },
+    "claim.contradicted": {
+      "comment": "Something argues against it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contradicted"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contredite"
+          }
+        }
+      }
+    },
+    "claim.refuted": {
+      "comment": "The thing that would make it true is now known not to hold.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refuted"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réfutée"
+          }
+        }
+      }
+    },
+    "claim.satisfied": {
+      "comment": "The constraint is met.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Satisfied"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Satisfaite"
+          }
+        }
+      }
+    },
+    "claim.notApplicable": {
+      "comment": "The constraint does not apply here. This is not satisfaction.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not applicable"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sans objet"
+          }
+        }
+      }
+    },
+    "claim.composerPrompt": {
+      "comment": "Asks what role a claim plays and what it is about.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is this, and what is it about?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qu’est-ce que c’est, et sur quoi porte-t-il ?"
+          }
+        }
+      }
+    },
+    "claim.criterionPlaceholder": {
+      "comment": "Optional: what would count as settling it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What would count as settling it?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qu’est-ce qui trancherait ?"
+          }
+        }
+      }
+    },
+    "claim.scopeHint": {
+      "comment": "The scope is what you have selected. A claim with no scope would apply to everything.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to what is selected. A claim with no scope would apply to everything"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porte sur la sélection. Sans portée, une affirmation vaudrait partout"
+          }
+        }
+      }
+    },
+    "claim.stateIt": {
+      "comment": "States the drafted claim.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "State it"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’énoncer"
+          }
+        }
+      }
+    },
+    "claim.observationPlaceholder": {
+      "comment": "Asks what was seen, because a verdict without one is not a verdict.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What did you see?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qu’avez-vous vu ?"
+          }
+        }
+      }
+    },
+    "claim.recordStance": {
+      "comment": "Records the stance, with its observation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer"
+          }
+        }
+      }
+    },
+    "claim.scopeCount": {
+      "comment": "How many objects a claim covers. %lld is the count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies to %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porte sur %lld"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

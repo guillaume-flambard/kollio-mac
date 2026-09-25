@@ -170,6 +170,15 @@ struct CanvasView: View {
             if let composer = model.composer {
                 ComposerView(model: model, anchor: composer.anchorID)
             }
+            if model.claimDraft != nil, let draft = model.claimDraft {
+                ClaimComposerView(model: model)
+                    .position(composerPosition(draft.anchor, viewport: viewport))
+            }
+            if let anchor = model.primarySelection, model.selection.count == 1,
+               model.stanceDraft == nil, model.claimSummary(for: anchor) != nil {
+                ClaimStanceView(model: model, anchor: anchor)
+                    .position(composerPosition(anchor, viewport: viewport))
+            }
             if let claim = model.openCitationClaim {
                 CitationListView(model: model, claim: claim)
                     .position(citationListPosition(claim, viewport: viewport))
@@ -203,6 +212,17 @@ struct CanvasView: View {
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: Motion.reveal), value: model.preview?.id)
         .animation(reduceMotion ? nil : .easeInOut(duration: Motion.reveal), value: model.composer?.id)
+    }
+
+    /// Claim cards sit under the object they are about, the same place the
+    /// composer and the citations go, so only one card is ever under one object.
+    private func composerPosition(_ anchor: ObjectID, viewport: CGSize) -> CGPoint {
+        guard let frame = model.frame(of: anchor) else {
+            return CGPoint(x: viewport.width / 2, y: viewport.height / 2)
+        }
+        let below = model.camera.toScreen(Position(x: frame.origin.x, y: frame.maxY + 16))
+        return CGPoint(x: min(max(below.x, 170), viewport.width - 170),
+                       y: min(below.y, viewport.height - 140))
     }
 
     /// Where the list of citations opens: beside the claim, below it, inside the

@@ -112,8 +112,9 @@ STATUS_NOTES = {
                "AC01 a constraint only blocks within its scope; AC02 not applicable is not "
                "satisfied; AC03 supported is not absolute truth. ClaimLedgerTests, and a scope "
                "with nothing in it is refused rather than read as everything. Intelligence may "
-               "suggest a claim but may not record how it stands. Still missing: stating a claim, "
-               "a scope and a stance from the interface."),
+               "suggest a claim but may not record how it stands. The interface states a claim with "
+               "its scope taken from the current selection, and records a stance only with an "
+               "observation. Still missing: asking for precision when two scopes overlap."),
     "CTX-06": ("automatedVerified",
                "The projection is built and measured on the real request path: omissions are "
                "counted, a required item is never dropped, and the budget cannot exceed the "
