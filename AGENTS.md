@@ -5,10 +5,14 @@ Read [docs/CONTINUE.md](docs/CONTINUE.md) for the active milestone and
 right now. [docs/PRODUCT_BLUEPRINT.md](docs/PRODUCT_BLUEPRINT.md) is the
 direction; it is not injected into every small task.
 
+[docs/specs/SPECIFICATIONS.md](docs/specs/SPECIFICATIONS.md) is the normative
+specification: 71 features, 169 acceptance criteria. [openspec/README.md](openspec/README.md)
+decomposes it into capabilities and lots.
+
 ## Verify
 
 ```bash
-./scripts/verify.sh          # 3 suites + the Xcode app target
+./scripts/verify.sh          # spec views + 3 suites + the Xcode app target
 ./scripts/run-app.sh --shot  # build, launch, screenshot into build/
 ```
 
@@ -44,3 +48,9 @@ launch.
     Reports to the owner in French.
 11. Deterministic tests never require Apple Intelligence, a key or a network.
     Real-model evidence is a separate, explicitly marked suite.
+12. `openspec/specs/feature-catalog.json`, `openspec/todo.md` and
+    `openspec/implementation-status.json` are **generated**. Edit the
+    specification or the two generator scripts, never those files. `verify.sh`
+    fails if they are stale.
+13. Status is earned, never assumed. `specified` is the default; a feature is
+    `automatedVerified` only when a named test passes.

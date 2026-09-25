@@ -55,7 +55,10 @@ kollio/
 ├── services/KollioServer         Vapor API
 ├── contracts/                    JSON schemas + the reference .kollio fixture
 ├── docs/                         architecture, format, action protocol, backend, limitations
-└── scripts/                      run-app.sh, test-all.sh, verify.sh, sync-xcodeproj.py
+│   └── specs/SPECIFICATIONS.md   the normative specification: 71 features, 169 criteria
+├── openspec/                     the decomposition, in capabilities and lots
+└── scripts/                      run-app.sh, verify.sh, sync-xcodeproj.py,
+                                 generate-spec-index.py, generate-spec-status.py
 ```
 
 `apps/macos/Kollio.xcodeproj` is **generated** by `scripts/sync-xcodeproj.py`. Never edit it by hand.
@@ -68,7 +71,7 @@ After adding or removing a file under `packages/KollioApp/Sources`, run:
 ## Verify before believing anything
 
 ```bash
-./scripts/verify.sh     # 3 test suites (149 tests) + the Xcode app target
+./scripts/verify.sh     # the spec views, 3 test suites (154 tests), the Xcode app target
 ./scripts/run-app.sh --shot   # builds, launches, screenshots into build/
 ```
 
@@ -78,6 +81,25 @@ looks like.
 
 Note: `run-app.sh --shot` prints a path whether or not the capture worked, and it captures the whole
 screen rather than the Kollio window. Check the file exists and shows the app before trusting it.
+
+## The specification is decomposed, and the views are generated
+
+`docs/specs/SPECIFICATIONS.md` is the normative source: 71 features, 169 acceptance criteria.
+`openspec/` decomposes it twice, and both decompositions are generated from that prose so they cannot
+drift out of sync with it:
+
+```bash
+python3 scripts/generate-spec-index.py     # openspec/specs/feature-catalog.json + openspec/todo.md
+python3 scripts/generate-spec-status.py    # openspec/implementation-status.json
+```
+
+`./scripts/verify.sh` runs both with `--check` first, so a stale view fails verification. The honest
+state today, per capability: `canvas`, `intelligence` and `decisions` are `automatedVerified`;
+`documents` is `implemented`; `context` and `studio` are `specified`; `collaboration`, `commerce` and
+`ecosystem` are `blockedExternal` and need an explicit authorisation.
+
+`openspec/specs/evidence.md` is the short honest answer to "what is actually proved", including the
+things that are wrong and the things owed to a person.
 
 ## Which intelligence source is in use
 
