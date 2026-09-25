@@ -3,6 +3,12 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# The spec views are generated. If they are stale, the project is describing
+# itself with a second source of truth, which is worse than being out of date.
+echo "=== Spec views are current"
+python3 "$ROOT/scripts/generate-spec-index.py" --check
+python3 "$ROOT/scripts/generate-spec-status.py" --check
+
 echo "=== KollioCore"
 (cd "$ROOT/packages/KollioCore" && swift test)
 echo "=== KollioApp"

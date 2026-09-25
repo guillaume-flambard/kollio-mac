@@ -24,6 +24,18 @@ struct CanvasView: View {
             .contentShape(Rectangle())
             .gesture(backgroundGesture)
             .simultaneousGesture(magnifyGesture)
+            .overlay(
+                // A trackpad scroll, which SwiftUI does not deliver on its own.
+                // It sits on top because AppKit hit testing only reaches a view
+                // that is in front, and it claims a hit only for a scroll event,
+                // so clicks, drags and text fields are untouched.
+                ScrollCatcher(
+                    onScroll: { delta in
+                        model.camera.pan(byScreenDelta: delta)
+                    },
+                    isEditingText: model.composer != nil
+                )
+            )
             .onPreferenceChange(NodeSizeKey.self) { sizes in
                 for (objectID, size) in sizes {
                     guard size.width > 1, size.height > 1,

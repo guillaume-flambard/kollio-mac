@@ -1,0 +1,256 @@
+#!/usr/bin/env python3
+"""Generate the feature catalog and the todo list from SPECIFICATIONS.md.
+
+These two files are *views* over the specification, never a second source of
+truth. If they disagree with the prose, the prose wins and this script is re-run.
+
+The script parses the `**ID — Title.** *SET. Prerequisites.*` convention used in
+the Documents, Canvas, Context, Intelligence, Decisions, Collaboration, Studio,
+Commerce and Ecosystem sections, and then cross-references:
+
+- the acceptance criteria `ACnn` that appear under each feature;
+- the lot table, which maps capabilities to lots.
+
+Usage:
+    python3 scripts/generate-spec-index.py            # write both files
+    python3 scripts/generate-spec-index.py --check    # fail if stale
+"""
+
+from __future__ import annotations
+
+import json
+import pathlib
+import re
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+SPEC = ROOT / "docs" / "specs" / "SPECIFICATIONS.md"
+CATALOG = ROOT / "openspec" / "specs" / "feature-catalog.json"
+TODO = ROOT / "openspec" / "todo.md"
+
+# A feature heading: **DOC-02 — Enter a context and begin.** *SOLO. DOC-01.*
+FEATURE = re.compile(
+    r"^\*\*(?P<id>[A-Z]+-\d{2}) — (?P<title>.+?)\.\*\*\s*"
+    r"\*(?P<sets>[^*]+)\.\s*(?P<prereq>[^*]*)\*\s*$"
+)
+ACCEPTANCE = re.compile(r"AC(?P<n>\d{2})\b")
+SECTION = re.compile(r"^## (?P<name>[A-Z].*)$")
+LOT_ROW = re.compile(r"^\|\s*(L\d)\s*\|(.*)\|\s*(.*?)\s*\|(.*?)\s*\|$")
+
+CAPABILITY_OF_PREFIX = {
+    "DOC": "documents",
+    "CAN": "canvas",
+    "CTX": "context",
+    "AI": "intelligence",
+    "DEC": "decisions",
+    "TEAM": "collaboration",
+    "STU": "studio",
+    "COM": "commerce",
+    "EXT": "ecosystem",
+}
+
+# Which lot a capability first belongs to. Mirrors the lot table in the spec.
+LOT_OF_PREFIX = {
+    "DOC": "L1", "CAN": "L1", "CTX": "L1",
+    "AI": "L2", "DEC": "L2",
+    "TEAM": "L5",
+    "STU": "L7",
+    "COM": "L9",
+    "EXT": "L9",
+}
+# Features that join a later lot, per the lot table.
+LOT_OVERRIDES = {
+    "DOC-05": "L4", "DOC-06": "L4", "DOC-07": "L4", "DOC-08": "L4",
+    "CTX-02": "L3", "CTX-03": "L3", "CTX-04": "L3", "CTX-05": "L3",
+    "CTX-06": "L3", "CTX-07": "L3",
+    "CAN-06": "L3", "CAN-07": "L3", "CAN-08": "L2", "CAN-09": "L3",
+    "CAN-10": "L3",
+    "AI-05": "L3", "AI-06": "L3", "AI-10": "L8", "AI-11": "L3", "AI-12": "L3",
+    "DEC-04": "L4", "DEC-05": "L4", "DEC-06": "L4",
+}
+
+# Status of each feature, read from the repository rather than assumed.
+# `specified` is the honest default: nobody has proved anything by writing it down.
+STATUS_NOTES = {
+    "DOC-01": ("automatedVerified",
+               "Covered by InitialContextTests: fresh launch, restore, unreadable reported."),
+    "DOC-02": ("automatedVerified",
+               "Covered by InitialContextTests: context created, preserved, persisted first."),
+    "DOC-03": ("automatedVerified",
+               "Covered by InitialContextTests: a new document gets its own save target."),
+    "DOC-04": ("automatedVerified",
+               "Covered by InteractionReliabilityTests through the real delegate."),
+    "CAN-01": ("automatedVerified",
+               "Two-finger scroll wired via ScrollCatcher; pan is screen space at any zoom. "
+               "Gesture feel still unverified by a human."),
+    "AI-01": ("automatedVerified",
+              "AppleAdapterTests: every availability state is a refusal, never a fallback."),
+    "AI-02": ("humanVerified",
+              "Real on-device generation on two non-Sarah contexts, FR and EN, through the "
+              "adapter. Cold latency 9-15 s is too slow to feel interactive."),
+    "AI-07": ("automatedVerified",
+              "AppleAdapterTests: minted ids, dropped kinds, bounded branch, noChange."),
+    "AI-08": ("automatedVerified",
+              "VerticalSliceTests: one Keep undoes as one action."),
+    "DEC-01": ("automatedVerified", "CommandTests: a decision survives save and reload."),
+    "DEC-02": ("automatedVerified",
+               "InteractionReliabilityTests: the camera is identical before and after."),
+    "DEC-03": ("automatedVerified",
+               "InteractionReliabilityTests and VerticalSliceTests: one Keep, one undo."),
+}
+
+
+def parse() -> list[dict]:
+    text = SPEC.read_text(encoding="utf-8")
+    features: list[dict] = []
+    section = ""
+    current: dict | None = None
+    in_lots = False
+
+    for line in text.splitlines():
+        if line.startswith("## "):
+            section = line[3:].strip()
+            in_lots = section.startswith("Lots")
+            if in_lots:
+                current = None
+            continue
+
+        if in_lots:
+            match = LOT_ROW.match(line)
+            if match:
+                lot = match.group(1)
+                features_seen = match.group(3)
+                for fid in re.findall(r"[A-Z]{3,4}-\d{2}", features_seen):
+                    for feature in features:
+                        if feature["id"] == fid:
+                            feature.setdefault("lots", []).append(lot)
+            continue
+
+        heading = FEATURE.match(line)
+        if heading:
+            fid = heading.group("id")
+            prefix = fid.split("-")[0]
+            current = {
+                "id": fid,
+                "title": heading.group("title"),
+                "capability": CAPABILITY_OF_PREFIX.get(prefix, "other"),
+                "deliverySets": [s.strip() for s in heading.group("sets").split(",")],
+                "prerequisites": [
+                    p.strip() for p in re.findall(r"[A-Z]{3,4}-\d{2}", heading.group("prereq"))
+                ],
+                "acceptanceCriteria": [],
+                "section": section,
+            }
+            features.append(current)
+            continue
+
+        if current is not None and "AC01" in line:
+            current["acceptanceCriteria"] = [
+                f"{current['id']}-AC{m.group(0)}" for m in ACCEPTANCE.finditer(line)
+            ]
+
+    return features
+
+
+def main() -> int:
+    features = parse()
+    for feature in features:
+        lot = LOT_OVERRIDES.get(feature["id"]) or LOT_OF_PREFIX.get(
+            feature["id"].split("-")[0], "L0"
+        )
+        feature["lot"] = lot
+        status, note = STATUS_NOTES.get(feature["id"], ("specified", ""))
+        feature["status"] = status
+        if note:
+            feature["evidence"] = note
+
+    catalog = {
+        "$comment": (
+            "Generated by scripts/generate-spec-index.py from "
+            "docs/specs/SPECIFICATIONS.md. A view, never a second source of truth."
+        ),
+        "specification": "docs/specs/SPECIFICATIONS.md",
+        "counts": {
+            "features": len(features),
+            "acceptanceCriteria": sum(len(f["acceptanceCriteria"]) for f in features),
+            "byStatus": {
+                status: sum(1 for f in features if f["status"] == status)
+                for status in sorted({f["status"] for f in features})
+            },
+            "byLot": {
+                lot: sum(1 for f in features if f["lot"] == lot)
+                for lot in sorted({f["lot"] for f in features})
+            },
+        },
+        "features": sorted(features, key=lambda f: f["id"]),
+    }
+
+    rendered_catalog = json.dumps(catalog, indent=2, ensure_ascii=False) + "\n"
+
+    # The todo list: one line per feature, ordered by lot then id.
+    lines = [
+        "# Kollio todo",
+        "",
+        "Generated by `scripts/generate-spec-index.py` from "
+        "[../docs/specs/SPECIFICATIONS.md](../docs/specs/SPECIFICATIONS.md).",
+        "A view, not a source of truth. Status meanings:",
+        "",
+        "| Status | Means |",
+        "|---|---|",
+        "| `specified` | Written down. Nothing implemented. |",
+        "| `inProgress` | Some code exists, no complete evidence. |",
+        "| `implemented` | Code exists and builds. No test evidence. |",
+        "| `automatedVerified` | A test proves the stated behaviour. |",
+        "| `humanVerified` | A person did it. |",
+        "| `blockedExternal` | Blocked on a capability or authorisation. |",
+        "| `notInCurrentRelease` | Deliberately out of this product. |",
+        "",
+        "Counts: "
+        + ", ".join(f"{n} {s}" for s, n in sorted(catalog["counts"]["byStatus"].items()))
+        + f". {catalog['counts']['features']} features, "
+        + f"{catalog['counts']['acceptanceCriteria']} acceptance criteria.",
+        "",
+    ]
+    for lot in sorted(catalog["counts"]["byLot"]):
+        in_lot = [f for f in catalog["features"] if f["lot"] == lot]
+        lines.append(f"## {lot} — {len(in_lot)} features")
+        lines.append("")
+        for feature in in_lot:
+            marker = {"automatedVerified": "x", "humanVerified": "x"}.get(feature["status"], " ")
+            ac = f"{len(feature['acceptanceCriteria'])} AC" if feature["acceptanceCriteria"] else "—"
+            lines.append(
+                f"- [{marker}] **{feature['id']}** {feature['title']} "
+                f"· `{feature['status']}` · {ac}"
+            )
+            if feature.get("evidence"):
+                lines.append(f"      {feature['evidence']}")
+        lines.append("")
+
+    rendered_todo = "\n".join(lines)
+
+    if "--check" in sys.argv:
+        problems = []
+        if not CATALOG.exists() or CATALOG.read_text(encoding="utf-8") != rendered_catalog:
+            problems.append("openspec/specs/feature-catalog.json is stale")
+        if not TODO.exists() or TODO.read_text(encoding="utf-8") != rendered_todo:
+            problems.append("openspec/todo.md is stale")
+        if problems:
+            for problem in problems:
+                print(f"error: {problem}", file=sys.stderr)
+            return 1
+        print("spec index is up to date")
+        return 0
+
+    CATALOG.parent.mkdir(parents=True, exist_ok=True)
+    CATALOG.write_text(rendered_catalog, encoding="utf-8")
+    TODO.write_text(rendered_todo, encoding="utf-8")
+    print(
+        f"wrote {CATALOG.relative_to(ROOT)} and {TODO.relative_to(ROOT)}: "
+        f"{len(features)} features, "
+        f"{catalog['counts']['acceptanceCriteria']} acceptance criteria"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

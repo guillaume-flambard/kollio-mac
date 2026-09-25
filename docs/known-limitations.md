@@ -141,10 +141,17 @@ Everything in the non-goals, and also, honestly:
   been walked through with a human eye under those settings.
 - **No performance measurement.** 100 objects and 200 relationships is the stated target; nothing has
   been measured. Off-screen culling is available on the camera and unused.
-- **Two-finger scrolling is almost certainly not wired.** Code inspection found no scroll handling
-  anywhere in the app: only a drag gesture and a magnify gesture. A trackpad two-finger scroll is
-  therefore expected to do nothing, leaving panning to a click-drag on empty canvas. **Not
-  reproduced**, and not fixed in this pass: it needs a real trackpad to confirm before anything is
-  changed.
+- **Two-finger scrolling is wired and its routing is tested; the gesture is not verified by a
+  person.** An earlier version placed the catcher in `.background` with `.allowsHitTesting(false)`,
+  which cannot work: SwiftUI drops that subtree from hit testing, so AppKit never routes a scroll to
+  it. It is now a topmost overlay that claims a hit only while a scroll event is being routed, and
+  `ScrollDeliveryTests` proves three things: a scroll reaches the canvas, a click does not, and a
+  text field outranks both. **Still owed:** a real trackpad scroll and its feel, which no test
+  substitutes for.
+- **The specification is written down; most of it is not built.** 71 features and 169 acceptance
+  criteria exist in [specs/SPECIFICATIONS.md](specs/SPECIFICATIONS.md). 11 are `automatedVerified`,
+  1 is `humanVerified`, 59 are `specified`, which means written down and nothing more. Read
+  [../openspec/specs/evidence.md](../openspec/specs/evidence.md) for the proved, the owed and the
+  wrong.
 - **No web renderer, no public SDK, no standard.** Intentional.
 - **No persistence, no accounts, no payments, no marketplace, no collaboration.** Intentional.

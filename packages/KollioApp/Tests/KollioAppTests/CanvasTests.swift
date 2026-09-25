@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import Testing
 import KollioCore
 @testable import KollioApp
@@ -98,6 +99,112 @@ struct CameraTests {
         #expect(bounds == Rect(x: -30, y: 20, width: 140, height: 130))
         #expect(bounds.contains(a.center))
         #expect(bounds.contains(b.center))
+    }
+
+    @Test("A two-finger scroll pans the canvas, and never moves the document")
+    func scrollPansTheCanvas() {
+        var camera = Camera(zoom: 1, translation: .zero)
+        let start = camera.translation
+        // Precise trackpad deltas are small and follow the fingers.
+        camera.pan(byScreenDelta: Position(x: 12, y: -30))
+        #expect(camera.translation != start)
+        // Panning is presentation only: it must never touch the meaning.
+        #expect(camera.zoom == 1)
+    }
+
+    @Test("A scroll at any zoom still pans by the same screen amount")
+    func scrollIsScreenSpaceAtAnyZoom() {
+        for zoom in [0.4, 1.0, 2.2] {
+            var camera = Camera(zoom: zoom, translation: Position(x: 10, y: 10))
+            let before = camera.translation
+            camera.pan(byScreenDelta: Position(x: 25, y: 40))
+            // The same finger movement moves the content by the same points,
+            // whatever the zoom, because the convention is screen = world * z + t.
+            #expect(camera.translation.x - before.x == 25)
+            #expect(camera.translation.y - before.y == 40)
+        }
+    }
+}
+
+@Suite("Scroll delivery")
+@MainActor
+struct ScrollDeliveryTests {
+    /// Build a catcher inside a host, the way the canvas places it.
+    private func makeCatcher(editing: Bool = false) -> (host: NSView, catcher: ScrollCatcher.ScrollView) {
+        let host = NSView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let catcher = ScrollCatcher.ScrollView(frame: host.bounds)
+        catcher.isEditingText = editing
+        host.addSubview(catcher)
+        return (host, catcher)
+    }
+
+    /// A synthetic scroll event, so the routing can be proved without a trackpad.
+    /// Built through CoreGraphics because that is the only constructor that
+    /// yields a real `.scrollWheel` event with a real precise delta.
+    private func scrollEvent(deltaY: Int32) -> NSEvent {
+        let cg = CGEvent(
+            scrollWheelEvent2Source: nil,
+            units: .pixel,
+            wheelCount: 2,
+            // In the two-source constructor the vertical axis is `wheel1`;
+            // `wheel2` is horizontal.
+            wheel1: deltaY,
+            wheel2: 0,
+            wheel3: 0
+        )!
+        return NSEvent(cgEvent: cg)!
+    }
+
+    /// A synthetic click, for the same reason.
+    private func clickEvent() -> NSEvent {
+        let cg = CGEvent(
+            mouseEventSource: nil,
+            mouseType: .leftMouseDown,
+            mouseCursorPosition: .zero,
+            mouseButton: .left
+        )!
+        return NSEvent(cgEvent: cg)!
+    }
+
+    @Test("A scroll event reaches the catcher, and the canvas pans by the same delta")
+    func scrollIsDeliveredToTheCanvas() {
+        let (host, catcher) = makeCatcher()
+        var received: [Position] = []
+        catcher.onScroll = { received.append($0) }
+
+        // AppKit routes the event by hit testing first, with that very event as
+        // the current one. Reproducing both halves is the only way to prove the
+        // view is reachable at all.
+        let event = scrollEvent(deltaY: -42)
+        catcher.injectedEvent = event
+        #expect(host.hitTest(NSPoint(x: 200, y: 150)) === catcher)
+
+        catcher.scrollWheel(with: event)
+        #expect(received == [Position(x: 0, y: -42)])
+    }
+
+    @Test("The catcher never takes a click, a drag or the focus")
+    func catcherIsInertForEverythingElse() {
+        let (host, catcher) = makeCatcher()
+        catcher.injectedEvent = clickEvent()
+
+        // The canvas keeps every gesture it had. A transparent full-bleed
+        // overlay that also ate clicks would be a regression, not a feature.
+        #expect(host.hitTest(NSPoint(x: 200, y: 150)) !== catcher)
+    }
+
+    @Test("While a text field owns the pointer, the canvas steps aside")
+    func editingTextWins() {
+        let (host, catcher) = makeCatcher(editing: true)
+        var received: [Position] = []
+        catcher.onScroll = { received.append($0) }
+
+        let event = scrollEvent(deltaY: -42)
+        catcher.injectedEvent = event
+
+        #expect(host.hitTest(NSPoint(x: 200, y: 150)) !== catcher)
+        catcher.scrollWheel(with: event)
+        #expect(received.isEmpty)
     }
 }
 
