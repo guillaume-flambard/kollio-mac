@@ -60,6 +60,7 @@ public struct RemoteSuggestionService: SuggestionService {
         case rejected(String)
         case transport(String)
         case malformedResponse
+        case snapshotTooLarge(String)
 
         public var errorDescription: String? {
             switch self {
@@ -69,6 +70,7 @@ public struct RemoteSuggestionService: SuggestionService {
             case .rejected(let reason): return reason
             case .transport(let detail): return "Could not reach the server: \(detail)"
             case .malformedResponse: return "The server answered something unexpected"
+            case .snapshotTooLarge(let detail): return "This part of the document is too large to send: \(detail)"
             }
         }
     }
@@ -92,14 +94,22 @@ public struct RemoteSuggestionService: SuggestionService {
     }
 
     public func respond(to request: ProposalRequest, document: KollioDocument) async throws -> ProposalResponse {
-        var scoped = request
-        scoped.context = ContextBuilder().context(for: request, document: document)
+        // The server holds no document, so the slice to reason about travels
+        // with the request. A neighbourhood too large to send is a refusal, not
+        // a silent truncation that would look like a complete answer.
+        var outgoing = request
+        do {
+            outgoing.snapshot = try document.snapshot(targeting: request.targetIds)
+        } catch {
+            throw ClientError.snapshotTooLarge(error.localizedDescription)
+        }
+        outgoing.context = ContextBuilder().context(for: request, document: document)
 
         var urlRequest = URLRequest(url: baseURL.appendingPathComponent("v1/proposals"))
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        urlRequest.httpBody = try JSONEncoder.kollioWire.encode(scoped)
+        urlRequest.httpBody = try JSONEncoder.kollioWire.encode(outgoing)
 
         let data: Data
         let response: URLResponse

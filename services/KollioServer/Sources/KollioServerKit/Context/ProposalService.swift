@@ -68,6 +68,7 @@ public struct ProposalService: Sendable {
         case providerRefused(String)
         case providerUnavailable
         case timedOut
+        case invalidSnapshot(String)
     }
 
     /// Returns a copy of the request whose context the server built itself.
@@ -87,8 +88,32 @@ public struct ProposalService: Sendable {
             contentLocale: request.contentLocale,
             context: builder.context(for: request, document: document),
             preconditions: request.preconditions,
-            scope: request.scope
+            scope: request.scope,
+            snapshot: request.snapshot
         )
+    }
+
+    /// Answers a request whose document arrived with it.
+    ///
+    /// The snapshot is client-authored and untrusted. It is checked for structure
+    /// and reference integrity first, and only then turned into the narrow
+    /// document everything below reasons about. The server holds no state between
+    /// calls and never becomes authoritative.
+    public func respond(to request: ProposalRequest, snapshot: DocumentSnapshot) async throws -> ProposalResponse {
+        guard snapshot.documentId == request.documentId else {
+            throw Rejection.invalidSnapshot("snapshot belongs to document \(snapshot.documentId), request to \(request.documentId)")
+        }
+        guard snapshot.semanticRevision == request.baseSemanticRevision else {
+            throw Rejection.stale(revision: snapshot.semanticRevision, expected: request.baseSemanticRevision)
+        }
+        do {
+            try snapshot.validate(targets: request.targetIds)
+        } catch let error as DocumentSnapshot.SnapshotError {
+            // Reported as such, never silently repaired: a partial snapshot must
+            // not pass as a whole document.
+            throw Rejection.invalidSnapshot(error.description)
+        }
+        return try await respond(to: request, document: snapshot.makeDocument())
     }
 
     public func respond(to request: ProposalRequest, document: KollioDocument) async throws -> ProposalResponse {
@@ -98,7 +123,6 @@ public struct ProposalService: Sendable {
         if request.baseSemanticRevision != document.semanticRevision {
             throw Rejection.stale(revision: document.semanticRevision, expected: request.baseSemanticRevision)
         }
-
         // The context is scoped by the server, never taken on trust from the
         // client.
         let scoped = Self.scoping(request, document: document, builder: contextBuilder)

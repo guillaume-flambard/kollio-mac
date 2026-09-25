@@ -247,13 +247,15 @@ struct KollioModelTests {
         #expect(model.isEmpty)
     }
 
-    @Test("The initial statement becomes the context, not a chat message")
+    @Test("The first statement becomes the context, and nothing else")
     func startWithStatement() {
         let model = KollioModel(document: KollioDocument(), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
-        model.start(with: "Recover our prospect list without the CRM")
-        #expect(model.document.content.count == 3)
-        #expect(model.document.objects.first { $0.kind == .context }?.text.text == "Recover our prospect list without the CRM")
-        #expect(model.relationshipsToRender().count == 2)
+        let context = model.start(with: "Recover our prospect list without the CRM")
+        // No canned hypotheses: what the person wrote is the document.
+        #expect(model.document.content.count == 1)
+        #expect(model.object(KollioID.object("context"))?.text.text == "Recover our prospect list without the CRM")
+        #expect(context == KollioID.object("context"))
+        #expect(model.relationshipsToRender().isEmpty)
     }
 
     @Test("The demo document shows Sarah and nothing else")

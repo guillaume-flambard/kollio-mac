@@ -47,6 +47,8 @@ public enum L10n {
     public static var composerPlaceholder: String { callAsFunction("composer.placeholder") }
     public static var composerAddPlaceholder: String { callAsFunction("composer.addPlaceholder") }
     public static var composerHint: String { callAsFunction("composer.hint") }
+    public static var composerEditPlaceholder: String { callAsFunction("composer.editPlaceholder") }
+    public static var edit: String { callAsFunction("canvas.edit") }
     public static var composerSetAsidePlaceholder: String { callAsFunction("composer.setAsidePlaceholder") }
     public static var composerSetAsideHint: String { callAsFunction("composer.setAsideHint") }
 
@@ -58,12 +60,15 @@ public enum L10n {
     public static var statusThinking: String { callAsFunction("status.thinking") }
     public static var errorGeneric: String { callAsFunction("error.generic") }
     public static var errorSaveFailed: String { callAsFunction("error.saveFailed") }
+    public static var errorLoadFailed: String { callAsFunction("error.loadFailed") }
+    public static var submitHint: String { callAsFunction("action.submitHint") }
 
     // Undo labels
     public static var undoMove: String { callAsFunction("undo.move") }
     public static var undoKeepProposal: String { callAsFunction("undo.keepProposal") }
     public static var undoSetAside: String { callAsFunction("undo.setAside") }
     public static var undoReopen: String { callAsFunction("undo.reopen") }
+    public static var undoEdit: String { callAsFunction("undo.edit") }
 
     // Menu
     public static var newDocument: String { callAsFunction("menu.newDocument") }

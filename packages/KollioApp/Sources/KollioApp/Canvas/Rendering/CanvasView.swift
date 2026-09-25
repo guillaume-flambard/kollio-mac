@@ -158,6 +158,22 @@ struct CanvasView: View {
             if let status = model.status, status.isEmpty == false {
                 StatusView(text: status)
             }
+            // The mode is stated plainly, once, and only when it is not the
+            // offline default. No panel and no badge on the canvas.
+            if model.serviceMode.requiresNetwork {
+                VStack {
+                    Spacer()
+                    Text("source: \(model.serviceMode.label)")
+                        .font(TypeScale.metadata)
+                        .foregroundStyle(theme.textSecondary)
+                        .padding(.horizontal, Space.m)
+                        .padding(.vertical, Space.xs)
+                        .background(Capsule().fill(theme.surfaceSubtle.opacity(0.9)))
+                        .padding(.bottom, Space.xxl + Space.l)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                .allowsHitTesting(false)
+            }
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: Motion.reveal), value: model.preview?.id)
         .animation(reduceMotion ? nil : .easeInOut(duration: Motion.reveal), value: model.composer?.id)

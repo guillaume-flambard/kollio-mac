@@ -109,6 +109,14 @@ public struct ProposalRequest: Codable, Hashable, Sendable, Identifiable {
     public var context: [ContextItem]
     public var preconditions: Preconditions
     public var scope: Scope
+    /// The slice of the client's document this request reasons about.
+    ///
+    /// The server is not authoritative and holds no store, so the document
+    /// travels with the request. It is required: a request without it cannot be
+    /// validated and is rejected rather than answered against a stand-in.
+    /// `context` stays in the shape for compatibility but the server always
+    /// rebuilds it from the snapshot.
+    public var snapshot: DocumentSnapshot?
 
     public enum Intent: String, Codable, Sendable, CaseIterable {
         case explore
@@ -164,7 +172,8 @@ public struct ProposalRequest: Codable, Hashable, Sendable, Identifiable {
         contentLocale: String = "fr",
         context: [ContextItem] = [],
         preconditions: Preconditions? = nil,
-        scope: Scope = Scope()
+        scope: Scope = Scope(),
+        snapshot: DocumentSnapshot? = nil
     ) {
         self.requestId = requestId
         self.documentId = documentId
@@ -176,6 +185,7 @@ public struct ProposalRequest: Codable, Hashable, Sendable, Identifiable {
         self.context = context
         self.preconditions = preconditions ?? Preconditions(semanticRevision: baseSemanticRevision)
         self.scope = scope
+        self.snapshot = snapshot
     }
 }
 

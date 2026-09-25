@@ -4,6 +4,25 @@ An honest inventory. Nothing here is a surprise: this is the prototype, not the 
 
 ## Implemented and tested
 
+- The entry point: a launch with no stored document shows the initial input, a stored document is
+  restored, and an unreadable one is reported without being overwritten. Sarah is only ever reached
+  through the explicit demo menu action. Tested.
+- The typed context: the authored sentence is preserved exactly, becomes a real context object with a
+  stable identity, is shown on the canvas, and is persisted **before** any intelligence is requested.
+  A dead backend cannot cost the user their words. Tested.
+- Editing the context: one object changes, keeps its identity, bumps only the semantic revision, and
+  undoes as one action. Nothing else in the document moves. Tested.
+- The request-bound document snapshot: bounded, layout-free, reference-checked, and rejected when
+  oversized, incomplete, of the wrong document version, or inconsistent. It rebuilds a real narrow
+  document on the server rather than a fixture. Tested in the domain.
+- The proposal route, exercised against a **separate local server process** with the demo provider:
+  two different client documents answered separately, in English and in French; a stale revision is a
+  409; a snapshot from another document, an unknown target and a missing snapshot are 400s; a bad
+  token is a 401. Verified over real HTTP.
+- The provider wire contract, with a mocked transport and no key: the documented `response_format`
+  field with a named `json_schema`, a schema that matches the DTO actually decoded, a valid candidate
+  assembled by the server, and missing fields, truncated output, unknown references, unknown kinds,
+  refusal, quota errors and timeouts all rejected. Tested.
 - The sentence typed in the inline composer reaches the intelligence source as the request's
   instruction, and a failed call leaves the draft in the composer instead of discarding it. Tested with
   a capturing fake source.
@@ -41,19 +60,32 @@ An honest inventory. Nothing here is a surprise: this is the prototype, not the 
   model behind each of these is covered by tests and the resulting states were captured as screenshots,
   but the click coordinates themselves were not driven by an automated UI test, because this
   environment does not grant UI scripting access. A human should still do a pass with a trackpad.
+- The entry point as a user reaches it: the invitation, the multiline field and the primary action were
+  seen in the launched app (`build/01-entry.png`). **Typing a sentence and pressing the action was not
+  done by a human or a script**: keystroke injection needs accessibility access, which this
+  environment refuses. The behaviour behind it is covered by tests against the real model, and the
+  transport it triggers is covered by the local server run, but the two have not been joined by an
+  actual person typing.
 
 ## Simulated or approximated
 
-- The offline "intelligence" is a rule engine with authored demo content, not a language model. It is
-  deterministic and state-reactive, which is what the prototype needs, and it is not evidence that a
-  real model produces good proposals.
-- `GroqProvider` is implemented against the documented HTTP API and is exercised only by unit tests of
-  its disabled and malformed paths. **It has never been called with a real key.** Treat its output
-  quality as unknown.
-- The server validates against a document the host injects. A production version would load the
-  client's snapshot by revision; the current shape is a deliberate simplification, not an oversight.
+- **The offline "intelligence"** is a rule engine with authored demo content, not a language model. It
+  is deterministic and state-reactive, which is what the prototype needs, and it is not evidence that
+  a real model produces good proposals.
+- **`GroqProvider` has never been called with a real key.** Its wire contract is now correct and
+  tested against a mocked transport, which is evidence about the request and the decoding, and
+  **nothing at all** about the quality, latency or reliability of a live model. Treat its output
+  quality as unknown until a small live test is authorised.
+- The server validates against the snapshot the client sent, scoped to the requested neighbourhood.
+  It validates the operations in that slice and nothing else: it does not see the rest of the
+  document, and it is not authoritative. A partial snapshot is reported as partial rather than
+  validated as if it were whole.
+- A service is chosen by environment variable, not by UI. A `server` mode with no token in the
+  Keychain falls back to the offline engine, and the status line says which source is in use. There is
+  no provider control panel, and a live-mode error is reported rather than silently downgraded.
 
 ## Not built
+
 
 Everything in the non-goals, and also, honestly:
 

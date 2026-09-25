@@ -9,9 +9,19 @@ intelligence source proposes a patch; it never regenerates the world.
 
 | Piece | State |
 |---|---|
-| `packages/KollioCore` | Domain, document format, commands, decisions, proposals, validation. Swift and Foundation only. |
-| `packages/KollioApp` | macOS app: canvas, camera, contextual actions, ghost branches, undo, save, FR/EN. |
+| `packages/KollioCore` | Domain, document format, commands, decisions, proposals, request-bound snapshot, validation. Swift and Foundation only. |
+| `packages/KollioApp` | macOS app: entry point, canvas, camera, contextual actions, ghost branches, undo, save, FR/EN. |
 | `services/KollioServer` | Vapor API. Offline demo provider by default, Groq provider disabled until a key exists. |
+
+## Start here
+
+Launch with nothing stored and the app asks one question: *What are we working on?* Type a context,
+press `Cmd+Enter`, and it becomes a real object on the canvas, saved before any intelligence is
+requested. The source proposes a branch beside it; you keep it or you do not. Nothing you typed is
+ever replaced by a summary.
+
+Sarah is a demo, reachable from `File` → `Open Demo` (`Cmd+Shift+D`). It is never what a launch falls
+back to.
 
 ## Run it
 
@@ -48,11 +58,16 @@ and is the only one in the repository. After adding or removing an app source, r
 
 Three ways to work on the document:
 
-1. **Offline, demo engine.** Open the app. Sarah is loaded. Nothing leaves the machine.
-2. **Local backend.** `cd services/KollioServer && KOLLIO_API_TOKEN=$(openssl rand -hex 32) swift run kollio-server`,
-   then point the client at it. Without `KOLLIO_GROQ_API_KEY` the server also runs on the demo engine.
+1. **Offline, demo engine.** Open the app. Nothing leaves the machine.
+2. **Local backend.** `KOLLIO_API_TOKEN=$(openssl rand -hex 32) swift run --package-path services/KollioServer kollio-server`,
+   then point the client at it with `KOLLIO_SERVICE=server`. Without `KOLLIO_GROQ_API_KEY` the server
+   also runs on the demo engine.
 3. **Remote model.** Set `KOLLIO_GROQ_API_KEY` and restart the server. Never in the app bundle, never in
-   a `.kollio` file, never in Git.
+   a `.kollio` file, never in Git. **Never called with a real key yet**: the wire contract is tested
+   with a mock, which says nothing about a live model's output.
+
+The client is told which source is in use by the environment, and says so in the status line. It does
+not fall back silently. See `docs/CONTINUE.md` for the exact commands.
 
 Keyboard: `Cmd+0` fit, `Cmd+1` actual size, `Cmd+Z` undo, `Cmd+Shift+Z` redo, `Cmd+S` save, `Cmd+Enter`
 submit in a composer, `Escape` returns to the calm state.

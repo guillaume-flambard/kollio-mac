@@ -65,8 +65,11 @@ struct ContextualActions: View {
             LocalAction(title: L10n.explore, hint: L10n.explore, isDefault: true) {
                 Task { await model.explore(target) }
             },
-            LocalAction(title: L10n.add, hint: L10n.add) {
-                model.startComposer(anchor: target)
+            LocalAction(title: L10n.clarify, hint: L10n.clarify) {
+                model.startComposer(anchor: target, intent: .add)
+            },
+            LocalAction(title: L10n.edit, hint: L10n.edit) {
+                model.startEditing(anchor: target)
             },
             LocalAction(title: L10n.setAside, hint: L10n.setAside) {
                 model.requestSetAsideReason(for: target)
@@ -101,7 +104,11 @@ struct ComposerView: View {
     @FocusState private var focused: Bool
 
     private var placeholder: String {
-        model.composer?.intent == .setAside ? L10n.composerSetAsidePlaceholder : L10n.composerAddPlaceholder
+        switch model.composer?.intent {
+        case .setAside: return L10n.composerSetAsidePlaceholder
+        case .edit: return L10n.composerEditPlaceholder
+        default: return L10n.composerAddPlaceholder
+        }
     }
 
     var body: some View {
@@ -149,13 +156,18 @@ struct ComposerView: View {
     }
 }
 
-/// The first experience: one invitation, one text field, no wizard.
+/// The first experience: one invitation, one multiline field, one action.
+///
+/// This is the product's entry point, so it is the same canvas-first screen
+/// with nothing added around it. `Enter` inserts a newline because a context is
+/// a paragraph, not a query; `Cmd+Enter` submits, and the button does the same.
 struct FirstExperienceView: View {
     let model: KollioModel
 
     @Environment(\.kollioTheme) private var theme
     @FocusState private var focused: Bool
     @State private var text: String = ""
+    @State private var isSubmitting = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.l) {
@@ -167,12 +179,22 @@ struct FirstExperienceView: View {
                 .font(TypeScale.body)
                 .foregroundStyle(theme.textSecondary)
 
-            TextField("", text: $text, prompt: Text(L10n.initialPlaceholder).foregroundStyle(theme.textSecondary))
-                .textFieldStyle(.plain)
+            // A stored document that could not be read is reported here rather
+            // than hidden behind a fresh canvas, and its file is left untouched.
+            if model.hasUnreadableDocument {
+                Text(L10n.errorLoadFailed)
+                    .font(TypeScale.metadata)
+                    .foregroundStyle(theme.error)
+                    .frame(width: 520, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            TextEditor(text: $text)
                 .font(TypeScale.primaryThought)
                 .foregroundStyle(theme.textPrimary)
-                .padding(.vertical, Space.m)
-                .padding(.horizontal, Space.l)
+                .scrollContentBackground(.hidden)
+                .padding(Space.s)
+                .frame(width: 520, height: 132)
                 .background(
                     RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
                         .fill(theme.surfacePrimary)
@@ -181,16 +203,29 @@ struct FirstExperienceView: View {
                     RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
                         .strokeBorder(focused ? theme.accent.opacity(0.6) : theme.decorativeBorder, lineWidth: 1)
                 )
-                .frame(width: 520)
                 .focused($focused)
-                .onSubmit { submit() }
+                .overlay(alignment: .bottomTrailing) {
+                    Text(L10n.submitHint)
+                        .font(TypeScale.metadata)
+                        .foregroundStyle(theme.textSecondary)
+                        .padding(Space.s)
+                        .allowsHitTesting(false)
+                }
 
             HStack(spacing: Space.s) {
                 Text("⌘↩")
                     .font(TypeScale.metadata)
                     .foregroundStyle(theme.textSecondary)
                 ActionButton(title: L10n.explore, isDefault: true) { submit() }
+                    .disabled(isSubmitting)
             }
+            // Cmd+Enter submits from anywhere in the field. `Enter` is left alone
+            // on purpose: a context is a paragraph, and a newline belongs in it.
+            .background(
+                Button("") { submit() }
+                    .keyboardShortcut(.return, modifiers: .command)
+                    .hidden()
+            )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .onAppear { focused = true }
@@ -200,8 +235,19 @@ struct FirstExperienceView: View {
 
     private func submit() {
         let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !value.isEmpty else { return }
+        guard !value.isEmpty, isSubmitting == false else { return }
+        isSubmitting = true
+        // The sentence is handed to the model, which persists it before it asks
+        // anything of the intelligence source. A failure there cannot cost the
+        // user their words, so nothing is restored here.
+        guard let context = model.start(with: value) else {
+            isSubmitting = false
+            return
+        }
         text = ""
-        model.start(with: value)
+        Task {
+            await model.exploreInitialContext(context)
+            isSubmitting = false
+        }
     }
 }

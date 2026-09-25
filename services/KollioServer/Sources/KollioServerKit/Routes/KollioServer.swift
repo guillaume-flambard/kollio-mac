@@ -10,20 +10,11 @@ public struct KollioServer: Sendable {
     public let authenticator: BearerAuthenticator
     public let gate: RequestGate
     public let registry: RequestRegistry
-    /// The document the server validates against.
-    ///
-    /// The macOS client owns the document and the server is not authoritative,
-    /// so in this prototype the host injects the snapshot it wants reasoned
-    /// about (a fixture in the tests, the local document in development). A
-    /// later version loads the client's snapshot by revision.
-    public let documentProvider: @Sendable () -> KollioDocument
 
     public init(
         configuration: ServerConfiguration,
-        provider: (any LLMProvider)? = nil,
-        documentProvider: @escaping @Sendable () -> KollioDocument = { KollioDocument() }
+        provider: (any LLMProvider)? = nil
     ) {
-        self.documentProvider = documentProvider
         self.configuration = configuration
         let resolved = provider ?? Self.makeProvider(configuration)
         self.service = ProposalService(provider: resolved, timeout: configuration.providerTimeout)
@@ -81,9 +72,15 @@ public struct KollioServer: Sendable {
             await registry.open(body.requestId)
             defer { gate.releaseTask() }
 
-            let document = documentProvider()
+            let document = body.snapshot
             do {
-                let response = try await service.respond(to: body, document: document)
+                // No document is held by the server: the request carries the
+                // slice to reason about, and a request without one is refused
+                // rather than answered against a stand-in document.
+                guard let document else {
+                    throw ProposalService.Rejection.invalidSnapshot("the request carried no document snapshot")
+                }
+                let response = try await service.respond(to: body, snapshot: document)
                 await registry.finish(body.requestId)
                 let data = try JSONEncoder.kollio.encode(response)
                 return Response(status: .ok, headers: ["Content-Type": "application/json"], body: .init(data: data))
@@ -117,6 +114,10 @@ public struct KollioServer: Sendable {
             return Abort(.serviceUnavailable, reason: "Provider unavailable")
         case ProposalService.Rejection.timedOut:
             return Abort(.gatewayTimeout, reason: "Provider timed out")
+        case ProposalService.Rejection.invalidSnapshot(let detail):
+            // A bad snapshot is the client's problem to fix, so it is a 400 and
+            // not a server fault.
+            return Abort(.badRequest, reason: "Invalid document snapshot: \(detail)")
         default:
             return error
         }

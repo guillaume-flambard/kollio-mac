@@ -21,6 +21,28 @@ public struct DocumentFileStore: Sendable {
         directory.appendingPathComponent("Kollio.\(DocumentCodec.fileExtension)")
     }
 
+    /// The document a launch should open.
+    ///
+    /// The default file when it exists, and otherwise the most recently written
+    /// document in the directory. This is what makes "a new document gets its
+    /// own file" work across launches: the previous document stays on disk and
+    /// is not overwritten, and the newest one is the one that was being worked
+    /// on.
+    public var mostRecentDocumentURL: URL? {
+        if FileManager.default.fileExists(atPath: defaultDocumentURL.path) {
+            return defaultDocumentURL
+        }
+        let candidates = (try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: [.contentModificationDateKey]
+        ))?.filter { $0.pathExtension == DocumentCodec.fileExtension } ?? []
+        return candidates.max { lhs, rhs in
+            let left = (try? lhs.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
+            let right = (try? rhs.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
+            return left < right
+        }
+    }
+
     public func url(named name: String) -> URL {
         directory.appendingPathComponent("\(name).\(DocumentCodec.fileExtension)")
     }
@@ -64,6 +86,7 @@ public final class KollioModel {
         case explore
         case add
         case setAside
+        case edit
     }
 
     // MARK: State
@@ -79,10 +102,18 @@ public final class KollioModel {
     public var composer: ComposerState?
     public var languageCode: String = KollioModel.systemLanguage
     public var documentURL: URL
+    /// Set when a stored document existed but could not be read. The canvas shows
+    /// the problem instead of quietly loading something else, and the unreadable
+    /// file is never written over.
+    public private(set) var loadFailure: (any Error)?
 
     /// The intelligence source. Offline and deterministic by default; the
     /// backend adapter is interchangeable.
     public var service: any SuggestionService
+
+    /// What the app is really talking to, so the status line can say so without
+    /// a control panel.
+    public private(set) var serviceMode: ServiceConfiguration = .demo
 
     public let fileStore: DocumentFileStore
 
@@ -110,10 +141,32 @@ public final class KollioModel {
     ) {
         self.fileStore = fileStore
         self.languageCode = languageCode
-        self.documentURL = fileStore.defaultDocumentURL
+        // A launch opens the default file when there is one, and otherwise the
+        // document that was written most recently.
+        let url = fileStore.mostRecentDocumentURL ?? fileStore.defaultDocumentURL
+        self.documentURL = url
         self.service = service ?? KollioModel.makeDemoService(languageCode: languageCode)
-        let loaded = document ?? (try? fileStore.load(fileStore.defaultDocumentURL)) ?? SarahFixture.document()
-        self.session = KollioSession(document: loaded)
+        self.serviceMode = .demo
+        if let document {
+            // Explicit document, as the tests and the demo use.
+            self.session = KollioSession(document: document)
+            self.loadFailure = nil
+        } else if FileManager.default.fileExists(atPath: url.path) {
+            // A document exists. If it cannot be read, that is reported and the
+            // file is left alone: overwriting it with a demo would destroy work
+            // the user could still recover by hand.
+            do {
+                self.session = KollioSession(document: try fileStore.load(url))
+                self.loadFailure = nil
+            } catch {
+                self.session = KollioSession(document: KollioDocument())
+                self.loadFailure = error
+            }
+        } else {
+            // Nothing stored: the first experience, and no fixture.
+            self.session = KollioSession(document: KollioDocument())
+            self.loadFailure = nil
+        }
     }
 
     static func makeDemoService(languageCode: String) -> LocalDemoSuggestionService {
@@ -121,6 +174,25 @@ public final class KollioModel {
             language: languageCode,
             authored: SarahFixture.authoredExpansions
         ))
+    }
+
+    /// Builds the service the environment asks for, and records what was really
+    /// chosen. A server that cannot be reached is reported as an error, never
+    /// quietly replaced by the demo engine.
+    public static func makeConfiguredService(
+        languageCode: String,
+        configuration: ServiceConfiguration = ServiceConfiguration.fromEnvironment().configuration,
+        token: String? = nil
+    ) -> (service: any SuggestionService, mode: ServiceConfiguration) {
+        switch configuration {
+        case .demo:
+            return (makeDemoService(languageCode: languageCode), .demo)
+        case .server(let baseURL):
+            guard let token, token.isEmpty == false else {
+                return (makeDemoService(languageCode: languageCode), .demo)
+            }
+            return (RemoteSuggestionService(baseURL: baseURL, token: token), configuration)
+        }
     }
 
     // MARK: Document access
@@ -523,6 +595,17 @@ public final class KollioModel {
         composer = ComposerState(anchorID: anchor, intent: intent)
     }
 
+    /// Opens the composer pre-filled with the object's own text, so an edit
+    /// starts from what is actually there rather than from nothing.
+    public func startEditing(anchor: ObjectID) {
+        guard let object = object(anchor) else { return }
+        composer = ComposerState(
+            anchorID: anchor,
+            text: object.text.text,
+            intent: .edit
+        )
+    }
+
     public func submitComposer() async {
         guard let composer else { return }
         let text = composer.text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -539,28 +622,95 @@ public final class KollioModel {
         case .explore:
             self.composer = nil
             await explore(composer.anchorID, intent: .explore)
+        case .edit:
+            // An edit is a user's own contribution, not a request to a model,
+            // so it goes through the command system and never asks anything.
+            self.composer = nil
+            applyEdit(to: composer.anchorID, text: text)
         }
+    }
+
+    /// Replaces the text of one object, keeping its identity.
+    ///
+    /// The full authored text is preserved: no summary replaces what was typed,
+    /// no other object moves, and the object stays the same object. It is one
+    /// transaction, so it undoes as one action.
+    @discardableResult
+    public func applyEdit(to id: ObjectID, text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, let object = object(id) else { return false }
+        guard object.text.text != trimmed else { return true }
+        let command = Command.updateObjectText(UpdateObjectText(
+            id: id,
+            text: LocalizedText(trimmed),
+            provenance: .human("local-user")
+        ))
+        guard session.apply([command], label: L10n.undoEdit) else {
+            status = L10n.errorGeneric
+            return false
+        }
+        return true
     }
 
     // MARK: First experience
 
-    /// The initial text becomes part of the document, with a small structure
-    /// around it. It is not a chat message.
-    public func start(with statement: String) {
+    /// The first experience: the person's own words become the document's
+    /// context object.
+    ///
+    /// There is no longer a pair of canned hypotheses behind it. The authored
+    /// text is preserved exactly as written, the object is created through the
+    /// command system so it has a stable identity and an undo entry, and the
+    /// canvas shows it immediately. Asking for intelligence is a separate step
+    /// that can fail without touching any of this.
+    @discardableResult
+    public func start(with statement: String) -> ObjectID? {
         let text = statement.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
+        guard !text.isEmpty else { return nil }
+
+        // A fresh document, and a save target of its own: a new document must
+        // never overwrite the previous one.
         var builder = DocumentBuilder(document: KollioDocument())
-        let context = builder.object("context", kind: .context, text, en: text, at: Position(x: 0, y: 0))!
-        let a = builder.object("direction-a", kind: .hypothesis, L10n.seedDirectionA, en: L10n.seedDirectionAEN, at: Position(x: -250, y: 210))!
-        let b = builder.object("direction-b", kind: .hypothesis, L10n.seedDirectionB, en: L10n.seedDirectionBEN, at: Position(x: 250, y: 210))!
-        builder.link("seed-a", from: context, to: a, .alternativeTo)
-        builder.link("seed-b", from: context, to: b, .alternativeTo)
+        guard let context = builder.object(
+            "context", kind: .context, text, en: text, at: Position(x: 0, y: 0)
+        ) else { return nil }
         session = KollioSession(document: builder.document)
+        adoptNewSaveTarget()
         selection = [context]
-        fitContent()
+        frames = [:]
+        camera = Camera(zoom: 1, translation: Position(x: 40, y: 120))
+        // Persisted before anything else can fail, so the words are safe even
+        // if the intelligence source is unreachable.
+        save()
+        return context
+    }
+
+    /// Explores the authored context. Separate from `start(with:)` on purpose:
+    /// a failure here must not cost the user their sentence.
+    public func exploreInitialContext(_ id: ObjectID) async {
+        await explore(id, intent: .explore)
+    }
+
+    /// A new document gets its own file, so saving it can never overwrite the
+    /// document that was open before.
+    private func adoptNewSaveTarget() {
+        let name = "Kollio-\(Self.shortStamp())"
+        documentURL = fileStore.url(named: name)
+    }
+
+    private static func shortStamp() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        // The short suffix keeps two documents created in the same second
+        // distinct, which a bare timestamp would not.
+        return "\(formatter.string(from: Date()))-\(UUID().uuidString.prefix(4))"
     }
 
     public var isEmpty: Bool { document.content.isEmpty }
+
+    /// A stored document could not be read. The user is told, and the file is
+    /// left exactly as it is.
+    public var hasUnreadableDocument: Bool { loadFailure != nil }
 
     /// Development aid for visual review: `KOLLIO_REVIEW=explore` opens the app
     /// with a proposal already on the canvas, so the ghost branch can be
@@ -629,19 +779,29 @@ public final class KollioModel {
         preview = nil
     }
 
+    /// A new, empty document with its own save target. Reusing the previous
+    /// document's file would destroy it on the first save.
     public func newDocument() {
         session = KollioSession(document: KollioDocument())
         frames = [:]
         selection = []
         preview = nil
+        composer = nil
+        loadFailure = nil
         camera = .identity
+        adoptNewSaveTarget()
     }
 
+    /// The Sarah scenario, always through an explicit action. It is never what a
+    /// launch falls back to.
     public func loadDemo() {
         session = KollioSession(document: SarahFixture.document())
         frames = [:]
         selection = []
         preview = nil
+        composer = nil
+        loadFailure = nil
+        adoptNewSaveTarget()
         fitContent()
     }
 }

@@ -34,10 +34,11 @@ struct ServerBackedTests {
     private static func makeApp() async throws -> Application {
         let app = try await Application.make(.testing)
         let configuration = ServerConfiguration(environment: ["KOLLIO_API_TOKEN": token])
+        // No document is injected: the request carries its own snapshot, and the
+        // server reasons about exactly that.
         let server = KollioServer(
             configuration: configuration,
-            provider: DemoProvider(),
-            documentProvider: { Self.document }
+            provider: DemoProvider()
         )
         try server.configure(app)
         return app
@@ -67,14 +68,19 @@ struct ServerBackedTests {
         RemoteSuggestionService(baseURL: URL(string: "http://127.0.0.1:8080")!, token: token)
     }
 
-    private func request(locale: String = "en") -> ProposalRequest {
-        ProposalRequest(
+    private func request(locale: String = "en", document: KollioDocument? = nil) throws -> ProposalRequest {
+        let document = document ?? Self.document
+        // The document travels with the request, so this is a real round trip
+        // and not a fixture injected into the test host.
+        let snapshot = try document.snapshot(targeting: ["object:csv"])
+        return ProposalRequest(
             requestId: UUID().uuidString,
-            documentId: Self.document.documentId,
-            baseSemanticRevision: Self.document.semanticRevision,
+            documentId: document.documentId,
+            baseSemanticRevision: document.semanticRevision,
             intent: .explore,
             targetIds: ["object:csv"],
-            contentLocale: locale
+            contentLocale: locale,
+            snapshot: snapshot
         )
     }
 
@@ -83,7 +89,7 @@ struct ServerBackedTests {
         let app = try await Self.makeApp()
         defer { Task { try? await app.asyncShutdown() } }
         let document = Self.document
-        let outgoing = request()
+        let outgoing = try request()
 
         let answer = try await call(
             app: app,
@@ -120,7 +126,7 @@ struct ServerBackedTests {
         let app = try await Self.makeApp()
         defer { Task { try? await app.asyncShutdown() } }
         for locale in ["fr", "en"] {
-            let outgoing = request(locale: locale)
+            let outgoing = try request(locale: locale)
             let answer = try await call(
                 app: app,
                 "/v1/proposals",
@@ -138,7 +144,7 @@ struct ServerBackedTests {
         defer { Task { try? await app.asyncShutdown() } }
         var movedOn = Self.document
         movedOn.semanticRevision += 1
-        let outgoing = request()
+        let outgoing = try request()
         let answer = try await call(
             app: app,
             "/v1/proposals",
@@ -164,7 +170,7 @@ struct ServerBackedTests {
     func unauthorized() async throws {
         let app = try await Self.makeApp()
         defer { Task { try? await app.asyncShutdown() } }
-        let outgoing = request()
+        let outgoing = try request()
         let answer = try await call(
             app: app,
             "/v1/proposals",

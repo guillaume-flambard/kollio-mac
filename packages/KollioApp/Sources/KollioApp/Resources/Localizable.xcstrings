@@ -664,6 +664,96 @@
           }
         }
       }
+    },
+    "action.submitHint": {
+      "comment": "The keyboard hint shown beside the primary action on the empty canvas",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘↩ to start"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘↩ pour commencer"
+          }
+        }
+      }
+    },
+    "error.loadFailed": {
+      "comment": "Shown when a stored document exists but cannot be read. The file is never overwritten.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved document could not be read, so nothing was replaced. It is still on disk: open it with Open, or start a new document."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le document enregistré n’a pas pu être lu, rien n’a donc été remplacé. Il est toujours sur le disque : ouvrez-le, ou commencez un nouveau document."
+          }
+        }
+      }
+    },
+    "canvas.edit": {
+      "comment": "The contextual action that edits an object's own text",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier"
+          }
+        }
+      }
+    },
+    "composer.editPlaceholder": {
+      "comment": "Placeholder in the inline composer when editing an object",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rewrite this text"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réécrivez ce texte"
+          }
+        }
+      }
+    },
+    "undo.edit": {
+      "comment": "Undo label for an edit of an object's text",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modification"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
