@@ -190,6 +190,11 @@ public enum VerificationStatus: Codable, Hashable, Sendable {
 /// A claim attached to an exact place in an exact revision.
 public struct Citation: Codable, Hashable, Sendable, Identifiable {
     public var id: CitationID
+    /// The claim in the document this citation supports. It is part of the citation
+    /// rather than of the command that created it, because the pairing has to
+    /// survive: a citation whose claim is only known at the moment it is made cannot
+    /// later answer "what is this object based on".
+    public var claimID: ObjectID
     public var sourceID: SourceID
     /// The revision this was read against. Immutable on purpose: see `SourceRevision`.
     public var revisionID: SourceRevisionID
@@ -200,6 +205,7 @@ public struct Citation: Codable, Hashable, Sendable, Identifiable {
 
     public init(
         id: CitationID,
+        claimID: ObjectID,
         sourceID: SourceID,
         revisionID: SourceRevisionID,
         locator: SourceLocator,
@@ -208,6 +214,7 @@ public struct Citation: Codable, Hashable, Sendable, Identifiable {
         recordedAt: Date = Date(timeIntervalSince1970: 0)
     ) {
         self.id = id
+        self.claimID = claimID
         self.sourceID = sourceID
         self.revisionID = revisionID
         self.locator = locator
@@ -415,6 +422,13 @@ public struct SourceLedger: Codable, Hashable, Sendable {
     /// Sorted by identifier so that a listing is stable between runs. A dictionary
     /// has no order, and an interface that reshuffles a list of citations on every
     /// redraw makes the list impossible to read.
+    /// The citations that support one claim, which is what an object shows.
+    public func citations(supporting claim: ObjectID) -> [Citation] {
+        citations.values
+            .filter { $0.claimID == claim }
+            .sorted { $0.id.rawValue < $1.id.rawValue }
+    }
+
     public func citations(of source: SourceID) -> [Citation] {
         citations.values
             .filter { $0.sourceID == source }

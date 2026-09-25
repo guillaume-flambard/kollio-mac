@@ -64,7 +64,8 @@ struct SourceLedgerTests {
 
         // A missing source: creating this would look like evidence.
         let orphan = Citation(
-            id: "citation:orphan", sourceID: "source:absent", revisionID: "rev:1",
+            id: "citation:orphan", claimID: ObjectID("object:claim"),
+            sourceID: "source:absent", revisionID: "rev:1",
             locator: SourceLocator(page: 1), quote: "Something"
         )
         if case .success = ledger.cite(orphan) {
@@ -73,7 +74,8 @@ struct SourceLedgerTests {
 
         // A real source, but a revision that does not exist.
         let wrongRevision = Citation(
-            id: "citation:wrong", sourceID: "source:brief", revisionID: "rev:9",
+            id: "citation:wrong", claimID: ObjectID("object:claim"),
+            sourceID: "source:brief", revisionID: "rev:9",
             locator: SourceLocator(page: 1), quote: "Something"
         )
         if case .success = ledger.cite(wrongRevision) {
@@ -89,7 +91,7 @@ struct SourceLedgerTests {
         _ = ledger.importRevision(revision("rev:1", 1), for: "source:brief")
 
         let citation = Citation(
-            id: "citation:1", sourceID: "source:brief", revisionID: "rev:1",
+            id: "citation:1", claimID: ObjectID("object:ctx"), sourceID: "source:brief", revisionID: "rev:1",
             locator: SourceLocator(lineRange: 1..<4), quote: "nine steps"
         )
         #expect((try? ledger.cite(citation).get()) != nil)
@@ -116,7 +118,7 @@ struct SourceLedgerTests {
         ledger.add(source())
         _ = ledger.importRevision(revision("rev:1", 1), for: "source:brief")
         _ = ledger.cite(Citation(
-            id: "citation:1", sourceID: "source:brief", revisionID: "rev:1",
+            id: "citation:1", claimID: ObjectID("object:ctx"), sourceID: "source:brief", revisionID: "rev:1",
             locator: SourceLocator(page: 2), quote: "nine steps"
         ))
         _ = ledger.importRevision(revision("rev:2", 2, text: "Signup takes three steps."), for: "source:brief")
@@ -136,7 +138,7 @@ struct SourceLedgerTests {
         ledger.add(source())
         _ = ledger.importRevision(revision("rev:1", 1), for: "source:brief")
         _ = ledger.cite(Citation(
-            id: "citation:1", sourceID: "source:brief", revisionID: "rev:1",
+            id: "citation:1", claimID: ObjectID("object:ctx"), sourceID: "source:brief", revisionID: "rev:1",
             locator: SourceLocator(lineRange: 10..<14), quote: "nine steps"
         ))
 
@@ -166,7 +168,7 @@ struct SourceLedgerTests {
         ledger.add(source())
         _ = ledger.importRevision(revision("rev:1", 1), for: "source:brief")
         _ = ledger.cite(Citation(
-            id: "citation:1", sourceID: "source:brief", revisionID: "rev:1",
+            id: "citation:1", claimID: ObjectID("object:ctx"), sourceID: "source:brief", revisionID: "rev:1",
             locator: SourceLocator(page: 1), quote: "nine steps"
         ).verified(observation: "Checked on Tuesday.", by: "person:owner"))
 
@@ -192,7 +194,7 @@ struct SourceLedgerTests {
         ledger.add(source())
         _ = ledger.importRevision(revision("rev:1", 1), for: "source:brief")
         _ = ledger.cite(Citation(
-            id: "citation:1", sourceID: "source:brief", revisionID: "rev:1",
+            id: "citation:1", claimID: ObjectID("object:ctx"), sourceID: "source:brief", revisionID: "rev:1",
             locator: SourceLocator(page: 1), quote: "nine steps"
         ))
 
@@ -229,7 +231,7 @@ struct SourceLedgerTests {
         ledger.add(source())
         _ = ledger.importRevision(revision("rev:1", 1), for: "source:brief")
         _ = ledger.cite(Citation(
-            id: "citation:1", sourceID: "source:brief", revisionID: "rev:1",
+            id: "citation:1", claimID: ObjectID("object:ctx"), sourceID: "source:brief", revisionID: "rev:1",
             locator: SourceLocator(page: 1), quote: "nine steps"
         ))
 
@@ -253,7 +255,8 @@ struct SourceLedgerTests {
         ledger.add(source())
         _ = ledger.importRevision(revision("rev:1", 1), for: "source:brief")
         _ = ledger.cite(Citation(
-            id: "citation:a", sourceID: "source:brief", revisionID: "rev:1",
+            id: "citation:a", claimID: ObjectID("object:claim"),
+            sourceID: "source:brief", revisionID: "rev:1",
             locator: .init(page: 1), quote: "nine steps"
         ))
 
@@ -272,7 +275,8 @@ struct SourceLedgerTests {
         ledger.add(source())
         _ = ledger.importRevision(revision("rev:1", 1), for: "source:brief")
         _ = ledger.cite(Citation(
-            id: "citation:a", sourceID: "source:brief", revisionID: "rev:1",
+            id: "citation:a", claimID: ObjectID("object:claim"),
+            sourceID: "source:brief", revisionID: "rev:1",
             locator: .init(page: 1), quote: "nine steps"
         ).verified(observation: "Checked on Tuesday.", by: "person:owner"))
 
@@ -294,7 +298,7 @@ struct SourceLedgerTests {
         _ = ledger.importRevision(revision("rev:1", 1), for: "source:brief")
         for id in ["citation:c", "citation:a", "citation:b"] {
             _ = ledger.cite(Citation(
-                id: CitationID(id), sourceID: "source:brief", revisionID: "rev:1",
+                id: CitationID(id), claimID: ObjectID("object:ctx"), sourceID: "source:brief", revisionID: "rev:1",
                 locator: .init(page: 1), quote: "x"
             ))
         }

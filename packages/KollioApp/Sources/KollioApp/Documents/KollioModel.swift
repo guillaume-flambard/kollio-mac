@@ -412,6 +412,52 @@ public final class KollioModel {
         )
     }
 
+    // MARK: Commands
+
+    /// The one way anything changes the document from outside.
+    ///
+    /// Views call this rather than mutating anything: the transaction, the undo
+    /// entry and the error handling all live here, so there is one path to get right
+    /// rather than one per call site. A refused command changes nothing and says
+    /// so, because a command that half-applied would be a corrupted document.
+    @discardableResult
+    public func perform(_ commands: [Command], label: String) -> Bool {
+        guard commands.isEmpty == false else { return true }
+        guard session.apply(commands, label: label) else {
+            status = L10n.errorGeneric
+            return false
+        }
+        return true
+    }
+
+    // MARK: Sources
+
+    /// What a source chip says about one resource cited by an object.
+    ///
+    /// Read straight from the ledger and never cached: the chip is the document's
+    /// own state, and a cached copy of it would be a second truth free to disagree.
+    public func sourceChips(for objectID: ObjectID) -> [SourceChip] {
+        let citations = document.sources.citations(supporting: objectID)
+        guard citations.isEmpty == false else { return [] }
+
+        // One chip per source, however many passages of it are cited.
+        var order: [SourceID] = []
+        var counts: [SourceID: Int] = [:]
+        for citation in citations {
+            if counts[citation.sourceID] == nil { order.append(citation.sourceID) }
+            counts[citation.sourceID, default: 0] += 1
+        }
+        return order.compactMap { id in
+            guard let source = document.sources.source(id) else { return nil }
+            return SourceChip(
+                id: id,
+                title: source.title,
+                state: SourceChipState(source.extraction),
+                citations: counts[id] ?? 0
+            )
+        }
+    }
+
     // MARK: Intelligence
 
     /// Asks the current source for a proposal and previews it as a ghost branch.
@@ -874,5 +920,71 @@ public final class KollioModel {
         loadFailure = nil
         adoptNewSaveTarget()
         fitContent()
+    }
+}
+
+
+/// The state a source chip shows, taken from what the import actually achieved.
+///
+/// There is no "imported" state that flatters the app: a file with no text layer
+/// says so, and a source nobody has read yet says that too.
+public enum SourceChipState: Hashable, Sendable {
+    case notRead
+    case importing
+    case ready
+    case partial(String)
+    case noText
+    case unsupported
+    case missing
+    /// Cited, but the source has moved or gone: the claim stands, the check does not.
+    case unverifiable
+
+    public init(_ extraction: SourceReference.Extraction) {
+        switch extraction {
+        case .notAttempted: self = .notRead
+        case .pending: self = .importing
+        case .ready: self = .ready
+        case .partial(_, let reason): self = .partial(reason)
+        case .noText: self = .noText
+        case .unsupported: self = .unsupported
+        case .missing: self = .missing
+        }
+    }
+
+    /// Spoken rather than shown, because a coloured dot tells a screen reader
+    /// nothing at all.
+    public var accessibilityDescription: String {
+        switch self {
+        case .notRead: return L10n.sourceStateNotRead
+        case .importing: return L10n.sourceStateImporting
+        case .ready: return L10n.sourceStateReady
+        case .partial: return L10n.sourceStatePartial
+        case .noText: return L10n.sourceStateNoText
+        case .unsupported: return L10n.sourceStateUnsupported
+        case .missing: return L10n.sourceStateMissing
+        case .unverifiable: return L10n.sourceStateUnverifiable
+        }
+    }
+
+    /// A chip is calm when nothing needs a person's attention.
+    public var needsAttention: Bool {
+        switch self {
+        case .ready, .notRead, .importing: return false
+        case .partial, .noText, .unsupported, .missing, .unverifiable: return true
+        }
+    }
+}
+
+public struct SourceChip: Hashable, Sendable, Identifiable {
+    public var id: SourceID
+    public var title: String
+    public var state: SourceChipState
+    public var citations: Int
+
+    public init(id: SourceID, title: String, state: SourceChipState, citations: Int) {
+        self.id = id
+        self.title = title
+        self.state = state
+        self.citations = citations
     }
 }

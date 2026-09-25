@@ -98,6 +98,7 @@ struct CanvasView: View {
                         isHovered: model.hoveredObjectID == object.id,
                         isDragging: model.dragState?.id == object.id,
                         width: instance.size?.width ?? NodeLayout.estimatedSize(for: object).width,
+                        sourceChips: model.sourceChips(for: object.id),
                         onSelect: { extend in model.select(object.id, extending: extend) },
                         onHover: { hovering in
                             if hovering {

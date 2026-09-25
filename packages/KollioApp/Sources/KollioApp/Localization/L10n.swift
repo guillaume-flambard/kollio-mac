@@ -52,6 +52,23 @@ public enum L10n {
     public static var composerSetAsidePlaceholder: String { callAsFunction("composer.setAsidePlaceholder") }
     public static var composerSetAsideHint: String { callAsFunction("composer.setAsideHint") }
 
+    // Sources
+    public static func sourceChip(_ title: String) -> String { callAsFunction("source.chip") }
+    public static func sourceChipCount(_ title: String, _ count: Int) -> String {
+        String(format: callAsFunction("source.chipCount"), title, count)
+    }
+    public static func sourceChipAccessibility(_ title: String, _ state: String) -> String {
+        String(format: callAsFunction("source.chipAccessibility"), title, state)
+    }
+    public static var sourceStateNotRead: String { callAsFunction("source.state.notRead") }
+    public static var sourceStateImporting: String { callAsFunction("source.state.importing") }
+    public static var sourceStateReady: String { callAsFunction("source.state.ready") }
+    public static var sourceStatePartial: String { callAsFunction("source.state.partial") }
+    public static var sourceStateNoText: String { callAsFunction("source.state.noText") }
+    public static var sourceStateUnsupported: String { callAsFunction("source.state.unsupported") }
+    public static var sourceStateMissing: String { callAsFunction("source.state.missing") }
+    public static var sourceStateUnverifiable: String { callAsFunction("source.state.unverifiable") }
+
     // Status
     public static var statusNoChange: String { callAsFunction("status.noChange") }
     public static var statusKept: String { callAsFunction("status.kept") }

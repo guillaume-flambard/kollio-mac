@@ -14,6 +14,11 @@ public enum Command: Codable, Hashable, Sendable {
     case addContributionToProduct(AddContributionToProduct)
     case applyProposal(ApplyProposal)
     case rejectProposal(RejectProposal)
+    case attachSource(AttachSource)
+    case importSourceRevision(ImportSourceRevision)
+    case addCitation(AddCitation)
+    case recordVerification(RecordVerification)
+    case removeSource(RemoveSource)
 
     /// Presentation-only commands never change the meaning of the document.
     public var isSemantic: Bool {
@@ -22,7 +27,9 @@ public enum Command: Codable, Hashable, Sendable {
             return false
         case .createObject, .updateObjectText, .addRelationship, .removeRelationship,
              .createScenario, .recordDecision, .revokeDecision,
-             .addContributionToProduct, .applyProposal, .rejectProposal:
+             .addContributionToProduct, .applyProposal, .rejectProposal,
+             .attachSource, .importSourceRevision, .addCitation, .recordVerification,
+             .removeSource:
             return true
         }
     }
@@ -41,6 +48,11 @@ public enum Command: Codable, Hashable, Sendable {
         case .addContributionToProduct: return "undo.addContribution"
         case .applyProposal: return "undo.applyProposal"
         case .rejectProposal: return "undo.rejectProposal"
+        case .attachSource: return "undo.attachSource"
+        case .importSourceRevision: return "undo.importSourceRevision"
+        case .addCitation: return "undo.addCitation"
+        case .recordVerification: return "undo.recordVerification"
+        case .removeSource: return "undo.removeSource"
         }
     }
 }
@@ -221,5 +233,77 @@ public struct RejectProposal: Codable, Hashable, Sendable {
         self.proposalId = proposalId
         self.reason = reason
         self.provenance = provenance
+    }
+}
+
+// MARK: - Sources and citations
+//
+// Every one of these is a validated command like any other, so attaching a source
+// is undoable, transactional and versioned with the rest of the document rather
+// than being a side effect a view performs.
+
+public struct AttachSource: Codable, Hashable, Sendable {
+    public var source: SourceReference
+    /// The object this source belongs to, when it was brought for a particular
+    /// piece of the document rather than for the whole of it.
+    public var attachedTo: ObjectID?
+    public var provenance: Provenance
+
+    public init(source: SourceReference, attachedTo: ObjectID? = nil, provenance: Provenance) {
+        self.source = source
+        self.attachedTo = attachedTo
+        self.provenance = provenance
+    }
+}
+
+public struct ImportSourceRevision: Codable, Hashable, Sendable {
+    public var sourceID: SourceID
+    public var revision: SourceRevision
+    public var provenance: Provenance
+
+    public init(sourceID: SourceID, revision: SourceRevision, provenance: Provenance) {
+        self.sourceID = sourceID
+        self.revision = revision
+        self.provenance = provenance
+    }
+}
+
+public struct AddCitation: Codable, Hashable, Sendable {
+    public var citation: Citation
+    /// The claim being supported. Required: a citation with nothing to attach to is
+    /// evidence for no one.
+    public var claimID: ObjectID
+    public var provenance: Provenance
+
+    public init(citation: Citation, claimID: ObjectID, provenance: Provenance) {
+        self.citation = citation
+        self.claimID = claimID
+        self.provenance = provenance
+    }
+}
+
+/// Recording a check. The observation and the author are both required by the
+/// type, so there is no command that can mark something verified on its own.
+public struct RecordVerification: Codable, Hashable, Sendable {
+    public var citationID: CitationID
+    public var observation: String
+    public var author: ActorID
+    public var at: Date
+
+    public init(citationID: CitationID, observation: String, author: ActorID, at: Date = Date()) {
+        self.citationID = citationID
+        self.observation = observation
+        self.author = author
+        self.at = at
+    }
+}
+
+public struct RemoveSource: Codable, Hashable, Sendable {
+    public var sourceID: SourceID
+    public var reason: String
+
+    public init(sourceID: SourceID, reason: String) {
+        self.sourceID = sourceID
+        self.reason = reason
     }
 }

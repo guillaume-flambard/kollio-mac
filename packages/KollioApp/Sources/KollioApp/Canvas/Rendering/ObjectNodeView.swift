@@ -13,6 +13,9 @@ struct ObjectNodeView: View {
     let isHovered: Bool
     let isDragging: Bool
     let width: Double
+    /// Sources cited by this object. Empty for most objects, and never invented:
+    /// the chip is drawn from the ledger or not at all.
+    let sourceChips: [SourceChip]
     let onSelect: (Bool) -> Void
     let onHover: (Bool) -> Void
     let onDragChanged: (CGSize) -> Void
@@ -83,6 +86,11 @@ struct ObjectNodeView: View {
                         .font(TypeScale.metadata)
                         .foregroundStyle(theme.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
+                }
+                if sourceChips.isEmpty == false {
+                    // On the object rather than in a panel: a chip about evidence
+                    // belongs next to the claim it supports, and nowhere else.
+                    SourceChipRow(chips: sourceChips)
                 }
             }
         }
@@ -201,5 +209,59 @@ struct CollapsedDirectionView: View {
         // rather than a double-click nobody can perform.
         .accessibilityHint(reason.map { "\($0). \(L10n.reopen)" } ?? L10n.reopen)
         .accessibilityAction(named: L10n.reopen) { onReopen() }
+    }
+}
+
+
+/// The state of the sources behind a claim, on the claim itself.
+///
+/// Small, quiet, and never interactive. A chip is information, not a control:
+/// opening the source, reading the passage and recording a check are actions taken
+/// where the person is working, not buttons on a badge.
+struct SourceChipRow: View {
+    let chips: [SourceChip]
+    @Environment(\.kollioTheme) private var theme
+
+    var body: some View {
+        HStack(spacing: Space.xs) {
+            ForEach(chips) { chip in
+                HStack(spacing: 2) {
+                    Image(systemName: symbol(for: chip.state))
+                        .font(.system(size: 9, weight: .semibold))
+                    Text(label(for: chip))
+                        .font(TypeScale.metadata)
+                }
+                .foregroundStyle(chip.state.needsAttention ? theme.attention : theme.textSecondary)
+                .padding(.horizontal, Space.xs)
+                .padding(.vertical, 2)
+                .background(
+                    Capsule().fill(theme.surfaceSubtle)
+                )
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            chips.map { L10n.sourceChipAccessibility($0.title, $0.state.accessibilityDescription) }
+                .joined(separator: ". ")
+        )
+    }
+
+    private func symbol(for state: SourceChipState) -> String {
+        switch state {
+        case .ready: return "checkmark.circle"
+        case .importing: return "arrow.triangle.2.circlepath"
+        case .notRead: return "circle.dashed"
+        case .partial: return "exclamationmark.circle"
+        case .noText: return "doc.text.magnifyingglass"
+        case .unsupported: return "questionmark.circle"
+        case .missing, .unverifiable: return "exclamationmark.triangle"
+        }
+    }
+
+    private func label(for chip: SourceChip) -> String {
+        let count = chip.citations
+        return count > 1
+            ? L10n.sourceChipCount(chip.title, count)
+            : L10n.sourceChip(chip.title)
     }
 }

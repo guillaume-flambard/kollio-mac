@@ -165,10 +165,17 @@ Everything in the non-goals, and also, honestly:
   `ScrollDeliveryTests` proves three things: a scroll reaches the canvas, a click does not, and a
   text field outranks both. **Still owed:** a real trackpad scroll and its feel, which no test
   substitutes for.
-- **L3 is a domain with no interface.** `SourceLedger` and `ContextProjection` exist, are
-  tested and are used on the real request path, and nothing draws them. There is no way
-  yet to attach a file, import a PDF, read a CSV, cite a line or see what was left out of
-  the context. The domain is correct and invisible.
+- **L3 has a chip but no way to fill it.** `SourceLedger` is part of the document, its
+  commands are transactional, and a claim now shows a chip saying what state its sources
+  are in. But there is still no way to choose a file, read it, or import its text, so in
+  practice every chip says "not read yet" unless a document was written by something other
+  than this app. Nothing opens a citation back at its passage, and nothing records a
+  verification from the interface.
+- **The schema had drifted and nothing noticed.** `contracts/schemas/kollio-document.schema.json`
+  declared `additionalProperties: false` while no test ever compared it to what the codec
+  writes, and its `required` list demanded a top-level `provenance` that has never existed.
+  Both are fixed, and a test now compares the codec against the schema. It is not full JSON
+  Schema validation and does not claim to be.
 - **The context budget is counted in characters, not tokens.** The app cannot know the
   model's tokenizer, so the conversion is a documented estimate, clamped so the budget can
   never exceed the model's real window. It is honest about being an estimate, and a

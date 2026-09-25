@@ -101,6 +101,14 @@ public struct ProposalValidator: Sendable {
                 throw DocumentError.forbiddenOperation("nested applyProposal")
             case .rejectProposal:
                 throw DocumentError.forbiddenOperation("rejectProposal")
+            case .attachSource, .importSourceRevision, .addCitation,
+                 .recordVerification, .removeSource:
+                // Intelligence may propose an idea, never attach evidence to it and
+                // never mark it verified. A model that could add a citation would be
+                // able to manufacture the appearance of support, and one that could
+                // record a verification could award itself a badge. Both are a
+                // person's to do.
+                throw DocumentError.forbiddenOperation("sources and citations are the user's to manage")
             }
         }
 

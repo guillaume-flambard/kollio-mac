@@ -94,20 +94,25 @@ STATUS_NOTES = {
     "AI-08": ("automatedVerified",
               "VerticalSliceTests: one Keep undoes as one action."),
     "CTX-02": ("automatedVerified",
-               "Domain only: SourceLedgerTests. A reference is a pointer, a link fetches nothing, "
-               "an image is not read until asked, and an image-only PDF says it has no text. "
-               "No file import, extraction or reader is built."),
+               "A reference is a pointer, a link fetches nothing, an image is not read until "
+               "asked, and a file with no text says so. SourceLedgerTests, SourceCommandTests. "
+               "Attaching and importing are commands. NO file import, extraction, reader or "
+               "chip wiring for a chosen file is built."),
     "CTX-03": ("automatedVerified",
-               "Domain only: SourceLedgerTests. A citation keeps its revision, is refused towards "
-               "anything absent, and cannot be verified without an observation and an author."),
+               "A citation keeps its revision, is refused towards anything absent, and cannot be "
+               "verified without an observation and an author. Intelligence is refused these "
+               "commands outright. SourceLedgerTests, SourceCommandTests. No interface to choose "
+               "a passage or open a citation is built."),
     "CTX-06": ("automatedVerified",
                "The projection is built and measured on the real request path: omissions are "
                "counted, a required item is never dropped, and the budget cannot exceed the "
-               "model's window. The interface that shows the list is not built."),
+               "model's window. ContextProjectionTests, AppleAdapterTests. The interface that "
+               "shows the list to a person is not built."),
     "CTX-07": ("automatedVerified",
-               "Domain only: SourceLedgerTests. A new revision flags what it supersedes without "
-               "moving a citation, a failed extraction keeps the previous version active, and a "
-               "removed source never deletes the claim."),
+               "A new revision flags what it supersedes without moving a citation, a failed "
+               "extraction keeps the previous version active, and a removed source never deletes "
+               "the claim. SourceLedgerTests, SourceCommandTests. No comparison of dependent "
+               "extracts and no reassessment proposal are built."),
     "DEC-01": ("automatedVerified", "CommandTests: a decision survives save and reload."),
     "DEC-02": ("automatedVerified",
                "InteractionReliabilityTests: the camera is identical before and after."),

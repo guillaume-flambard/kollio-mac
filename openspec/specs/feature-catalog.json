@@ -498,7 +498,7 @@
       ],
       "lot": "L3",
       "status": "automatedVerified",
-      "evidence": "Domain only: SourceLedgerTests. A reference is a pointer, a link fetches nothing, an image is not read until asked, and an image-only PDF says it has no text. No file import, extraction or reader is built."
+      "evidence": "A reference is a pointer, a link fetches nothing, an image is not read until asked, and a file with no text says so. SourceLedgerTests, SourceCommandTests. Attaching and importing are commands. NO file import, extraction, reader or chip wiring for a chosen file is built."
     },
     {
       "id": "CTX-03",
@@ -516,7 +516,7 @@
       "section": "Context and sources",
       "lot": "L3",
       "status": "automatedVerified",
-      "evidence": "Domain only: SourceLedgerTests. A citation keeps its revision, is refused towards anything absent, and cannot be verified without an observation and an author."
+      "evidence": "A citation keeps its revision, is refused towards anything absent, and cannot be verified without an observation and an author. Intelligence is refused these commands outright. SourceLedgerTests, SourceCommandTests. No interface to choose a passage or open a citation is built."
     },
     {
       "id": "CTX-04",
@@ -567,7 +567,7 @@
       "section": "Context and sources",
       "lot": "L3",
       "status": "automatedVerified",
-      "evidence": "The projection is built and measured on the real request path: omissions are counted, a required item is never dropped, and the budget cannot exceed the model's window. The interface that shows the list is not built."
+      "evidence": "The projection is built and measured on the real request path: omissions are counted, a required item is never dropped, and the budget cannot exceed the model's window. ContextProjectionTests, AppleAdapterTests. The interface that shows the list to a person is not built."
     },
     {
       "id": "CTX-07",
@@ -584,7 +584,7 @@
       "section": "Context and sources",
       "lot": "L3",
       "status": "automatedVerified",
-      "evidence": "Domain only: SourceLedgerTests. A new revision flags what it supersedes without moving a citation, a failed extraction keeps the previous version active, and a removed source never deletes the claim."
+      "evidence": "A new revision flags what it supersedes without moving a citation, a failed extraction keeps the previous version active, and a removed source never deletes the claim. SourceLedgerTests, SourceCommandTests. No comparison of dependent extracts and no reassessment proposal are built."
     },
     {
       "id": "DEC-01",

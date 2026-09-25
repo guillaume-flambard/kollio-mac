@@ -65,15 +65,15 @@ Counts: 15 automatedVerified, 1 humanVerified, 55 specified. 71 features, 169 ac
 - [ ] **CAN-09** Search and navigate · `specified` · 3 AC
 - [ ] **CAN-10** Presentation and accessible reading · `specified` · 3 AC
 - [x] **CTX-02** Drop resources and read them · `automatedVerified` · 2 AC
-      Domain only: SourceLedgerTests. A reference is a pointer, a link fetches nothing, an image is not read until asked, and an image-only PDF says it has no text. No file import, extraction or reader is built.
+      A reference is a pointer, a link fetches nothing, an image is not read until asked, and a file with no text says so. SourceLedgerTests, SourceCommandTests. Attaching and importing are commands. NO file import, extraction, reader or chip wiring for a chosen file is built.
 - [x] **CTX-03** Cite and verify provenance · `automatedVerified` · 3 AC
-      Domain only: SourceLedgerTests. A citation keeps its revision, is refused towards anything absent, and cannot be verified without an observation and an author.
+      A citation keeps its revision, is refused towards anything absent, and cannot be verified without an observation and an author. Intelligence is refused these commands outright. SourceLedgerTests, SourceCommandTests. No interface to choose a passage or open a citation is built.
 - [ ] **CTX-04** Define a hypothesis or a constraint · `specified` · 2 AC
 - [ ] **CTX-05** Understand the impact of new information · `specified` · 2 AC
 - [x] **CTX-06** See and limit what intelligence will use · `automatedVerified` · 2 AC
-      The projection is built and measured on the real request path: omissions are counted, a required item is never dropped, and the budget cannot exceed the model's window. The interface that shows the list is not built.
+      The projection is built and measured on the real request path: omissions are counted, a required item is never dropped, and the budget cannot exceed the model's window. ContextProjectionTests, AppleAdapterTests. The interface that shows the list to a person is not built.
 - [x] **CTX-07** Update a resource without erasing history · `automatedVerified` · 2 AC
-      Domain only: SourceLedgerTests. A new revision flags what it supersedes without moving a citation, a failed extraction keeps the previous version active, and a removed source never deletes the claim.
+      A new revision flags what it supersedes without moving a citation, a failed extraction keeps the previous version active, and a removed source never deletes the claim. SourceLedgerTests, SourceCommandTests. No comparison of dependent extracts and no reassessment proposal are built.
 
 ## L4 — 7 features
 

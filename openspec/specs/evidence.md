@@ -43,6 +43,10 @@ project outruns its proof.
 | A removed source does not delete the claim | `SourceLedgerTests` | L3 |
 | The context budget is measured, required items are never dropped | `ContextProjectionTests`, `AppleAdapterTests` | L3 |
 | A local-only projection cannot be sent | `ContextProjectionTests` | L3 |
+| Attaching a source is transactional and atomic | `SourceCommandTests` | L3 |
+| Intelligence may not attach or verify evidence | `SourceCommandTests` | L3 |
+| A chip shows the state of a claim's sources | `SourceChipTests` | L3 |
+| The codec and the published schema agree | `SourceCommandTests` | L3 |
 
 ## What is owed to a person
 
@@ -72,6 +76,18 @@ These cannot be automated here, and no line of code substitutes for them.
   engine, took 35 seconds and started failing on a Mac with a usable model. Fixed
   by pinning the engine in every test; recorded because it is the failure mode
   this project is most likely to repeat.
+- The published `.kollio` schema had drifted twice without anything noticing: it
+  declared `additionalProperties: false` while the codec had never been compared
+  against it, and its `required` list demanded a top-level `provenance` that has
+  never existed in the format. A test now compares the two, which is not full JSON
+  Schema validation and does not claim to be.
+- `Citation` did not record which claim it supported, so nothing could answer "what
+  is this object based on". The chip could not have been written without it, and my
+  first attempt at `sourceChips` contained a filter that was always true because of
+  it. The pairing now lives on the citation, where it survives.
+- `KollioModel` exposed no way to run a command from outside, because every existing
+  mutation had its own hand-written method. `perform(_:label:)` is now the single
+  path, which is also what a source action in the interface will use.
 - The context budget had a 2000-character floor that could exceed a small model's
   whole window, so it would have claimed more room than existed and truncation would
   have gone undetected. It is now clamped to the window, and a test covers 64, 300,

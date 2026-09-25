@@ -20,6 +20,10 @@ public struct KollioDocument: Codable, Hashable, Sendable {
     public var contributions: [ActorID: ContributionRecord]
     public var products: [ObjectID: ProductComposition]
     public var presentation: Presentation
+    /// Sources and the citations made from them. Part of the document rather than a
+    /// side store, so a claim and what it was based on travel together in one file
+    /// and are versioned by the same revision.
+    public var sources: SourceLedger
 
     public init(
         schemaVersion: Int = KollioDocument.currentSchemaVersion,
@@ -33,7 +37,8 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         decisions: [DecisionID: Decision] = [:],
         contributions: [ActorID: ContributionRecord] = [:],
         products: [ObjectID: ProductComposition] = [:],
-        presentation: Presentation = Presentation()
+        presentation: Presentation = Presentation(),
+        sources: SourceLedger = SourceLedger()
     ) {
         self.schemaVersion = schemaVersion
         self.documentId = documentId
@@ -47,9 +52,12 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         self.contributions = contributions
         self.products = products
         self.presentation = presentation
+        self.sources = sources
     }
 
-    public static let currentSchemaVersion = 1
+    /// 2 added the `sources` ledger. A file written at version 1 has no `sources`
+    /// key and decodes as a document with no sources, which is the truth about it.
+    public static let currentSchemaVersion = 2
 
     // MARK: - Codable
 
@@ -59,7 +67,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case schemaVersion, documentId, revision, semanticRevision, createdAt, updatedAt
         case content, relationships, decisions, contributions, products
-        case presentation
+        case presentation, sources
     }
 
     private struct IdKey: CodingKey {
@@ -84,6 +92,9 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         contributions = try Self.decodeMap(ActorID.self, from: container, forKey: .contributions, of: ContributionRecord.self)
         products = try Self.decodeMap(ObjectID.self, from: container, forKey: .products, of: ProductComposition.self)
         presentation = try container.decode(Presentation.self, forKey: .presentation)
+        // Absent in a file written before sources existed, which is a document with
+        // no sources rather than a corrupt one.
+        sources = try container.decodeIfPresent(SourceLedger.self, forKey: .sources) ?? SourceLedger()
     }
 
     private static func decodeMap<Key: KollioIdentifier, Value: Decodable>(
@@ -115,6 +126,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         try Self.encodeMap(contributions, into: &container, forKey: .contributions)
         try Self.encodeMap(products, into: &container, forKey: .products)
         try container.encode(presentation, forKey: .presentation)
+        try container.encode(sources, forKey: .sources)
     }
 
     private static func encodeMap<Key: KollioIdentifier, Value: Encodable>(

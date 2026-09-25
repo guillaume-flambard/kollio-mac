@@ -18,6 +18,14 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
     case forbiddenOperation(String)
     case unknownContributionReference(ObjectID, ActorID)
     case invalidShareRange(Double)
+    case duplicateSource(SourceID)
+    case unknownSource(SourceID)
+    case unknownSourceRevision(SourceID, SourceRevisionID)
+    case unknownCitation(CitationID)
+    /// The import ran and produced nothing usable, so the previous version stays
+    /// active. Named rather than folded into a generic failure because "your file
+    /// has no text layer" and "that file is gone" call for different reactions.
+    case sourceExtractionFailed(SourceID)
 
     public var description: String {
         switch self {
@@ -38,6 +46,11 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
         case .forbiddenOperation(let name): return "Forbidden operation \(name)"
         case .unknownContributionReference(let object, let contribution): return "Object \(object) references unknown contribution \(contribution)"
         case .invalidShareRange(let value): return "Invalid share \(value)"
+        case .duplicateSource(let id): return "Duplicate source \(id)"
+        case .unknownSource(let id): return "Unknown source \(id)"
+        case .unknownSourceRevision(let source, let revision): return "Source \(source) has no revision \(revision)"
+        case .unknownCitation(let id): return "Unknown citation \(id)"
+        case .sourceExtractionFailed(let id): return "Source \(id) produced no readable text; the previous version stays active"
         }
     }
 }
@@ -113,6 +126,16 @@ public struct DocumentStore: Sendable {
         case .rejectProposal(let reject):
             // see note in applyCommand
             _ = reject
+        case .attachSource(let attach):
+            try attachSource(attach, in: &document)
+        case .importSourceRevision(let importRevision):
+            try importSourceRevision(importRevision, in: &document)
+        case .addCitation(let citation):
+            try addCitation(citation, in: &document)
+        case .recordVerification(let verification):
+            try recordVerification(verification, in: &document)
+        case .removeSource(let remove):
+            try removeSource(remove, in: &document)
         }
     }
 
@@ -323,5 +346,87 @@ public struct DocumentStore: Sendable {
 extension DocumentStore {
     public static func setAsideProposalReason(for reject: RejectProposal) -> RejectProposal.RejectReason {
         reject.reason
+    }
+
+    // MARK: - Sources and citations
+
+    private static func attachSource(_ attach: AttachSource, in document: inout KollioDocument) throws {
+        guard document.sources.source(attach.source.id) == nil else {
+            throw DocumentError.duplicateSource(attach.source.id)
+        }
+        if let target = attach.attachedTo, document.content[target] == nil {
+            // A source attached to nothing in particular is legitimate, so this is
+            // only refused when an attachment was named and does not exist.
+            throw DocumentError.unknownObject(target)
+        }
+        document.sources.add(attach.source)
+    }
+
+    private static func importSourceRevision(
+        _ importRevision: ImportSourceRevision,
+        in document: inout KollioDocument
+    ) throws {
+        switch document.sources.importRevision(importRevision.revision, for: importRevision.sourceID) {
+        case .imported:
+            return
+        case .rejected(.unknownSource):
+            throw DocumentError.unknownSource(importRevision.sourceID)
+        case .rejected(.extractionFailed):
+            // A failed import leaves the previous version active and changes
+            // nothing. It is not an error the document has to record, but it is not
+            // a success either, so the caller is told rather than left to assume the
+            // file was read.
+            throw DocumentError.sourceExtractionFailed(importRevision.sourceID)
+        }
+    }
+
+    private static func addCitation(_ add: AddCitation, in document: inout KollioDocument) throws {
+        guard document.content[add.claimID] != nil else {
+            throw DocumentError.unknownObject(add.claimID)
+        }
+        // The claim named by the command is the claim recorded on the citation. Two
+        // places to state one thing would be two places to disagree.
+        var citation = add.citation
+        citation.claimID = add.claimID
+        switch document.sources.cite(citation) {
+        case .success:
+            return
+        case .failure(.unknownSource):
+            throw DocumentError.unknownSource(citation.sourceID)
+        case .failure(.unknownRevision(let revision)):
+            throw DocumentError.unknownSourceRevision(citation.sourceID, revision)
+        case .failure(.unknownCitation(let citation)):
+            throw DocumentError.unknownCitation(citation)
+        }
+    }
+
+    private static func recordVerification(
+        _ verification: RecordVerification,
+        in document: inout KollioDocument
+    ) throws {
+        guard verification.observation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
+            // A verification with nothing to say is not a verification.
+            throw DocumentError.forbiddenOperation("a verification needs an observation")
+        }
+        switch document.sources.recordVerification(
+            verification.citationID,
+            observation: verification.observation,
+            by: verification.author,
+            at: verification.at
+        ) {
+        case .success:
+            return
+        case .failure:
+            throw DocumentError.unknownCitation(verification.citationID)
+        }
+    }
+
+    private static func removeSource(_ remove: RemoveSource, in document: inout KollioDocument) throws {
+        guard document.sources.source(remove.sourceID) != nil else {
+            throw DocumentError.unknownSource(remove.sourceID)
+        }
+        // The history stays. What is lost is the ability to check quietly, and every
+        // citation says so.
+        document.sources.removeSourceKeepingHistory(remove.sourceID)
     }
 }

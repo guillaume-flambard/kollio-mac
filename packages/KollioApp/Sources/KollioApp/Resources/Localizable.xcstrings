@@ -808,6 +808,204 @@
           }
         }
       }
+    },
+    "source.chip": {
+      "comment": "A source cited by this object, named. No state: the state is spoken separately.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
+          }
+        }
+      }
+    },
+    "source.chipCount": {
+      "comment": "A source cited more than once by this object. The count is how many passages.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ×%2$lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ×%2$lld"
+          }
+        }
+      }
+    },
+    "source.chipAccessibility": {
+      "comment": "A source chip read aloud: the source, then its state.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "source.state.notRead": {
+      "comment": "The source has not been read yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not read yet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pas encore lu"
+          }
+        }
+      }
+    },
+    "source.state.importing": {
+      "comment": "The source is being read.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "being read"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "en cours de lecture"
+          }
+        }
+      }
+    },
+    "source.state.ready": {
+      "comment": "The source was read and its text is available.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "read"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lu"
+          }
+        }
+      }
+    },
+    "source.state.partial": {
+      "comment": "Only part of the source could be read.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "only partly read"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lu partiellement"
+          }
+        }
+      }
+    },
+    "source.state.noText": {
+      "comment": "The file has no text to read, for example a scan without a text layer.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no text in the file"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aucun texte dans le fichier"
+          }
+        }
+      }
+    },
+    "source.state.unsupported": {
+      "comment": "This kind of file is not supported yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not supported yet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "format non pris en charge"
+          }
+        }
+      }
+    },
+    "source.state.missing": {
+      "comment": "The file is not where it was.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "file not found"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fichier introuvable"
+          }
+        }
+      }
+    },
+    "source.state.unverifiable": {
+      "comment": "The source has moved or gone, so the claim cannot be checked.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "source no longer available"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "source indisponible"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

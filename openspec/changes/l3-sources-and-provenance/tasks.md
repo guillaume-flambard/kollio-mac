@@ -20,8 +20,23 @@ stated on every line rather than blurred.
       counted, and a required item is never dropped to fit. `ContextProjectionTests`,
       `AppleAdapterTests`
 - [x] A local-only projection cannot be sent. `ContextProjectionTests`
-- [ ] A source is attached through a validated command in one transaction. The
-      ledger exists and is correct; nothing mutates the document yet.
+- [x] A source is attached through a validated command in one transaction, and a
+      transaction that fails halfway attaches nothing. `SourceCommandTests`
+- [x] Intelligence is refused `attachSource`, `addCitation`, `recordVerification` and
+      `removeSource` outright. A model that could add a citation would manufacture the
+      appearance of support, and one that could record a verification could award
+      itself a badge. `SourceCommandTests`
+- [x] A chip on the claim shows what state its sources are in, one per source, read
+      from the ledger and never cached. `SourceChipTests`
+- [x] A file with no text cannot be imported as a good revision, and the previous
+      version stays active. `SourceCommandTests`
+- [x] The `.kollio` schema declares the ledger, the version is bumped to 2, and a
+      test fails if the codec writes a key the schema does not declare.
+- [ ] Choosing a file, reading it, and importing its text. **Not started.** The chip
+      can only report what the ledger already holds.
+- [ ] Opening a citation back at its passage.
+- [ ] Recording a verification from the interface. The command exists and is tested;
+      nothing in the app calls it.
 - [ ] Import and extraction: text, Markdown, PDF, CSV, image. **Not started.**
 - [ ] A context view lists sources and quotes, reading only from the ledger.
 - [ ] A knowledge view is derived, never authored twice.
