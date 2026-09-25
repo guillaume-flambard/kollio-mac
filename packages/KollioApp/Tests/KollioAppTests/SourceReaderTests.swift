@@ -13,6 +13,11 @@ import KollioCore
 /// wrong rather than something absent.
 @Suite("Reading a source")
 struct SourceReaderTests {
+    /// Shared with the citation tests: a real PDF with a real text layer.
+    static func writeTextPDF(at url: URL, text: String) -> Bool {
+        makePDF(at: url, drawText: true, text: text)
+    }
+
     /// One directory per test instance. A computed property would mint a new UUID on
     /// every access, so the file written and the file read would be in different
     /// places, which is exactly the kind of quiet wrongness these tests exist to
@@ -212,7 +217,7 @@ struct SourceReaderTests {
     /// annotations are not page content, so `page.string` finds nothing, which is a
     /// faithful reflection of how annotations behave and not a way to make a fixture.
     /// Drawing through a PDF context is what actually produces a text layer.
-    private static func makePDF(at url: URL, drawText: Bool) -> Bool {
+    static func makePDF(at url: URL, drawText: Bool, text: String = "Signup takes nine steps today.") -> Bool {
         var mediaBox = CGRect(x: 0, y: 0, width: 300, height: 300)
         guard let consumer = CGDataConsumer(url: url as CFURL),
               let context = CGContext(consumer: consumer, mediaBox: &mediaBox, nil) else {
@@ -221,7 +226,7 @@ struct SourceReaderTests {
         context.beginPDFPage(nil)
         if drawText {
             let attributed = NSAttributedString(
-                string: "Signup takes nine steps today.",
+                string: text,
                 attributes: [.font: NSFont.systemFont(ofSize: 14)]
             )
             let line = CTLineCreateWithAttributedString(attributed)

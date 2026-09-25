@@ -102,8 +102,10 @@ STATUS_NOTES = {
     "CTX-03": ("automatedVerified",
                "A citation keeps its revision, is refused towards anything absent, and cannot be "
                "verified without an observation and an author. Intelligence is refused these "
-               "commands outright. SourceLedgerTests, SourceCommandTests. No interface to choose "
-               "a passage or open a citation is built."),
+               "commands outright. SourceLedgerTests, SourceCommandTests. The interface opens a "
+               "citation at the lines its locator names, from the revision it was read against, "
+               "and records a check only with an observation: SourceChipTests. Still missing: "
+               "choosing a passage inside the file, and opening the file itself in a reader."),
     "CTX-06": ("automatedVerified",
                "The projection is built and measured on the real request path: omissions are "
                "counted, a required item is never dropped, and the budget cannot exceed the "

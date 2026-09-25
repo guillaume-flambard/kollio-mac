@@ -51,9 +51,13 @@ stated on every line rather than blurred.
 - [x] A failed import is recorded rather than refused, so the chip can say so, and a
       usable earlier revision stays the one being read. `SourceLedgerTests`
 - [ ] A native reader for a long PDF, and a CSV preview in the interface.
-- [ ] Opening a citation back at its passage.
-- [ ] Recording a verification from the interface. The command exists and is tested;
-      nothing in the app calls it.
+- [x] Opening a citation back at its passage, from the exact revision it was read
+      against, beside the claim. `SourceChipTests`
+- [x] Recording a verification from the interface, and only with an observation:
+      an empty one is refused and the draft is kept. `SourceChipTests`
+- [x] A page locator shows no passage rather than a slice of joined text that would
+      point at the wrong place. `SourceChipTests`
+- [x] A citation on a superseded revision says so in the interface.
 - [ ] Import and extraction: text, Markdown, PDF, CSV, image. **Not started.**
 - [ ] A context view lists sources and quotes, reading only from the ledger.
 - [ ] A knowledge view is derived, never authored twice.

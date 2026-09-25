@@ -279,3 +279,150 @@ struct FirstExperienceView: View {
         }
     }
 }
+
+/// The citations behind a claim, and the one place a check can be recorded.
+///
+/// It opens beside the claim and closes when the person moves on. There is no
+/// citations panel anywhere else in the application, because a permanent home for
+/// evidence would be a permanent home for reading instead of thinking.
+///
+/// What it shows is deliberately literal: the exact quote, the locator, the state,
+/// and whether the revision it was read against is still the current one. A
+/// citation whose source has moved on says so, rather than presenting a stale
+/// check as a current one.
+struct CitationListView: View {
+    let model: KollioModel
+    let claim: ObjectID
+
+    @Environment(\.kollioTheme) private var theme
+    @FocusState private var focused: Bool
+
+    private var details: [CitationDetail] { model.citations(of: claim) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.s) {
+            Text(L10n.citationsTitle)
+                .font(TypeScale.metadata.weight(.semibold))
+                .foregroundStyle(theme.textSecondary)
+
+            if details.isEmpty {
+                Text(L10n.citationsEmpty)
+                    .font(TypeScale.body)
+                    .foregroundStyle(theme.textSecondary)
+            }
+
+            ForEach(details) { detail in
+                VStack(alignment: .leading, spacing: Space.xs) {
+                    HStack(spacing: Space.xs) {
+                        Text(detail.sourceTitle)
+                            .font(TypeScale.metadata.weight(.medium))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer(minLength: 0)
+                        Text(stateLabel(for: detail))
+                            .font(TypeScale.metadata)
+                            .foregroundStyle(labelColour(for: detail))
+                    }
+
+                    // The quote as it was written, never reworded.
+                    Text("“\(detail.citation.quote)”")
+                        .font(TypeScale.body)
+                        .foregroundStyle(theme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    if let passage = detail.passage {
+                        // The lines the locator points at, from the exact revision
+                        // the citation was read against.
+                        Text(passage)
+                            .font(TypeScale.metadata)
+                            .foregroundStyle(theme.textSecondary)
+                            .padding(Space.xs)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(
+                                RoundedRectangle(cornerRadius: Radius.control, style: .continuous)
+                                    .fill(theme.surfaceSubtle)
+                            )
+                    } else {
+                        Text(L10n.citationNoPassage)
+                            .font(TypeScale.metadata)
+                            .foregroundStyle(theme.textSecondary)
+                    }
+
+                    if detail.isCurrentRevision == false {
+                        Label(L10n.citationSuperseded, systemImage: "exclamationmark.triangle")
+                            .font(TypeScale.metadata)
+                            .foregroundStyle(theme.attention)
+                    }
+
+                    if model.verifyingCitationID == detail.id {
+                        verificationComposer(for: detail)
+                    } else {
+                        HStack {
+                            Spacer(minLength: 0)
+                            ActionButton(title: L10n.citationVerify, isDefault: false) {
+                                model.verifyingCitationID = detail.id
+                                focused = true
+                            }
+                            .help(L10n.citationVerifyHint)
+                        }
+                    }
+                }
+                .padding(Space.s)
+                .background(
+                    RoundedRectangle(cornerRadius: Radius.control, style: .continuous)
+                        .fill(theme.surfaceSubtle)
+                )
+            }
+        }
+        .padding(Space.m)
+        .frame(width: 340, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
+                .fill(theme.surfacePrimary)
+                .shadow(color: .black.opacity(theme.isDark ? 0.38 : 0.13), radius: 14, y: 6)
+        )
+        .onExitCommand { model.openCitationClaim = nil }
+    }
+
+    /// A check needs an observation, so the input is the whole action. There is no
+    /// button that marks something verified by itself.
+    private func verificationComposer(for detail: CitationDetail) -> some View {
+        VStack(alignment: .leading, spacing: Space.xs) {
+            TextField(
+                L10n.citationObservationPlaceholder,
+                text: Binding(
+                    get: { model.verificationDraft },
+                    set: { model.verificationDraft = $0 }
+                ),
+                axis: .vertical
+            )
+            .font(TypeScale.body)
+            .focused($focused)
+            HStack {
+                Spacer(minLength: 0)
+                ActionButton(title: L10n.citationRecord, isDefault: true) {
+                    // The draft is cleared by the model only once the command has
+                    // been accepted, so a refused check keeps what was typed.
+                    if model.recordVerification(detail.id, observation: model.verificationDraft) {
+                        model.verificationDraft = ""
+                    }
+                }
+            }
+        }
+    }
+
+    private func stateLabel(for detail: CitationDetail) -> String {
+        switch detail.citation.status {
+        case .unverified: return L10n.citationUnverified
+        case .verified: return L10n.citationVerified
+        case .needsReview: return L10n.citationNeedsReview
+        case .sourceMissing: return detail.state.accessibilityDescription
+        }
+    }
+
+    private func labelColour(for detail: CitationDetail) -> Color {
+        switch detail.citation.status {
+        case .verified: return theme.textSecondary
+        case .unverified, .needsReview, .sourceMissing: return theme.attention
+        }
+    }
+}

@@ -1114,6 +1114,222 @@
           }
         }
       }
+    },
+    "undo.recordVerification": {
+      "comment": "Undo label for recording that a citation was checked.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the verification"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler la vérification"
+          }
+        }
+      }
+    },
+    "citations.title": {
+      "comment": "Heading of the list of citations behind a claim.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fondé sur"
+          }
+        }
+      }
+    },
+    "citations.verify": {
+      "comment": "The action that records a check of a citation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked this"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "J’ai vérifié"
+          }
+        }
+      }
+    },
+    "citations.verifyHint": {
+      "comment": "Why a check needs an observation rather than a badge.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record what you saw, so the check can be repeated later"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notez ce que vous avez vu, pour pouvoir revérifier plus tard"
+          }
+        }
+      }
+    },
+    "citations.observation": {
+      "comment": "Placeholder for the observation that makes a verification real.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What did you see?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qu’avez-vous vu ?"
+          }
+        }
+      }
+    },
+    "citations.record": {
+      "comment": "Confirms recording a verification.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer"
+          }
+        }
+      }
+    },
+    "citations.unverified": {
+      "comment": "The state of a citation nobody has checked.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not checked"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non vérifiée"
+          }
+        }
+      }
+    },
+    "citations.verified": {
+      "comment": "The state of a citation a person checked, with the observation and date.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifiée"
+          }
+        }
+      }
+    },
+    "citations.needsReview": {
+      "comment": "A citation whose source moved on, so the check needs repeating.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The source changed, check again"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La source a changé, à revérifier"
+          }
+        }
+      }
+    },
+    "citations.superseded": {
+      "comment": "A citation read against a revision that is no longer current.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read against an older version"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lue sur une version antérieure"
+          }
+        }
+      }
+    },
+    "citations.noPassage": {
+      "comment": "A locator that points at a page, so there is no line range to show.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page reference, no line range to show"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Référence de page, aucune plage de lignes"
+          }
+        }
+      }
+    },
+    "citations.empty": {
+      "comment": "A claim with no citations yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No source cited yet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune source citée"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

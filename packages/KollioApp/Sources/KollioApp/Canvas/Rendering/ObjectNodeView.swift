@@ -16,6 +16,8 @@ struct ObjectNodeView: View {
     /// Sources cited by this object. Empty for most objects, and never invented:
     /// the chip is drawn from the ledger or not at all.
     let sourceChips: [SourceChip]
+    let isCitationsOpen: Bool
+    let onToggleCitations: () -> Void
     let onSelect: (Bool) -> Void
     let onHover: (Bool) -> Void
     let onDragChanged: (CGSize) -> Void
@@ -90,7 +92,11 @@ struct ObjectNodeView: View {
                 if sourceChips.isEmpty == false {
                     // On the object rather than in a panel: a chip about evidence
                     // belongs next to the claim it supports, and nowhere else.
-                    SourceChipRow(chips: sourceChips)
+                    SourceChipRow(
+                        chips: sourceChips,
+                        isOpen: isCitationsOpen,
+                        onOpen: onToggleCitations
+                    )
                 }
             }
         }
@@ -215,11 +221,14 @@ struct CollapsedDirectionView: View {
 
 /// The state of the sources behind a claim, on the claim itself.
 ///
-/// Small, quiet, and never interactive. A chip is information, not a control:
-/// opening the source, reading the passage and recording a check are actions taken
-/// where the person is working, not buttons on a badge.
+/// Small and quiet. The chip itself is not a control: it says what state the
+/// sources are in, and clicking it opens the citations beside the claim, where
+/// reading a passage and recording a check actually happen. It is a label that
+/// happens to be a door, not a row of buttons pretending to be evidence.
 struct SourceChipRow: View {
     let chips: [SourceChip]
+    let isOpen: Bool
+    let onOpen: () -> Void
     @Environment(\.kollioTheme) private var theme
 
     var body: some View {
@@ -235,15 +244,20 @@ struct SourceChipRow: View {
                 .padding(.horizontal, Space.xs)
                 .padding(.vertical, 2)
                 .background(
-                    Capsule().fill(theme.surfaceSubtle)
+                    Capsule().fill(isOpen ? theme.accentSurface : theme.surfaceSubtle)
                 )
             }
         }
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onOpen)
+        .help(L10n.citationsTitle)
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isOpen ? [.isSelected, .isButton] : .isButton)
         .accessibilityLabel(
             chips.map { L10n.sourceChipAccessibility($0.title, $0.state.accessibilityDescription) }
                 .joined(separator: ". ")
         )
+        .accessibilityHint(L10n.citationsTitle)
     }
 
     private func symbol(for state: SourceChipState) -> String {

@@ -52,6 +52,9 @@ project outruns its proof.
 | AC03 a pasted link is never fetched | `SourceReaderTests` | L3 |
 | A chosen file is read and attached in one transaction | `SourceChipTests` | L3 |
 | A file with no text is attached and labelled, not announced as read | `SourceChipTests` | L3 |
+| A citation opens at the lines its locator points at | `SourceChipTests` | L3 |
+| A page locator shows no passage rather than a wrong one | `SourceChipTests` | L3 |
+| A verification is recorded only with an observation | `SourceChipTests` | L3 |
 
 ## What is owed to a person
 

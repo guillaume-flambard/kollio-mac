@@ -57,6 +57,18 @@ public enum L10n {
     public static var addSource: String { callAsFunction("source.add") }
     public static var addSourceHint: String { callAsFunction("source.addHint") }
     public static var undoAttachSource: String { callAsFunction("undo.attachSource") }
+    public static var undoRecordVerification: String { callAsFunction("undo.recordVerification") }
+    public static var citationsTitle: String { callAsFunction("citations.title") }
+    public static var citationVerify: String { callAsFunction("citations.verify") }
+    public static var citationVerifyHint: String { callAsFunction("citations.verifyHint") }
+    public static var citationObservationPlaceholder: String { callAsFunction("citations.observation") }
+    public static var citationRecord: String { callAsFunction("citations.record") }
+    public static var citationUnverified: String { callAsFunction("citations.unverified") }
+    public static var citationVerified: String { callAsFunction("citations.verified") }
+    public static var citationNeedsReview: String { callAsFunction("citations.needsReview") }
+    public static var citationSuperseded: String { callAsFunction("citations.superseded") }
+    public static var citationNoPassage: String { callAsFunction("citations.noPassage") }
+    public static var citationsEmpty: String { callAsFunction("citations.empty") }
     public static func sourceAttached(_ title: String) -> String {
         String(format: callAsFunction("source.attached"), title)
     }

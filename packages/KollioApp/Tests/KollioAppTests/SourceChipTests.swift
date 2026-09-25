@@ -222,4 +222,84 @@ struct SourceChipTests {
         #expect(model.document.sources.sources.count == 2)
     }
 
+
+    // MARK: Opening a citation and recording a check
+
+    /// A model with one text source cited by `claim` on lines 2 to 4.
+    private func modelWithCitation() throws -> KollioModel {
+        var model = model()
+        let url = directory.appendingPathComponent("brief.txt")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try Data("Signup today.\nIt takes nine steps.\nThree would do.\nEnd.".utf8).write(to: url)
+        let read = try #require(model.attachSource(at: url, to: claim))
+        let id = SourceID("source:" + String(read.digest.prefix(16)))
+        let revision = try #require(model.document.sources.source(id)?.latest)
+        #expect(model.perform([.addCitation(.init(
+            citation: Citation(
+                id: "citation:1", claimID: claim, sourceID: id,
+                revisionID: revision.id, locator: SourceLocator(lineRange: 1..<3),
+                quote: "It takes nine steps."
+            ),
+            claimID: claim, provenance: .human("person:owner")
+        ))], label: "cite"))
+        return model
+    }
+
+    @Test("A citation opens at the lines its locator points at")
+    func citationOpensItsPassage() throws {
+        let model = try modelWithCitation()
+        let details = model.citations(of: claim)
+        #expect(details.count == 1)
+        let detail = try #require(details.first)
+        #expect(detail.citation.quote == "It takes nine steps.")
+        // The passage is the real slice, and it is not reworded.
+        #expect(detail.passage == "It takes nine steps.\nThree would do.")
+        #expect(detail.isCurrentRevision)
+    }
+
+    @Test("A page locator shows no passage rather than a wrong one")
+    func pageLocatorHasNoPassage() throws {
+        var model = model()
+        let url = directory.appendingPathComponent("contract.pdf")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        #expect(SourceReaderTests.writeTextPDF(at: url, text: "Clause one.\nClause two."))
+        let read = try #require(model.attachSource(at: url, to: claim))
+        let id = SourceID("source:" + String(read.digest.prefix(16)))
+        let revision = try #require(model.document.sources.source(id)?.latest)
+        #expect(model.perform([.addCitation(.init(
+            citation: Citation(
+                id: "citation:p", claimID: claim, sourceID: id,
+                revisionID: revision.id, locator: SourceLocator(page: 1),
+                quote: "Clause one."
+            ),
+            claimID: claim, provenance: .human("person:owner")
+        ))], label: "cite"))
+        // A PDF has pages, not line numbers. Returning a slice of the joined text
+        // would be a locator pointing at the wrong place.
+        #expect(model.citations(of: claim).first?.passage == nil)
+    }
+
+    @Test("A check is recorded with its observation, and an empty one is refused")
+    func verificationNeedsAnObservation() throws {
+        var model = try modelWithCitation()
+        #expect(model.citations(of: claim).first?.citation.status == .unverified)
+
+        // Nothing to say is not a check, and the half-written sentence stays where
+        // it was rather than being cleared by a refusal.
+        model.verificationDraft = "half a note"
+        #expect(model.recordVerification("citation:1", observation: "   ") == false)
+        #expect(model.verificationDraft == "half a note")
+        #expect(model.document.sources.citation("citation:1")?.status == .unverified)
+
+        #expect(model.recordVerification("citation:1", observation: "Confirmed on line 2."))
+        let status = model.document.sources.citation("citation:1")?.status
+        #expect(status?.isVerified == true)
+        if case .verified(let observation, let author, _) = status! {
+            #expect(observation.contains("line 2"))
+            #expect(author == "local-user")
+        } else {
+            Issue.record("the check should carry its observation and its author")
+        }
+    }
+
 }

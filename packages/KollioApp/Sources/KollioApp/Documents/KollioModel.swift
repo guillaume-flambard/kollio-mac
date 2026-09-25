@@ -435,6 +435,79 @@ public final class KollioModel {
     }
 
     // MARK: Sources
+    // MARK: Citations
+
+    /// The claim whose citations are open, and the one being checked.
+    ///
+    /// Transient, like the composer and the decision card: it appears where the
+    /// person is working and goes away when they move on. There is no citations
+    /// panel anywhere in the application, because a permanent home for evidence
+    /// would be a permanent home for reading rather than for thinking.
+    public var openCitationClaim: ObjectID?
+    public var verifyingCitationID: CitationID?
+    /// What the person is writing into the verification input. It lives on the model
+    /// so a refused check does not lose the sentence.
+    public var verificationDraft: String = ""
+
+    /// The citations of a claim, in a stable order.
+    public func citations(of objectID: ObjectID) -> [CitationDetail] {
+        document.sources.citations(supporting: objectID).map { citation in
+            let source = document.sources.source(citation.sourceID)
+            let revision = source?.revision(citation.revisionID)
+            return CitationDetail(
+                citation: citation,
+                sourceTitle: source?.title ?? citation.sourceID.rawValue,
+                /// The text of the exact revision the citation was read against. Not
+                /// the current one: a claim has to be re-checkable against what it
+                /// was actually based on, which is the whole point of keeping the
+                /// history.
+                passage: Self.passage(in: revision?.extraction.text, at: citation.locator),
+                state: SourceChipState(revision?.extraction ?? .notAttempted),
+                isCurrentRevision: source?.latest?.id == citation.revisionID
+            )
+        }
+    }
+
+    /// The lines a locator points at, when the text is line-addressable.
+    ///
+    /// A page locator in a PDF has no line numbers, so the passage is nil and the
+    /// interface shows the locator and the quote instead of pretending it opened
+    /// something. Returning nil is the honest answer; a wrong slice would be worse.
+    static func passage(in text: String?, at locator: SourceLocator) -> String? {
+        guard let text, let range = locator.lineRange else { return nil }
+        let lines = text.components(separatedBy: .newlines)
+        guard range.lowerBound >= 0, range.upperBound <= lines.count, range.lowerBound < range.upperBound
+        else { return nil }
+        return lines[range].joined(separator: "\n")
+    }
+
+    public func toggleCitations(of objectID: ObjectID) {
+        openCitationClaim = openCitationClaim == objectID ? nil : objectID
+        verifyingCitationID = nil
+    }
+
+    /// Records that a person checked a citation, with what they saw.
+    ///
+    /// Refused when the observation is empty, because a check that says nothing is
+    /// not a check. The draft is only cleared once the command has been accepted,
+    /// so a refused verification keeps what was typed.
+    @discardableResult
+    public func recordVerification(
+        _ citationID: CitationID,
+        observation: String
+    ) -> Bool {
+        let trimmed = observation.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else { return false }
+        let command = Command.recordVerification(.init(
+            citationID: citationID,
+            observation: trimmed,
+            author: ActorID("local-user")
+        ))
+        guard perform([command], label: L10n.undoRecordVerification) else { return false }
+        verifyingCitationID = nil
+        return true
+    }
+
 
     /// Reads a file the person chose and attaches it, as one transaction.
     ///
@@ -1043,5 +1116,35 @@ public struct SourceChip: Hashable, Sendable, Identifiable {
         self.title = title
         self.state = state
         self.citations = citations
+    }
+}
+
+
+/// A citation, with everything the interface needs to show it honestly.
+public struct CitationDetail: Identifiable, Hashable, Sendable {
+    public var citation: Citation
+    public var sourceTitle: String
+    /// The lines the locator points at, or nil when it points at a page or the
+    /// text is unavailable.
+    public var passage: String?
+    public var state: SourceChipState
+    /// False when the source has moved on since this was cited, which is the case
+    /// where re-reading matters most.
+    public var isCurrentRevision: Bool
+
+    public var id: CitationID { citation.id }
+
+    public init(
+        citation: Citation,
+        sourceTitle: String,
+        passage: String?,
+        state: SourceChipState,
+        isCurrentRevision: Bool
+    ) {
+        self.citation = citation
+        self.sourceTitle = sourceTitle
+        self.passage = passage
+        self.state = state
+        self.isCurrentRevision = isCurrentRevision
     }
 }

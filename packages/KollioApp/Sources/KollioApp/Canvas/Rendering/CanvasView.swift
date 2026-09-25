@@ -99,6 +99,8 @@ struct CanvasView: View {
                         isDragging: model.dragState?.id == object.id,
                         width: instance.size?.width ?? NodeLayout.estimatedSize(for: object).width,
                         sourceChips: model.sourceChips(for: object.id),
+                        isCitationsOpen: model.openCitationClaim == object.id,
+                        onToggleCitations: { model.toggleCitations(of: object.id) },
                         onSelect: { extend in model.select(object.id, extending: extend) },
                         onHover: { hovering in
                             if hovering {
@@ -168,6 +170,10 @@ struct CanvasView: View {
             if let composer = model.composer {
                 ComposerView(model: model, anchor: composer.anchorID)
             }
+            if let claim = model.openCitationClaim {
+                CitationListView(model: model, claim: claim)
+                    .position(citationListPosition(claim, viewport: viewport))
+            }
             if let progress = model.progress, model.preview == nil {
                 ProposalProgressView(progress: progress, languageCode: model.languageCode)
             }
@@ -193,6 +199,18 @@ struct CanvasView: View {
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: Motion.reveal), value: model.preview?.id)
         .animation(reduceMotion ? nil : .easeInOut(duration: Motion.reveal), value: model.composer?.id)
+    }
+
+    /// Where the list of citations opens: beside the claim, below it, inside the
+    /// window and clear of the claim itself so the two can be read together.
+    private func citationListPosition(_ claim: ObjectID, viewport: CGSize) -> CGPoint {
+        let width: Double = 340
+        guard let frame = model.frame(of: claim) else {
+            return CGPoint(x: viewport.width / 2, y: viewport.height / 2)
+        }
+        let below = model.camera.toScreen(Position(x: frame.origin.x, y: frame.maxY + 18))
+        let x = min(max(below.x, width / 2 + Space.m), viewport.width - width / 2 - Space.m)
+        return CGPoint(x: x, y: min(below.y, viewport.height - 120))
     }
 
     /// The decision sits beside the branch it is about, clear of the branch
