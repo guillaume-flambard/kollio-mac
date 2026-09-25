@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kollio.dev/schemas/kollio-proposal.schema.json",
+  "title": "Kollio proposal",
+  "description": "A patch proposed by an intelligence source. Never a document, never a view, never a pixel coordinate.",
+  "type": "object",
+  "required": ["proposalId", "requestId", "documentId", "baseSemanticRevision", "summary", "operations", "generator"],
+  "properties": {
+    "proposalId": { "type": "string" },
+    "requestId": { "type": "string" },
+    "documentId": { "type": "string" },
+    "baseSemanticRevision": { "type": "integer", "minimum": 0 },
+    "summary": { "$ref": "kollio-document.schema.json#/$defs/localizedText" },
+    "rationale": { "$ref": "kollio-document.schema.json#/$defs/localizedText" },
+    "operations": { "type": "array", "items": { "type": "object" } },
+    "placementHints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["objectID", "offsetX", "offsetY"],
+        "properties": {
+          "objectID": { "type": "string" },
+          "relativeTo": { "type": "string" },
+          "offsetX": { "type": "number" },
+          "offsetY": { "type": "number" }
+        }
+      }
+    },
+    "limitations": { "type": "array", "items": { "type": "string" } },
+    "generator": {
+      "type": "object",
+      "required": ["name", "deterministic"],
+      "properties": {
+        "name": { "type": "string" },
+        "model": { "type": "string" },
+        "deterministic": { "type": "boolean" }
+      }
+    }
+  }
+}

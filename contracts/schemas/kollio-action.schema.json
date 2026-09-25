@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kollio.dev/schemas/kollio-action.schema.json",
+  "title": "Kollio action protocol",
+  "description": "The closed set of things a user or a proposal can ask the document to do. Anything not listed here is not a Kollio action.",
+  "type": "object",
+  "required": ["intent", "documentId", "baseSemanticRevision"],
+  "properties": {
+    "intent": { "enum": ["explore", "add", "setAside", "reopen", "clarify"] },
+    "documentId": { "type": "string" },
+    "baseSemanticRevision": { "type": "integer", "minimum": 0 },
+    "targetIds": { "type": "array", "items": { "type": "string" } },
+    "instruction": { "type": "string" },
+    "contentLocale": { "type": "string", "enum": ["fr", "en"] },
+    "preconditions": {
+      "type": "object",
+      "properties": {
+        "semanticRevision": { "type": "integer" },
+        "readSetFingerprint": { "type": "string" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "maxOperations": { "type": "integer", "minimum": 1, "maximum": 32 },
+        "allowNewObjects": { "type": "boolean" }
+      }
+    }
+  }
+}

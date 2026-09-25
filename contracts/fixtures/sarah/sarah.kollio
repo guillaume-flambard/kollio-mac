@@ -1,0 +1,283 @@
+{
+  "content" : {
+    "object:sarah-blocked" : {
+      "id" : "object:sarah-blocked",
+      "kind" : "constraint",
+      "lifecycle" : "active",
+      "provenance" : {
+        "actor" : "local-user",
+        "kind" : "human"
+      },
+      "text" : {
+        "text" : "Identifiants API indisponibles",
+        "variants" : {
+          "en" : "API credentials unavailable"
+        }
+      }
+    },
+    "object:sarah-context" : {
+      "id" : "object:sarah-context",
+      "kind" : "context",
+      "lifecycle" : "active",
+      "provenance" : {
+        "actor" : "local-user",
+        "kind" : "human"
+      },
+      "text" : {
+        "text" : "Récupérer la liste des prospects sans dépendre du CRM",
+        "variants" : {
+          "en" : "Recover the prospect list without depending on the CRM"
+        }
+      }
+    },
+    "object:sarah-crm" : {
+      "detail" : {
+        "text" : "Lecture de la liste des prospects depuis l’API du CRM",
+        "variants" : {
+          "en" : "Reading the prospect list straight from the CRM API"
+        }
+      },
+      "id" : "object:sarah-crm",
+      "kind" : "hypothesis",
+      "lifecycle" : "active",
+      "provenance" : {
+        "actor" : "local-user",
+        "kind" : "human"
+      },
+      "text" : {
+        "text" : "Connexion directe au CRM",
+        "variants" : {
+          "en" : "Direct CRM connection"
+        }
+      }
+    },
+    "object:sarah-csv" : {
+      "detail" : {
+        "text" : "L’export est déjà disponible dans l’outil source",
+        "variants" : {
+          "en" : "The export is already available in the source tool"
+        }
+      },
+      "id" : "object:sarah-csv",
+      "kind" : "hypothesis",
+      "lifecycle" : "active",
+      "provenance" : {
+        "actor" : "local-user",
+        "kind" : "human"
+      },
+      "text" : {
+        "text" : "Export CSV depuis l’outil source",
+        "variants" : {
+          "en" : "CSV export from the source tool"
+        }
+      }
+    },
+    "object:sarah-question" : {
+      "id" : "object:sarah-question",
+      "kind" : "question",
+      "lifecycle" : "active",
+      "provenance" : {
+        "actor" : "local-user",
+        "kind" : "human"
+      },
+      "text" : {
+        "text" : "Peut-on récupérer aussi les tags ?",
+        "variants" : {
+          "en" : "Can we recover the tags too?"
+        }
+      }
+    },
+    "object:sarah-viable" : {
+      "id" : "object:sarah-viable",
+      "kind" : "evidence",
+      "lifecycle" : "active",
+      "provenance" : {
+        "actor" : "local-user",
+        "kind" : "human"
+      },
+      "text" : {
+        "text" : "Export disponible",
+        "variants" : {
+          "en" : "Export available"
+        }
+      }
+    }
+  },
+  "contributions" : {
+
+  },
+  "createdAt" : "2026-09-25T17:24:24.370Z",
+  "decisions" : {
+
+  },
+  "documentId" : "89BF8377-CFCA-4FBC-93B5-D0AD7AB76F9A",
+  "presentation" : {
+    "instances" : [
+      {
+        "hidden" : false,
+        "id" : "instance:object:sarah-context",
+        "objectID" : "object:sarah-context",
+        "position" : {
+          "x" : 0,
+          "y" : 0
+        }
+      },
+      {
+        "hidden" : false,
+        "id" : "instance:object:sarah-crm",
+        "objectID" : "object:sarah-crm",
+        "position" : {
+          "x" : -270,
+          "y" : 210
+        }
+      },
+      {
+        "hidden" : false,
+        "id" : "instance:object:sarah-csv",
+        "objectID" : "object:sarah-csv",
+        "position" : {
+          "x" : 270,
+          "y" : 210
+        }
+      },
+      {
+        "hidden" : false,
+        "id" : "instance:object:sarah-blocked",
+        "objectID" : "object:sarah-blocked",
+        "position" : {
+          "x" : -270,
+          "y" : 400
+        }
+      },
+      {
+        "hidden" : false,
+        "id" : "instance:object:sarah-viable",
+        "objectID" : "object:sarah-viable",
+        "position" : {
+          "x" : 270,
+          "y" : 400
+        }
+      },
+      {
+        "hidden" : false,
+        "id" : "instance:object:sarah-question",
+        "objectID" : "object:sarah-question",
+        "position" : {
+          "x" : 600,
+          "y" : 520
+        }
+      }
+    ]
+  },
+  "products" : {
+
+  },
+  "relationships" : {
+    "relationship:sarah-l1" : {
+      "from" : "object:sarah-context",
+      "fromAnchor" : {
+        "unitX" : 0.5,
+        "unitY" : 1
+      },
+      "id" : "relationship:sarah-l1",
+      "kind" : "alternativeTo",
+      "provenance" : {
+        "actor" : "local-user",
+        "kind" : "human"
+      },
+      "to" : "object:sarah-crm",
+      "toAnchor" : {
+        "unitX" : 0.5,
+        "unitY" : 0
+      }
+    },
+    "relationship:sarah-l2" : {
+      "from" : "object:sarah-context",
+      "fromAnchor" : {
+        "unitX" : 0.5,
+        "unitY" : 1
+      },
+      "id" : "relationship:sarah-l2",
+      "kind" : "alternativeTo",
+      "provenance" : {
+        "actor" : "local-user",
+        "kind" : "human"
+      },
+      "to" : "object:sarah-csv",
+      "toAnchor" : {
+        "unitX" : 0.5,
+        "unitY" : 0
+      }
+    },
+    "relationship:sarah-l3" : {
+      "from" : "object:sarah-crm",
+      "fromAnchor" : {
+        "unitX" : 0.5,
+        "unitY" : 1
+      },
+      "id" : "relationship:sarah-l3",
+      "kind" : "constrains",
+      "label" : {
+        "text" : "bloque",
+        "variants" : {
+          "en" : "blocks"
+        }
+      },
+      "provenance" : {
+        "actor" : "local-user",
+        "kind" : "human"
+      },
+      "to" : "object:sarah-blocked",
+      "toAnchor" : {
+        "unitX" : 0.5,
+        "unitY" : 0
+      }
+    },
+    "relationship:sarah-l4" : {
+      "from" : "object:sarah-csv",
+      "fromAnchor" : {
+        "unitX" : 0.5,
+        "unitY" : 1
+      },
+      "id" : "relationship:sarah-l4",
+      "kind" : "supports",
+      "label" : {
+        "text" : "ouvre",
+        "variants" : {
+          "en" : "enables"
+        }
+      },
+      "provenance" : {
+        "actor" : "local-user",
+        "kind" : "human"
+      },
+      "to" : "object:sarah-viable",
+      "toAnchor" : {
+        "unitX" : 0.5,
+        "unitY" : 0
+      }
+    },
+    "relationship:sarah-l5" : {
+      "from" : "object:sarah-csv",
+      "fromAnchor" : {
+        "unitX" : 0.5,
+        "unitY" : 1
+      },
+      "id" : "relationship:sarah-l5",
+      "kind" : "addresses",
+      "provenance" : {
+        "actor" : "local-user",
+        "kind" : "human"
+      },
+      "to" : "object:sarah-question",
+      "toAnchor" : {
+        "unitX" : 0.5,
+        "unitY" : 0
+      }
+    }
+  },
+  "revision" : 11,
+  "schemaVersion" : 1,
+  "semanticRevision" : 11,
+  "updatedAt" : "2026-09-25T17:24:24.370Z"
+}

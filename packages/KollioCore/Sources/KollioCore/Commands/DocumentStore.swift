@@ -1,0 +1,327 @@
+import Foundation
+
+public enum DocumentError: Error, Equatable, CustomStringConvertible {
+    case unknownObject(ObjectID)
+    case unknownRelationship(RelationshipID)
+    case unknownInstance(InstanceID)
+    case unknownContribution(ActorID)
+    case duplicateObject(ObjectID)
+    case duplicateRelationship(RelationshipID)
+    case duplicateInstance(InstanceID)
+    case selfRelationship(RelationshipID)
+    case missingInstanceForObject(ObjectID)
+    case emptyText(ObjectID)
+    case unknownDecision(DecisionID)
+    case decisionTargetNotFound(ObjectID)
+    case staleProposal(reason: String)
+    case tooManyOperations(Int)
+    case forbiddenOperation(String)
+    case unknownContributionReference(ObjectID, ActorID)
+    case invalidShareRange(Double)
+
+    public var description: String {
+        switch self {
+        case .unknownObject(let id): return "Unknown object \(id)"
+        case .unknownRelationship(let id): return "Unknown relationship \(id)"
+        case .unknownInstance(let id): return "Unknown instance \(id)"
+        case .unknownContribution(let id): return "Unknown contribution \(id)"
+        case .duplicateObject(let id): return "Duplicate object \(id)"
+        case .duplicateRelationship(let id): return "Duplicate relationship \(id)"
+        case .duplicateInstance(let id): return "Duplicate instance \(id)"
+        case .selfRelationship(let id): return "Relationship \(id) points at itself"
+        case .missingInstanceForObject(let id): return "No visual instance for object \(id)"
+        case .emptyText(let id): return "Object \(id) has empty text"
+        case .unknownDecision(let id): return "Unknown decision \(id)"
+        case .decisionTargetNotFound(let id): return "Decision target \(id) not found"
+        case .staleProposal(let reason): return "Stale proposal: \(reason)"
+        case .tooManyOperations(let n): return "Too many operations: \(n)"
+        case .forbiddenOperation(let name): return "Forbidden operation \(name)"
+        case .unknownContributionReference(let object, let contribution): return "Object \(object) references unknown contribution \(contribution)"
+        case .invalidShareRange(let value): return "Invalid share \(value)"
+        }
+    }
+}
+
+/// The only way a document changes.
+///
+/// A transaction either fully succeeds or fails: the store mutates a value copy
+/// and only publishes it when every command has been applied.
+public struct DocumentStore: Sendable {
+    public private(set) var document: KollioDocument
+
+    public init(document: KollioDocument = KollioDocument()) {
+        self.document = document
+    }
+
+    public var revision: Int { document.revision }
+    public var semanticRevision: Int { document.semanticRevision }
+
+    @discardableResult
+    public mutating func apply(
+        _ commands: [Command],
+        at date: Date = Date(),
+        undoLabel: String? = nil
+    ) throws -> KollioDocument {
+        guard !commands.isEmpty else { return document }
+        _ = undoLabel
+        let date = date.kollioNormalized
+        var candidate = document
+        var changedSemantics = false
+
+        for command in commands {
+            try Self.applyCommand(command, to: &candidate, at: date)
+            changedSemantics = changedSemantics || command.isSemantic
+        }
+
+        candidate.revision += 1
+        if changedSemantics {
+            candidate.semanticRevision += 1
+        }
+        candidate.updatedAt = date
+        document = candidate
+        return document
+    }
+
+    public mutating func replace(with newDocument: KollioDocument) {
+        document = newDocument
+    }
+
+    // MARK: - Command application
+
+    private static func applyCommand(_ command: Command, to document: inout KollioDocument, at date: Date) throws {
+        switch command {
+        case .createObject(let create):
+            try createObject(create, in: &document)
+        case .updateObjectText(let update):
+            try updateObjectText(update, in: &document)
+        case .addRelationship(let add):
+            try addRelationship(add, in: &document)
+        case .removeRelationship(let remove):
+            try removeRelationship(remove, from: &document)
+        case .moveNodeInstances(let moves):
+            try move(moves, in: &document)
+        case .createScenario(let scenario):
+            try createScenario(scenario, in: &document, at: date)
+        case .recordDecision(let decision):
+            try recordDecision(decision, in: &document, at: date)
+        case .revokeDecision(let revoke):
+            try revokeDecision(revoke, in: &document)
+        case .addContributionToProduct(let add):
+            try addContribution(add, in: &document)
+        case .applyProposal(let apply):
+            try applyProposal(apply, in: &document, at: date)
+        case .rejectProposal(let reject):
+            // see note in applyCommand
+            _ = reject
+        }
+    }
+
+    private static func createObject(_ create: CreateObject, in document: inout KollioDocument) throws {
+        guard document.content[create.id] == nil else { throw DocumentError.duplicateObject(create.id) }
+        guard !create.text.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw DocumentError.emptyText(create.id)
+        }
+        if let contributionID = create.contributionID, document.contributions[contributionID] == nil {
+            throw DocumentError.unknownContributionReference(create.id, contributionID)
+        }
+        let object = ContentObject(
+            id: create.id,
+            kind: create.kind,
+            text: create.text,
+            detail: create.detail,
+            contributionID: create.contributionID,
+            provenance: create.provenance
+        )
+        document.content[create.id] = object
+        document.presentation.instances.append(
+            NodeInstance(
+                id: InstanceID("instance:\(create.id.rawValue)"),
+                objectID: create.id,
+                position: create.position ?? .zero,
+                size: create.size
+            )
+        )
+    }
+
+    private static func updateObjectText(_ update: UpdateObjectText, in document: inout KollioDocument) throws {
+        guard var object = document.content[update.id] else { throw DocumentError.unknownObject(update.id) }
+        guard !update.text.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw DocumentError.emptyText(update.id)
+        }
+        object.text = update.text
+        object.detail = update.detail
+        object.provenance = update.provenance
+        document.content[update.id] = object
+    }
+
+    private static func addRelationship(_ add: AddRelationship, in document: inout KollioDocument) throws {
+        guard document.content[add.from] != nil else { throw DocumentError.unknownObject(add.from) }
+        guard document.content[add.to] != nil else { throw DocumentError.unknownObject(add.to) }
+        guard add.from != add.to else { throw DocumentError.selfRelationship(add.id) }
+        guard document.relationships[add.id] == nil else { throw DocumentError.duplicateRelationship(add.id) }
+        document.relationships[add.id] = Relationship(
+            id: add.id,
+            from: add.from,
+            to: add.to,
+            kind: add.kind,
+            label: add.label,
+            fromAnchor: add.fromAnchor,
+            toAnchor: add.toAnchor,
+            provenance: add.provenance
+        )
+    }
+
+    private static func removeRelationship(_ remove: RemoveRelationship, from document: inout KollioDocument) throws {
+        guard document.relationships.removeValue(forKey: remove.id) != nil else {
+            throw DocumentError.unknownRelationship(remove.id)
+        }
+    }
+
+    private static func move(_ move: MoveNodeInstances, in document: inout KollioDocument) throws {
+        for one in move.moves {
+            guard let index = document.presentation.instances.firstIndex(where: { $0.id == one.instanceID }) else {
+                throw DocumentError.unknownInstance(one.instanceID)
+            }
+            document.presentation.instances[index].position = one.position
+        }
+    }
+
+    private static func createScenario(_ scenario: CreateScenario, in document: inout KollioDocument, at date: Date) throws {
+        var context = scenario.context
+        context.position = scenario.rootPosition
+        try createObject(context, in: &document)
+        for child in scenario.children {
+            try createObject(child, in: &document)
+        }
+        for link in scenario.links {
+            try addRelationship(link, in: &document)
+        }
+        _ = date
+    }
+
+    /// Records a durable decision. `setAside` collapses the branch without
+    /// deleting anything; `reopened` restores it exactly as it was, positions
+    /// included.
+    private static func recordDecision(_ command: RecordDecision, in document: inout KollioDocument, at date: Date) throws {
+        guard let target = document.content[command.targetObjectID] else {
+            throw DocumentError.decisionTargetNotFound(command.targetObjectID)
+        }
+
+        var branch: Set<ObjectID> = []
+        switch command.kind {
+        case .setAside, .kept:
+            branch = document.exclusiveDescendants(of: command.targetObjectID)
+        case .reopened:
+            branch = Set(
+                document.decisions.values
+                    .filter { $0.targetObjectID == command.targetObjectID && $0.kind == .setAside }
+                    .flatMap(\.branchObjectIDs)
+                    .map { ObjectID($0.rawValue) }
+            )
+            if branch.isEmpty { branch = [command.targetObjectID] }
+        }
+
+        // A new decision supersedes the previous active decision on the same target.
+        for (id, decision) in document.decisions
+        where decision.targetObjectID == command.targetObjectID && decision.status == .active {
+            var superseded = decision
+            superseded.status = .superseded
+            document.decisions[id] = superseded
+        }
+
+        let decision = Decision(
+            id: command.id,
+            kind: command.kind,
+            targetObjectID: command.targetObjectID,
+            branchObjectIDs: branch.sorted { $0.rawValue < $1.rawValue },
+            rationale: command.rationale,
+            createdAt: date,
+            provenance: command.provenance
+        )
+        document.decisions[command.id] = decision
+
+        switch command.kind {
+        case .setAside:
+            for id in branch {
+                guard var object = document.content[id] else { continue }
+                object.lifecycle = .setAside
+                object.setAsideByDecision = command.id
+                document.content[id] = object
+            }
+        case .reopened:
+            for id in branch {
+                guard var object = document.content[id] else { continue }
+                // Only restore what this decision actually closed.
+                guard object.setAsideByDecision != nil else { continue }
+                object.lifecycle = .active
+                object.setAsideByDecision = nil
+                document.content[id] = object
+            }
+        case .kept:
+            break
+        }
+        _ = target
+    }
+
+    private static func revokeDecision(_ revoke: RevokeDecision, in document: inout KollioDocument) throws {
+        guard var decision = document.decisions[revoke.id] else { throw DocumentError.unknownDecision(revoke.id) }
+        decision.status = .superseded
+        document.decisions[revoke.id] = decision
+        if decision.kind == .setAside {
+            for id in decision.branchObjectIDs.map { ObjectID($0.rawValue) } {
+                guard var object = document.content[id] else { continue }
+                guard object.setAsideByDecision == revoke.id else { continue }
+                object.lifecycle = .active
+                object.setAsideByDecision = nil
+                document.content[id] = object
+            }
+        }
+    }
+
+    private static func addContribution(_ add: AddContributionToProduct, in document: inout KollioDocument) throws {
+        guard document.contributions[add.contributionID] != nil else {
+            throw DocumentError.unknownContribution(add.contributionID)
+        }
+        guard (0...1).contains(add.share) else { throw DocumentError.invalidShareRange(add.share) }
+        var product = document.products[add.productID] ?? ProductComposition(
+            id: add.productID,
+            name: document.content[add.productID]?.text ?? LocalizedText(add.productID.rawValue)
+        )
+        if !product.memberContributionIDs.contains(add.contributionID) {
+            product.memberContributionIDs.append(add.contributionID)
+        }
+        product.shares[add.contributionID.rawValue] = add.share
+        document.products[add.productID] = product
+    }
+
+    private static func applyProposal(_ apply: ApplyProposal, in document: inout KollioDocument, at date: Date) throws {
+        let validator = ProposalValidator()
+        try validator.validate(apply.proposal, against: document, scope: .init(maxOperations: 32, allowNewObjects: true))
+
+        for operation in apply.proposal.operations {
+            try applyCommand(operation, to: &document, at: date)
+        }
+        for (objectID, position) in apply.placements {
+            guard let instance = document.presentation.instance(for: objectID) else { continue }
+            if let index = document.presentation.instances.firstIndex(where: { $0.id == instance.id }) {
+                document.presentation.instances[index].position = position
+            }
+        }
+        _ = apply.provenance
+    }
+
+    private static func createdObjectID(_ command: Command) -> ObjectID? {
+        if case .createObject(let create) = command { return create.id }
+        return nil
+    }
+}
+
+/// Rejecting a proposal never touches the document: a proposal that was never
+/// kept has no branch on the canvas. Setting a *kept* branch aside is a durable
+/// decision, expressed with `RecordDecision`, so it keeps its rationale and can be
+/// reopened.
+extension DocumentStore {
+    public static func setAsideProposalReason(for reject: RejectProposal) -> RejectProposal.RejectReason {
+        reject.reason
+    }
+}

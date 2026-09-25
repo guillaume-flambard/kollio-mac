@@ -1,0 +1,24 @@
+# HTTPS -> Caddy -> KollioServer -> LLM provider
+api.kollio.example {
+	encode zstd gzip
+
+	# A proposal request is small and bounded; a large body is refused early.
+	request_body {
+		max_size 256KB
+	}
+
+	reverse_proxy kollio-server:8080 {
+		header_up X-Forwarded-Proto {scheme}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

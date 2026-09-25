@@ -1,0 +1,17 @@
+# Local backend, offline. The desktop app is the only client.
+name: kollio-local
+services:
+  kollio-server:
+    build:
+      context: ../..
+      dockerfile: infrastructure/backend/Dockerfile
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      # Generate one for your machine: openssl rand -hex 32
+      KOLLIO_API_TOKEN: "${KOLLIO_API_TOKEN:?set KOLLIO_API_TOKEN in your shell}"
+      KOLLIO_GROQ_API_KEY: "${KOLLIO_GROQ_API_KEY:-}"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true

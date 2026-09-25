@@ -1,0 +1,35 @@
+# Prepared, not deployed. HTTPS is terminated by Caddy in front of the service.
+name: kollio
+services:
+  kollio-server:
+    build:
+      context: ../..
+      dockerfile: infrastructure/backend/Dockerfile
+    environment:
+      KOLLIO_API_TOKEN: "${KOLLIO_API_TOKEN:?required}"
+      KOLLIO_GROQ_API_KEY: "${KOLLIO_GROQ_API_KEY:-}"
+      KOLLIO_GROQ_MODEL: "${KOLLIO_GROQ_MODEL:-openai/gpt-oss-120b}"
+    expose:
+      - "8080"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+
+  caddy:
+    image: caddy:2-alpine
+    depends_on:
+      - kollio-server
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy-data:
+  caddy-config:

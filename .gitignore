@@ -1,0 +1,9 @@
+# SwiftPM build products
+.build/
+.swiftpm/
+# The Xcode app built by scripts/run-app.sh
+build/
+# macOS
+.DS_Store
+# Per-user Xcode state: window layout and toolbar customisation, machine specific
+xcuserdata/

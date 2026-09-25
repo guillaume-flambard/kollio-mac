@@ -1,0 +1,369 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		DB40AD4145CD1370B6781EE7 /* KollioApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CE6A9133B8E50289B0A87E /* KollioApp.swift */; };
+		AE330C2613E8DA0A95394DCA /* ContextualViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327F089F1E9542437CF4D0BA /* ContextualViews.swift */; };
+		2D599205436A6EE6EDCCE95E /* ProposalViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1562A6F0E1A1E1FB3F4E6C20 /* ProposalViews.swift */; };
+		B27AF4A4D83015FA1DB0E13F /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57F0D306F6B02200C92CF2C4 /* Camera.swift */; };
+		D7C9D816D766F286D70BF6E7 /* RelationshipGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F9C7FEA54F8BAE07EED8B5 /* RelationshipGeometry.swift */; };
+		D8100C9AECEA328A96CE8B34 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39DEC28D8E8BBC9B1227A22A /* CanvasView.swift */; };
+		CDF3A4BF574BDE3A2F2687F1 /* ObjectNodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C273C77BEB9BBF817307596E /* ObjectNodeView.swift */; };
+		E417DEB525AF27063C0FF18A /* RelationshipLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A7DCDE74DBB93E3EAD6097B /* RelationshipLayer.swift */; };
+		E1C1059CAE0996DA95CD8850 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4155C7B22DF3C3EC1209850 /* DesignTokens.swift */; };
+		00D7CB0981F9B01187718397 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C7E575628E93E7F5B7B314D /* Theme.swift */; };
+		BC95C2ABA26D1B42C7EE1D7A /* KollioModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273245039D6F21FD6ABF9DF4 /* KollioModel.swift */; };
+		8CD037E8A401D0323A3772E3 /* SarahFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD7D59809DEE0ABB5166D00 /* SarahFixture.swift */; };
+		FC58297587EDA09BD788229B /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5AA53ABAB9E944F1F26625 /* L10n.swift */; };
+		17B4920FF13B62C2F9AB3500 /* RemoteSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E1FC3E3575E691B54510EFF /* RemoteSuggestionService.swift */; };
+		0A5DB5547C54A2B2E1140E6E /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 3BBC4A255F74D2A1B53AE951 /* Localizable.xcstrings */; };
+		26C70343164791EB7E0D636E /* KollioCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8F00A5AE310737084590BBD6 /* KollioCore */; };
+		862E11B013B7E3490389CCC2 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B34B0507FE00BF36365A62E0 /* Info.plist */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		D0CE6A9133B8E50289B0A87E /* KollioApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = KollioApp.swift; path = ../../packages/KollioApp/Sources/KollioApp/App/KollioApp.swift; sourceTree = SOURCE_ROOT; };
+		327F089F1E9542437CF4D0BA /* ContextualViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContextualViews.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Components/ContextualViews.swift; sourceTree = SOURCE_ROOT; };
+		1562A6F0E1A1E1FB3F4E6C20 /* ProposalViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProposalViews.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Components/ProposalViews.swift; sourceTree = SOURCE_ROOT; };
+		57F0D306F6B02200C92CF2C4 /* Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Camera.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Geometry/Camera.swift; sourceTree = SOURCE_ROOT; };
+		08F9C7FEA54F8BAE07EED8B5 /* RelationshipGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RelationshipGeometry.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Geometry/RelationshipGeometry.swift; sourceTree = SOURCE_ROOT; };
+		39DEC28D8E8BBC9B1227A22A /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CanvasView.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Rendering/CanvasView.swift; sourceTree = SOURCE_ROOT; };
+		C273C77BEB9BBF817307596E /* ObjectNodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ObjectNodeView.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Rendering/ObjectNodeView.swift; sourceTree = SOURCE_ROOT; };
+		2A7DCDE74DBB93E3EAD6097B /* RelationshipLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RelationshipLayer.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Rendering/RelationshipLayer.swift; sourceTree = SOURCE_ROOT; };
+		A4155C7B22DF3C3EC1209850 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DesignTokens.swift; path = ../../packages/KollioApp/Sources/KollioApp/DesignSystem/DesignTokens.swift; sourceTree = SOURCE_ROOT; };
+		4C7E575628E93E7F5B7B314D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Theme.swift; path = ../../packages/KollioApp/Sources/KollioApp/DesignSystem/Theme.swift; sourceTree = SOURCE_ROOT; };
+		273245039D6F21FD6ABF9DF4 /* KollioModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = KollioModel.swift; path = ../../packages/KollioApp/Sources/KollioApp/Documents/KollioModel.swift; sourceTree = SOURCE_ROOT; };
+		8DD7D59809DEE0ABB5166D00 /* SarahFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SarahFixture.swift; path = ../../packages/KollioApp/Sources/KollioApp/Documents/SarahFixture.swift; sourceTree = SOURCE_ROOT; };
+		4C5AA53ABAB9E944F1F26625 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = L10n.swift; path = ../../packages/KollioApp/Sources/KollioApp/Localization/L10n.swift; sourceTree = SOURCE_ROOT; };
+		8E1FC3E3575E691B54510EFF /* RemoteSuggestionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RemoteSuggestionService.swift; path = ../../packages/KollioApp/Sources/KollioApp/Networking/RemoteSuggestionService.swift; sourceTree = SOURCE_ROOT; };
+		3BBC4A255F74D2A1B53AE951 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = ../../packages/KollioApp/Sources/KollioApp/Localizable.xcstrings; sourceTree = SOURCE_ROOT; };
+		B34B0507FE00BF36365A62E0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F5BF48AA40CAD7891EB709FC /* Kollio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kollio.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		349B578E88FC623128D2018B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				26C70343164791EB7E0D636E /* KollioCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2A44C54E23411059C3A1A1E1 = {
+			isa = PBXGroup;
+			children = (
+				D1FB5A21859A354159B69A14 /* Localizable.xcstrings */,
+				AC6545EDE5A39074A15E6244 /* App */,
+				353ED2007F9D7FBFF5C0CB75 /* Canvas */,
+				132D4E0BBF7CDB76520B439E /* DesignSystem */,
+				B837DD26924365EFAE8F8615 /* Documents */,
+				786FA564B216918DA2F165B6 /* Localization */,
+				D2698074F197869D93E6D480 /* Networking */,
+				B34B0507FE00BF36365A62E0 /* Info.plist */,
+				C863DA5204F95EC573510473 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C863DA5204F95EC573510473 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F5BF48AA40CAD7891EB709FC /* Kollio.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AC6545EDE5A39074A15E6244 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				749F962E91E367E652AEF3EF /* KollioApp.swift */,
+			);
+			name = App;
+			sourceTree = "<group>";
+		};
+		353ED2007F9D7FBFF5C0CB75 /* Canvas */ = {
+			isa = PBXGroup;
+			children = (
+				F3B06D14FE62ECBB42E2B074 /* Components */,
+				708A45DF2D8D73611047CF45 /* Geometry */,
+				CF90BC23455F7E5A358E0717 /* Rendering */,
+			);
+			name = Canvas;
+			sourceTree = "<group>";
+		};
+		F3B06D14FE62ECBB42E2B074 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				6D3AA3D42050DD42E1F26C45 /* ContextualViews.swift */,
+				F389F7433915ED2219CC33F6 /* ProposalViews.swift */,
+			);
+			name = Components;
+			sourceTree = "<group>";
+		};
+		708A45DF2D8D73611047CF45 /* Geometry */ = {
+			isa = PBXGroup;
+			children = (
+				F552D897CADAB8E0B973743F /* Camera.swift */,
+				E2521772D829F64AD7F115C5 /* RelationshipGeometry.swift */,
+			);
+			name = Geometry;
+			sourceTree = "<group>";
+		};
+		CF90BC23455F7E5A358E0717 /* Rendering */ = {
+			isa = PBXGroup;
+			children = (
+				0B094496530D7EA95BA69DB3 /* CanvasView.swift */,
+				22AA84250320BFC5B624CBE0 /* ObjectNodeView.swift */,
+				355A699D18BFBD03AD882A02 /* RelationshipLayer.swift */,
+			);
+			name = Rendering;
+			sourceTree = "<group>";
+		};
+		132D4E0BBF7CDB76520B439E /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				FF67D09DCE7300321C50B6ED /* DesignTokens.swift */,
+				461EC1C00C6088ED0A63ACF9 /* Theme.swift */,
+			);
+			name = DesignSystem;
+			sourceTree = "<group>";
+		};
+		B837DD26924365EFAE8F8615 /* Documents */ = {
+			isa = PBXGroup;
+			children = (
+				CD0AD6287B24B34AA06DF8F1 /* KollioModel.swift */,
+				367A889D5201569FFE38E099 /* SarahFixture.swift */,
+			);
+			name = Documents;
+			sourceTree = "<group>";
+		};
+		786FA564B216918DA2F165B6 /* Localization */ = {
+			isa = PBXGroup;
+			children = (
+				4391C6ACA1646A3B30C64A4F /* L10n.swift */,
+			);
+			name = Localization;
+			sourceTree = "<group>";
+		};
+		D2698074F197869D93E6D480 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				17D0157EE1A142E72B36E08A /* RemoteSuggestionService.swift */,
+			);
+			name = Networking;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DE9A815229F9740C22B6C682 /* Kollio */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 88A9556C78F4D881C352E222;
+			buildPhases = (
+				F3F3D267CF0FD5307403D537 /* Sources */,
+				349B578E88FC623128D2018B /* Frameworks */,
+				41B260B1D2A5E0B273280C8E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Kollio;
+			packageProductDependencies = (
+				8F00A5AE310737084590BBD6 /* KollioCore */,
+			);
+			productName = Kollio;
+			productReference = F5BF48AA40CAD7891EB709FC /* Kollio.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		46F86FAA6BBF9AC94A7E4595 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					DE9A815229F9740C22B6C682 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+				};
+			};
+			buildConfigurationList = 887D4B5F61EA6AAAF609F3AC;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = fr;
+			hasScannedForEncodings = 0;
+			knownRegions = (fr, en, Base);
+			mainGroup = 2A44C54E23411059C3A1A1E1;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3E810DE79F20F2FBDB55E7AA /* XCLocalSwiftPackageReference "../packages/KollioCore" */,
+			);
+			productRefGroup = C863DA5204F95EC573510473 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DE9A815229F9740C22B6C682 /* Kollio */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		41B260B1D2A5E0B273280C8E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A5DB5547C54A2B2E1140E6E /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F3F3D267CF0FD5307403D537 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DB40AD4145CD1370B6781EE7 /* KollioApp.swift in Sources */,
+				AE330C2613E8DA0A95394DCA /* ContextualViews.swift in Sources */,
+				2D599205436A6EE6EDCCE95E /* ProposalViews.swift in Sources */,
+				B27AF4A4D83015FA1DB0E13F /* Camera.swift in Sources */,
+				D7C9D816D766F286D70BF6E7 /* RelationshipGeometry.swift in Sources */,
+				D8100C9AECEA328A96CE8B34 /* CanvasView.swift in Sources */,
+				CDF3A4BF574BDE3A2F2687F1 /* ObjectNodeView.swift in Sources */,
+				E417DEB525AF27063C0FF18A /* RelationshipLayer.swift in Sources */,
+				E1C1059CAE0996DA95CD8850 /* DesignTokens.swift in Sources */,
+				00D7CB0981F9B01187718397 /* Theme.swift in Sources */,
+				BC95C2ABA26D1B42C7EE1D7A /* KollioModel.swift in Sources */,
+				8CD037E8A401D0323A3772E3 /* SarahFixture.swift in Sources */,
+				FC58297587EDA09BD788229B /* L10n.swift in Sources */,
+				17B4920FF13B62C2F9AB3500 /* RemoteSuggestionService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A1FEF218C4C57CE118AD5A8A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_TESTABILITY = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		D49EF4AC7029FD1A8C1140E0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		FEE7AE1A1C8291DDE6965C1D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks");
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.kollio.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Debug;
+		};
+		71B50D198E64EEE00C2C0E9C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks");
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.kollio.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		887D4B5F61EA6AAAF609F3AC /* Build configuration list for PBXProject "Kollio" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1FEF218C4C57CE118AD5A8A /* Debug */,
+				D49EF4AC7029FD1A8C1140E0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		88A9556C78F4D881C352E222 /* Build configuration list for PBXNativeTarget "Kollio" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FEE7AE1A1C8291DDE6965C1D /* Debug */,
+				71B50D198E64EEE00C2C0E9C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		3E810DE79F20F2FBDB55E7AA /* XCLocalSwiftPackageReference "../packages/KollioCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../packages/KollioCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8F00A5AE310737084590BBD6 /* KollioCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3E810DE79F20F2FBDB55E7AA /* XCLocalSwiftPackageReference "../packages/KollioCore" */;
+			productName = KollioCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 46F86FAA6BBF9AC94A7E4595 /* Project object */;
+}

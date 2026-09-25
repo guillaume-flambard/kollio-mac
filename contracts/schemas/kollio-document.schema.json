@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kollio.dev/schemas/kollio-document.schema.json",
+  "title": "Kollio document",
+  "description": "A versioned, portable, renderer-independent document. No SwiftUI, AppKit or platform type ever appears here.",
+  "type": "object",
+  "required": ["schemaVersion", "documentId", "revision", "semanticRevision", "content", "relationships", "decisions", "provenance", "presentation"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1, "maximum": 1 },
+    "documentId": { "type": "string" },
+    "revision": { "type": "integer", "minimum": 0, "description": "Bumped on every accepted mutation, presentation included." },
+    "semanticRevision": { "type": "integer", "minimum": 0, "description": "Bumped only when the meaning of the document changed." },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "content": {
+      "type": "object",
+      "description": "Semantic objects, keyed by stable object id.",
+      "additionalProperties": { "$ref": "#/$defs/contentObject" }
+    },
+    "relationships": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/relationship" }
+    },
+    "decisions": {
+      "type": "object",
+      "description": "Durable project memory. Survives quitting, reloading and undo-stack loss.",
+      "additionalProperties": { "$ref": "#/$defs/decision" }
+    },
+    "contributions": {
+      "type": "object",
+      "description": "Reusable contributions. Visual duplication never creates a new one.",
+      "additionalProperties": { "$ref": "#/$defs/contribution" }
+    },
+    "products": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/productComposition" }
+    },
+    "presentation": { "$ref": "#/$defs/presentation" }
+  },
+  "$defs": {
+    "position": {
+      "type": "object",
+      "required": ["x", "y"],
+      "additionalProperties": false,
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+    },
+    "size": {
+      "type": "object",
+      "required": ["width", "height"],
+      "additionalProperties": false,
+      "properties": { "width": { "type": "number" }, "height": { "type": "number" } }
+    },
+    "localizedText": {
+      "type": "object",
+      "description": "Authored text. `text` is the source; `variants` holds only explicitly authored variants, never machine translations.",
+      "required": ["text"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "variants": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["actor", "kind"],
+      "properties": {
+        "actor": { "type": "string" },
+        "kind": { "enum": ["human", "localEngine", "remoteModel"] },
+        "requestId": { "type": "string" },
+        "proposalId": { "type": "string" }
+      }
+    },
+    "contentObject": {
+      "type": "object",
+      "required": ["id", "kind", "text", "lifecycle", "provenance"],
+      "properties": {
+        "id": { "type": "string" },
+        "kind": {
+          "enum": ["context", "need", "method", "technicalBlock", "product", "hypothesis", "constraint", "question", "evidence", "scenario", "decision", "note", "contribution"]
+        },
+        "text": { "$ref": "#/$defs/localizedText" },
+        "detail": { "$ref": "#/$defs/localizedText" },
+        "lifecycle": { "enum": ["active", "setAside"] },
+        "setAsideByDecision": { "type": "string" },
+        "contributionID": { "type": "string" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "required": ["id", "from", "to", "kind", "provenance"],
+      "properties": {
+        "id": { "type": "string" },
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "kind": { "enum": ["addresses", "uses", "dependsOn", "constrains", "supports", "contradicts", "alternativeTo", "derivedFrom", "associatedWith"] },
+        "label": { "$ref": "#/$defs/localizedText" },
+        "fromAnchor": { "$ref": "#/$defs/anchor" },
+        "toAnchor": { "$ref": "#/$defs/anchor" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "description": "Attachment point in object-local unit space, so a connector follows its object.",
+      "required": ["unitX", "unitY"],
+      "properties": { "unitX": { "type": "number" }, "unitY": { "type": "number" } }
+    },
+    "decision": {
+      "type": "object",
+      "required": ["id", "kind", "targetObjectID", "branchObjectIDs", "status", "createdAt", "provenance"],
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "enum": ["setAside", "reopened", "kept"] },
+        "targetObjectID": { "type": "string" },
+        "branchObjectIDs": { "type": "array", "items": { "type": "string" } },
+        "rationale": { "$ref": "#/$defs/localizedText" },
+        "status": { "enum": ["active", "superseded"] },
+        "supersedes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "contribution": {
+      "type": "object",
+      "required": ["id", "name", "kind", "owner", "reusable"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "kind": { "type": "string" },
+        "owner": { "type": "string" },
+        "reusable": { "type": "boolean" }
+      }
+    },
+    "productComposition": {
+      "type": "object",
+      "required": ["id", "name", "memberContributionIDs", "shares"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "$ref": "#/$defs/localizedText" },
+        "memberContributionIDs": { "type": "array", "items": { "type": "string" } },
+        "shares": { "type": "object", "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 } }
+      }
+    },
+    "presentation": {
+      "type": "object",
+      "required": ["instances"],
+      "properties": {
+        "instances": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "objectID", "position", "hidden"],
+            "properties": {
+              "id": { "type": "string" },
+              "objectID": { "type": "string" },
+              "position": { "$ref": "#/$defs/position" },
+              "size": { "$ref": "#/$defs/size" },
+              "hidden": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
