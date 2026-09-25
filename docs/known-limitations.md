@@ -165,10 +165,18 @@ Everything in the non-goals, and also, honestly:
   `ScrollDeliveryTests` proves three things: a scroll reaches the canvas, a click does not, and a
   text field outranks both. **Still owed:** a real trackpad scroll and its feel, which no test
   substitutes for.
+- **L3 is a domain with no interface.** `SourceLedger` and `ContextProjection` exist, are
+  tested and are used on the real request path, and nothing draws them. There is no way
+  yet to attach a file, import a PDF, read a CSV, cite a line or see what was left out of
+  the context. The domain is correct and invisible.
+- **The context budget is counted in characters, not tokens.** The app cannot know the
+  model's tokenizer, so the conversion is a documented estimate, clamped so the budget can
+  never exceed the model's real window. It is honest about being an estimate, and a
+  truncation is reported, but it is not a token count.
 - **The specification is written down; most of it is not built.** 71 features and 169 acceptance
-  criteria exist in [specs/SPECIFICATIONS.md](specs/SPECIFICATIONS.md). 11 are `automatedVerified`,
-  1 is `humanVerified`, 59 are `specified`, which means written down and nothing more. Read
+  criteria exist in [specs/SPECIFICATIONS.md](specs/SPECIFICATIONS.md). 15 are `automatedVerified`,
+  1 is `humanVerified`, 55 are `specified`, which means written down and nothing more. Read
   [../openspec/specs/evidence.md](../openspec/specs/evidence.md) for the proved, the owed and the
   wrong.
 - **No web renderer, no public SDK, no standard.** Intentional.
-- **No persistence, no accounts, no payments, no marketplace, no collaboration.** Intentional.
+- **No accounts, no payments, no marketplace, no collaboration.** Intentional.

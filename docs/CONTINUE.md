@@ -34,6 +34,8 @@ was probed directly, not inferred from the SDK being installed.
 | **Ghost branch from the real model, captured on screen** | **Owed** |
 | Warm latency, three calls in one process | Done, real model: 2.50 s, 2.68 s, 2.29 s |
 | A streaming answer reports progress and stays non-blocking | Done, real model: 54 updates in 5.1 s |
+| Sources, citations, revisions and verification | Domain done and tested, no interface |
+| Context budget measured, required items never dropped | Done, on the real request path |
 | **Network-disabled run after system resources exist** | **Not done**: it needs the firewall changed, which is the owner's call |
 
 The deterministic suite never touches a real model, and stays under two seconds. Reproduce the

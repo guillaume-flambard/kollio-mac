@@ -373,6 +373,69 @@ struct AppleAdapterTests {
         #expect(final?.hasOutcome == true)
     }
 
+    @Test("The context budget is measured, and truncation is reported not hidden")
+    func contextBudgetIsAppliedAndVisible() {
+        // A small model on purpose: the point is what happens when the real context
+        // does not fit, not that a big model copes.
+        let probe = StubAppleModelProbe(availability: .available, contextSize: 300)
+        let request = ProposalRequest(
+            requestId: "budget-1", documentId: document().documentId,
+            baseSemanticRevision: 0, intent: .explore,
+            targetIds: ["object:ctx"], contentLocale: "fr"
+        )
+        var withContext = request
+        withContext.context = [
+            .init(objectID: "object:ctx", kind: .context,
+                  text: String(repeating: "contexte ", count: 400), lifecycle: .active)
+        ]
+        let projection = AppleLocalSuggestionService.project(
+            request: withContext, document: document(), probe: probe
+        )
+        // A 300-token window is roughly 1200 characters, and this context is
+        // several times that, so it genuinely cannot fit.
+        #expect(projection.budgetCharacters < withContext.context.first!.text.count)
+        #expect(projection.missingRequired == [.object("object:ctx")])
+        #expect(projection.isComplete == false)
+        // The target is what was asked about, so it is required and is reported as
+        // missing rather than quietly dropped.
+        #expect(projection.mayLeaveTheMachine == false)
+    }
+
+    @Test("The budget never claims more room than the model has")
+    func budgetNeverExceedsTheWindow() {
+        // The bug this catches: a minimum budget larger than the real context
+        // would report a generous room that does not exist, and truncation would
+        // then happen without being detected.
+        for tokens in [64, 300, 1_000, 8_192] {
+            let budget = ApplePromptBuilder.characterBudget(forContextTokens: tokens)
+            #expect(budget <= tokens * ApplePromptBuilder.conservativeCharactersPerToken,
+                    "budget \(budget) exceeds a \(tokens) token window")
+            #expect(budget > 0)
+        }
+        // A model that does not report its size gets a stated default rather than
+        // an unbounded one.
+        #expect(ApplePromptBuilder.characterBudget(forContextTokens: nil) > 0)
+    }
+
+    @Test("A context that fits needs no narrowing")
+    func aFittingContextIsComplete() {
+        let probe = StubAppleModelProbe(availability: .available, contextSize: 8_192)
+        var request = ProposalRequest(
+            requestId: "budget-2", documentId: document().documentId,
+            baseSemanticRevision: 0, intent: .explore,
+            targetIds: ["object:ctx"], contentLocale: "fr"
+        )
+        request.context = [
+            .init(objectID: "object:ctx", kind: .context,
+                  text: "Réduire l'inscription de neuf étapes à trois", lifecycle: .active)
+        ]
+        let projection = AppleLocalSuggestionService.project(
+            request: request, document: document(), probe: probe
+        )
+        #expect(projection.isComplete)
+        #expect(projection.measuredCharacters > 0)
+    }
+
     // MARK: The seam is unchanged
 
     @Test("The domain never sees an Apple type")

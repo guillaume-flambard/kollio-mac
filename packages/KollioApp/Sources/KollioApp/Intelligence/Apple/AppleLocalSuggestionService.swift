@@ -81,7 +81,9 @@ public struct AppleLocalSuggestionService: StreamingSuggestionService {
             throw AppleModelError.unavailable(reason)
         }
 
+        let projection = Self.project(request: request, document: document, probe: probe)
         let prompt = ApplePromptBuilder.build(request: request, document: document)
+        Self.report(projection)
         do {
             #if canImport(FoundationModels)
             if #available(macOS 26.0, *) {
@@ -123,6 +125,50 @@ public struct AppleLocalSuggestionService: StreamingSuggestionService {
     }
     #endif
 
+    /// Measures what would be sent, and refuses to pretend it all fits.
+    ///
+    /// This is the point of `ContextProjection` in the adapter rather than in a
+    /// document nobody reads: the budget is applied to the real context, the real
+    /// context is measured, and what did not fit is reported instead of dropped in
+    /// silence.
+    static func project(
+        request: ProposalRequest,
+        document: KollioDocument,
+        probe: any AppleModelProbing
+    ) -> ContextProjection {
+        // Targets and the root context are required: they are what the person
+        // asked about. Everything else is material that helps but is not the ask.
+        let required: Set<ObjectID> = Set(request.targetIds)
+        let costs = (request.context ?? []).map { item in
+            ContextProjector.ItemCost(
+                item: .object(item.objectID),
+                characters: item.text.count + item.objectID.rawValue.count + 16,
+                isRequired: required.contains(item.objectID)
+            )
+        }
+        return ContextProjector().project(
+            rootContext: Array(required),
+            targets: request.targetIds,
+            costs: costs,
+            budgetCharacters: ApplePromptBuilder.characterBudget(forContextTokens: probe.contextSize()),
+            locality: .localOnly
+        )
+    }
+
+    /// Says what was left out, in counts only.
+    ///
+    /// The document's own words never reach a log, and neither does anything that
+    /// would let a reader guess them. A missing required item is worth more than a
+    /// warning, so it says so plainly: the answer will be about less than was asked.
+    static func report(_ projection: ContextProjection) {
+        if projection.omissions.isEmpty == false {
+            NSLog("Kollio apple: context truncated, \(projection.omissions.count) optional item(s) did not fit")
+        }
+        if projection.missingRequired.isEmpty == false {
+            NSLog("Kollio apple: \(projection.missingRequired.count) required item(s) did not fit; the answer will be narrower than the request")
+        }
+    }
+
     // MARK: Streaming
 
     /// The same answer, reported while it is being written.
@@ -149,7 +195,9 @@ public struct AppleLocalSuggestionService: StreamingSuggestionService {
             throw AppleModelError.unavailable(reason)
         }
 
+        let projection = Self.project(request: request, document: document, probe: probe)
         let prompt = ApplePromptBuilder.build(request: request, document: document)
+        Self.report(projection)
         do {
             #if canImport(FoundationModels)
             if #available(macOS 26.0, *) {
@@ -296,6 +344,27 @@ enum ApplePromptBuilder {
     - Your rationale is one short sentence addressed to the user. No chain of
       thought, no explanation of your process.
     """
+
+    /// The budget for the assembled context, in characters.
+    ///
+    /// The model reports its context in tokens and the app cannot know its
+    /// tokenizer, so this is an estimate and is called one. It is deliberately
+    /// conservative: the cost of guessing low is a truncated answer the person
+    /// never sees, and the cost of guessing high is a refusal that asks for a
+    /// narrower task, which is honest and recoverable.
+    static let conservativeCharactersPerToken = 4
+
+    static func characterBudget(forContextTokens tokens: Int?) -> Int {
+        guard let tokens, tokens > 0 else { return 8_000 }
+        // A third of the window is left for the instructions, the schema and the
+        // answer itself.
+        let share = (tokens / 3) * conservativeCharactersPerToken
+        // The floor exists so a pathologically small window still allows a little
+        // context rather than refusing everything. It is clamped to the real window,
+        // because a "minimum" larger than the whole context would claim more room
+        // than the model has, which is the one thing a budget must never do.
+        return min(max(2_000, share), tokens * conservativeCharactersPerToken)
+    }
 
     static func build(request: ProposalRequest, document: KollioDocument) -> String {
         let context = request.context.map { item in

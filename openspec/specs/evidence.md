@@ -35,6 +35,14 @@ project outruns its proof.
 | A half-written answer yields progress only, never commands | `AppleAdapterTests` | L2 |
 | Streamed and non-streamed answers convert identically | `AppleAdapterTests` | L2 |
 | One keep undoes as one action | `VerticalSliceTests` | L2 |
+| A source is a reference; a link fetches nothing | `SourceLedgerTests` | L3 |
+| A citation keeps its revision, and is refused towards nothing | `SourceLedgerTests` | L3 |
+| Verification needs an observation and an author | `SourceLedgerTests` | L3 |
+| A new revision flags without moving a citation | `SourceLedgerTests` | L3 |
+| A failed extraction keeps the previous version | `SourceLedgerTests` | L3 |
+| A removed source does not delete the claim | `SourceLedgerTests` | L3 |
+| The context budget is measured, required items are never dropped | `ContextProjectionTests`, `AppleAdapterTests` | L3 |
+| A local-only projection cannot be sent | `ContextProjectionTests` | L3 |
 
 ## What is owed to a person
 
@@ -64,6 +72,14 @@ These cannot be automated here, and no line of code substitutes for them.
   engine, took 35 seconds and started failing on a Mac with a usable model. Fixed
   by pinning the engine in every test; recorded because it is the failure mode
   this project is most likely to repeat.
+- The context budget had a 2000-character floor that could exceed a small model's
+  whole window, so it would have claimed more room than existed and truncation would
+  have gone undetected. It is now clamped to the window, and a test covers 64, 300,
+  1000 and 8192 tokens.
+- `importRevision` originally left already-verified citations alone when a source
+  gained a revision, so a check on a superseded file kept looking current. A
+  verified citation is now flagged like any other: the observation is not erased,
+  but it is no longer presented as current.
 - The first draft of the streaming test proved the projection against malformed
   JSON, which the framework cannot produce: `GeneratedContent(json:)` refuses to
   parse it. The test now covers the case that can actually happen, valid JSON in an
