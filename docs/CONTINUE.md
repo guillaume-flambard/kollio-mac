@@ -8,6 +8,43 @@ You are continuing **Kollio**, a macOS prototype: a living visual document that 
 question and evolve together. The canvas is the application. A `.kollio` document is the product
 model. An intelligence source proposes a patch; it never regenerates the world.
 
+The direction is [PRODUCT_BLUEPRINT.md](PRODUCT_BLUEPRINT.md). Read it once, not every task.
+
+## Active milestone: G0, real entry point and on-device Apple intelligence
+
+**Status: G0-A and G0-B both reached. The human gesture pass is still owed.**
+
+Verified 2026-09-25 on arm64, macOS 27.0 (26A428), Xcode 27.0, SDK 27.0.
+`SystemLanguageModel.default.availability` is `.available`, 24 languages, 8192-token context. This
+was probed directly, not inferred from the SDK being installed.
+
+| Criterion | State |
+|---|---|
+| Fresh input instead of automatic Sarah | Done, tested |
+| Authored context persisted before any request | Done, tested |
+| Inline instruction delivered | Done, tested |
+| New-document isolation, unreadable document reported | Done, tested |
+| Save on quit wired | Done, tested end to end |
+| `AppleLocalSuggestionService` behind the seam | Done, tested with a stub |
+| Two distinct non-Sarah contexts reach the adapter | Done, real model, FR and EN |
+| Keep / Undo / save / reopen without a server | Done, tested |
+| Real on-device generation produces a valid proposal | Done, real model |
+| No network socket held by the running app | Done, `lsof` against the app pid |
+| **Human trackpad and pointer pass** | **Owed** |
+| **Ghost branch from the real model, captured on screen** | **Owed** |
+| **Warm latency and a second identical call** | **Not measured** |
+| **Network-disabled run after system resources exist** | **Not done**: it needs the firewall changed, which is the owner's call |
+
+The deterministic suite never touches a real model, and stays under two seconds. Reproduce the
+real-model check:
+
+```bash
+KOLLIO_REAL_MODEL=1 swift test --package-path packages/KollioApp --filter RealOnDeviceModelTests
+```
+
+Measured cold latency for a small candidate: **9 to 15 seconds**. That is the dominant finding of
+this round. The path works; the latency does not yet feel interactive.
+
 ## Where the code is
 
 ```
@@ -31,7 +68,7 @@ After adding or removing a file under `packages/KollioApp/Sources`, run:
 ## Verify before believing anything
 
 ```bash
-./scripts/verify.sh     # 3 test suites (134 tests) + the Xcode app target
+./scripts/verify.sh     # 3 test suites (149 tests) + the Xcode app target
 ./scripts/run-app.sh --shot   # builds, launches, screenshots into build/
 ```
 
@@ -129,15 +166,18 @@ Read `docs/known-limitations.md` before promising anything. The short version:
 
 ## The next things worth doing, in this order
 
-1. A human pass, and the two things only a human can settle: **type a sentence into the entry point
-   and press the action**, and **scroll with two fingers**. Drag, double-click to explore, contextual
-   buttons, `Cmd+0` / `Cmd+1` / `Cmd+Z` / `Cmd+S`, then quit without `Cmd+S` and relaunch. The code
-   says two-finger scrolling does nothing; confirm or refute it.
-2. Relationship selection: a label, a wider hit area than the visible stroke, and a contextual action.
-3. Performance: generate 100 objects and 200 relationships, measure pan, zoom and drag, then use the
+1. A human pass. Three things only a human can settle: **type a sentence into the entry point and
+   press the action**, **scroll with two fingers** (the code says it does nothing; confirm or
+   refute), and **watch a real-model proposal arrive and be kept**. Then drag, double-click to
+   explore, contextual buttons, `Cmd+0` / `Cmd+1` / `Cmd+Z` / `Cmd+S`, and quit without `Cmd+S`.
+2. Latency, because it is the blocking finding: measure a warm call, a second identical call, and
+   whether the first cost is asset loading or generation. A pending state that lasts ten seconds is
+   the next thing the user will complain about.
+3. Relationship selection: a label, a wider hit area than the visible stroke, and a contextual action.
+4. Performance: generate 100 objects and 200 relationships, measure pan, zoom and drag, then use the
    camera's visible rectangle to cull. Connector routing samples its curve, so this is where the
    cost will show.
-4. Keyboard traversal between objects, so the canvas is usable without a pointer.
-5. Only then, and only with explicit permission and a key kept server-side: a small live Groq test
-   behind the existing seam. Everything the transport needs is already in place and mocked; what is
-   missing is evidence about a real model's output, not plumbing.
+5. Keyboard traversal between objects, so the canvas is usable without a pointer.
+6. Only then, and only with explicit permission: a small live Groq test, or a PCC eligibility check.
+   Everything the transport needs is in place and mocked; what is missing is evidence about a live
+   model, not plumbing.

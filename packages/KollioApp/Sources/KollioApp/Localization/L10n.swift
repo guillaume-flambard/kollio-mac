@@ -62,6 +62,11 @@ public enum L10n {
     public static var errorSaveFailed: String { callAsFunction("error.saveFailed") }
     public static var errorLoadFailed: String { callAsFunction("error.loadFailed") }
     public static var submitHint: String { callAsFunction("action.submitHint") }
+    public static var sourceOnDevice: String { callAsFunction("source.onDevice") }
+    /// %@ is the real reason reported by the framework, in the user's language.
+    public static func sourceUnavailable(_ reason: String) -> String {
+        String(format: callAsFunction("source.unavailable"), reason)
+    }
 
     // Undo labels
     public static var undoMove: String { callAsFunction("undo.move") }

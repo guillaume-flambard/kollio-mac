@@ -50,7 +50,7 @@ struct InitialContextTests {
     func freshLaunchIsEmpty() {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = KollioModel(document: nil, fileStore: store)
+        let model = KollioModel(document: nil, service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         // No fixture is substituted for a missing document.
         #expect(model.isEmpty)
         #expect(model.hasUnreadableDocument == false)
@@ -60,11 +60,11 @@ struct InitialContextTests {
     func storedDocumentIsRestored() {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let first = KollioModel(document: KollioDocument(), fileStore: store)
+        let first = KollioModel(document: KollioDocument(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         first.start(with: "Récupérer la liste des prospects")
         #expect(first.save())
 
-        let relaunched = KollioModel(document: nil, fileStore: store)
+        let relaunched = KollioModel(document: nil, service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         #expect(relaunched.isEmpty == false)
         #expect(relaunched.document.content.count == 1)
         #expect(relaunched.object(KollioID.object("context"))?.text.text == "Récupérer la liste des prospects")
@@ -78,7 +78,7 @@ struct InitialContextTests {
         try FileManager.default.createDirectory(at: store.directory, withIntermediateDirectories: true)
         try Data("{ this is not a kollio document".utf8).write(to: url)
 
-        let model = KollioModel(document: nil, fileStore: store)
+        let model = KollioModel(document: nil, service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         #expect(model.hasUnreadableDocument)
         // The user's file is still exactly what it was.
         let onDisk = String(decoding: try Data(contentsOf: url), as: UTF8.self)
@@ -89,7 +89,7 @@ struct InitialContextTests {
     func newDocumentGetsItsOwnFile() throws {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = KollioModel(document: KollioDocument(), fileStore: store)
+        let model = KollioModel(document: KollioDocument(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         model.start(with: "First context")
         #expect(model.save())
         let firstURL = model.documentURL
@@ -110,7 +110,7 @@ struct InitialContextTests {
     func contextPreservesAuthoredText() {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = KollioModel(document: KollioDocument(), fileStore: store)
+        let model = KollioModel(document: KollioDocument(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         let sentence = "Il faut refaire le parcours d'inscription avant la fin du trimestre, sinon on perd les comptes."
         model.start(with: sentence)
         // No summarising, no trimming of the meaning, no translation.
@@ -121,7 +121,7 @@ struct InitialContextTests {
     func emptySubmissionIsRejected() {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = KollioModel(document: KollioDocument(), fileStore: store)
+        let model = KollioModel(document: KollioDocument(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         #expect(model.start(with: "   \n  ") == nil)
         #expect(model.isEmpty)
     }
@@ -139,7 +139,7 @@ struct InitialContextTests {
         let context = try #require(model.start(with: "A context that must survive a dead backend"))
         await model.exploreInitialContext(context)
 
-        let relaunched = KollioModel(document: nil, fileStore: store)
+        let relaunched = KollioModel(document: nil, service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         #expect(relaunched.text(of: context) == "A context that must survive a dead backend")
     }
 
@@ -147,7 +147,7 @@ struct InitialContextTests {
     func editKeepsIdentity() throws {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = KollioModel(document: KollioDocument(), fileStore: store)
+        let model = KollioModel(document: KollioDocument(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         let context = try #require(model.start(with: "First version of the context"))
         let revision = model.document.semanticRevision
 
@@ -165,7 +165,7 @@ struct InitialContextTests {
     func emptyEditIsRefused() throws {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = KollioModel(document: KollioDocument(), fileStore: store)
+        let model = KollioModel(document: KollioDocument(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         let context = try #require(model.start(with: "Untouchable"))
         let revision = model.document.semanticRevision
         #expect(model.applyEdit(to: context, text: "  ") == false)

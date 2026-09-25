@@ -137,7 +137,8 @@ public final class KollioModel {
         document: KollioDocument? = nil,
         service: (any SuggestionService)? = nil,
         fileStore: DocumentFileStore = DocumentFileStore(),
-        languageCode: String = KollioModel.systemLanguage
+        languageCode: String = KollioModel.systemLanguage,
+        mode: ServiceConfiguration? = nil
     ) {
         self.fileStore = fileStore
         self.languageCode = languageCode
@@ -145,8 +146,16 @@ public final class KollioModel {
         // document that was written most recently.
         let url = fileStore.mostRecentDocumentURL ?? fileStore.defaultDocumentURL
         self.documentURL = url
-        self.service = service ?? KollioModel.makeDemoService(languageCode: languageCode)
-        self.serviceMode = .demo
+        if let service {
+            // An explicit service, as the tests use.
+            self.service = service
+            self.serviceMode = mode ?? .demo
+        } else {
+            // The source the environment actually configured, resolved once.
+            let resolved = KollioModel.makeConfiguredService(languageCode: languageCode)
+            self.service = resolved.service
+            self.serviceMode = resolved.mode
+        }
         if let document {
             // Explicit document, as the tests and the demo use.
             self.session = KollioSession(document: document)
@@ -176,15 +185,48 @@ public final class KollioModel {
         ))
     }
 
+    /// The model a normal launch gets. Separate from `init` so the default
+    /// arguments used by tests stay deterministic.
+    public static func makeAppModel() -> KollioModel {
+        KollioModel()
+    }
+
+    /// A model pinned to the deterministic engine, for tests and previews.
+    ///
+    /// The deterministic suite must never depend on whether the Mac it runs on
+    /// has a usable on-device model, and must never make a real generation. Every
+    /// test that needs a service asks for this one explicitly rather than
+    /// inheriting the launch default.
+    public static func deterministicModel(
+        document: KollioDocument? = nil,
+        fileStore: DocumentFileStore = DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory()))
+    ) -> KollioModel {
+        KollioModel(
+            document: document,
+            service: makeDemoService(languageCode: "fr"),
+            fileStore: fileStore,
+            mode: .demo
+        )
+    }
+
+    /// What the app says about on-device intelligence right now, and nothing
+    /// more. The status line uses this; no panel is added to the canvas.
+    public var appleAvailability: AppleModelAvailability? {
+        (service as? AppleLocalSuggestionService)?.availability
+    }
+
     /// Builds the service the environment asks for, and records what was really
     /// chosen. A server that cannot be reached is reported as an error, never
-    /// quietly replaced by the demo engine.
+    /// quietly replaced by the demo engine, and an unavailable on-device model is
+    /// reported as a refusal, never quietly replaced either.
     public static func makeConfiguredService(
         languageCode: String,
         configuration: ServiceConfiguration = ServiceConfiguration.fromEnvironment().configuration,
         token: String? = nil
     ) -> (service: any SuggestionService, mode: ServiceConfiguration) {
         switch configuration {
+        case .apple:
+            return (AppleLocalSuggestionService(), .apple)
         case .demo:
             return (makeDemoService(languageCode: languageCode), .demo)
         case .server(let baseURL):
@@ -398,6 +440,15 @@ public final class KollioModel {
             let response = try await service.respond(to: request, document: document)
             handle(response, anchor: id)
             return true
+        } catch is CancellationError {
+            // A cancelled request publishes nothing. The draft and the context
+            // stay exactly as they were.
+            return false
+        } catch let error as AppleModelError {
+            // The real reason, in the user's language, and no substitution: the
+            // context is untouched and the demo engine is not quietly used.
+            status = error.errorDescription
+            return false
         } catch {
             status = L10n.errorGeneric
             return false

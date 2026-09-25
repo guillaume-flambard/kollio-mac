@@ -13,7 +13,7 @@ struct VerticalSliceTests {
         let directory = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("kollio-slice-\(UUID().uuidString)")
         let store = DocumentFileStore(directory: directory)
-        let model = KollioModel(document: SarahFixture.document(), fileStore: store)
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         return (model, directory)
     }
 

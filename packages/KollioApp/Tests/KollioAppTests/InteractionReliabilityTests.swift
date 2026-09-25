@@ -96,7 +96,7 @@ struct InteractionReliabilityTests {
     func quitSavesWithoutAnExplicitSave() async {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = KollioModel(document: SarahFixture.document(), fileStore: store)
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
 
         // The person explores, keeps, and then quits with the mouse.
         await model.explore(KollioID.object("sarah-csv"))
@@ -108,7 +108,7 @@ struct InteractionReliabilityTests {
         model.save()
 
         // Relaunch: a new model, reading only what reached the disk.
-        let relaunched = KollioModel(document: nil, fileStore: store)
+        let relaunched = KollioModel(document: nil, service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         #expect(relaunched.document.content.count == 9)
         #expect(relaunched.document.semanticRevision == keptRevision)
     }
@@ -117,7 +117,7 @@ struct InteractionReliabilityTests {
     func quittingThroughTheDelegateSaves() async {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = KollioModel(document: SarahFixture.document(), fileStore: store)
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
 
         // The work happens with no Cmd+S, exactly as in a real session.
         await model.explore(KollioID.object("sarah-csv"))
@@ -129,7 +129,7 @@ struct InteractionReliabilityTests {
         delegate.model = model
         #expect(delegate.applicationShouldTerminate(NSApplication.shared) == .terminateNow)
 
-        let relaunched = KollioModel(document: nil, fileStore: store)
+        let relaunched = KollioModel(document: nil, service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         #expect(relaunched.document.content.count == 9)
         #expect(relaunched.document.semanticRevision == keptRevision)
     }
@@ -138,12 +138,12 @@ struct InteractionReliabilityTests {
     func saveStillWorksWithoutTheDelegate() async {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = KollioModel(document: SarahFixture.document(), fileStore: store)
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         await model.explore(KollioID.object("sarah-csv"))
         model.keepPreview()
         let revision = model.document.semanticRevision
         #expect(model.save())
-        let relaunched = KollioModel(document: nil, fileStore: store)
+        let relaunched = KollioModel(document: nil, service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         #expect(relaunched.document.semanticRevision == revision)
     }
 
@@ -153,7 +153,7 @@ struct InteractionReliabilityTests {
     func setAsideKeepsTheCamera() async {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = KollioModel(document: SarahFixture.document(), fileStore: store)
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         model.camera = Camera(zoom: 1.8, translation: Position(x: -140, y: 96))
         let before = model.camera
 
@@ -167,7 +167,7 @@ struct InteractionReliabilityTests {
     func reopenKeepsTheCamera() {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = KollioModel(document: SarahFixture.document(), fileStore: store)
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         model.setAside(KollioID.object("sarah-csv"), reason: "Pas maintenant")
         model.camera = Camera(zoom: 0.75, translation: Position(x: 220, y: -60))
         let before = model.camera
@@ -181,7 +181,7 @@ struct InteractionReliabilityTests {
     func reopenDoesNotReorganise() {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = KollioModel(document: SarahFixture.document(), fileStore: store)
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         let before = Dictionary(
             uniqueKeysWithValues: model.document.presentation.instances.map { ($0.objectID, $0.position) }
         )
@@ -196,7 +196,7 @@ struct InteractionReliabilityTests {
     func fitContentStillWorks() {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = KollioModel(document: SarahFixture.document(), fileStore: store)
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         model.camera = Camera(zoom: 2.5, translation: Position(x: 900, y: 900))
         model.fitContent()
         // Fitting really reframes: the content is centred in the viewport.

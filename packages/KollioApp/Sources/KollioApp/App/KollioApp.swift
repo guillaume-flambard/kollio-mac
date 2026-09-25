@@ -4,7 +4,9 @@ import AppKit
 
 @main
 struct KollioApp: App {
-    @State private var model = KollioModel()
+    /// Built from the environment at launch, so the app starts with the source it
+    /// was actually configured for rather than always the offline engine.
+    @State private var model = KollioModel.makeAppModel()
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     var body: some Scene {

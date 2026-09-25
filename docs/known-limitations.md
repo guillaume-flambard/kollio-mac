@@ -2,6 +2,23 @@
 
 An honest inventory. Nothing here is a surprise: this is the prototype, not the product.
 
+## Verified on this machine
+
+Recorded 2026-09-25, on an arm64 Mac, macOS 27.0 (26A428), Xcode 27.0, SDK 27.0.
+
+- **The on-device model is genuinely available here.** `SystemLanguageModel.default.availability`
+  is `.available`, 24 supported languages, a context size of 8192 tokens. This was probed directly
+  rather than inferred from the SDK being installed.
+- **Real generation works, in French and English, on two distinct non-Sarah contexts.** Through the
+  adapter, not a standalone script: a French context and an English context each produced a small
+  proposal, and both passed the same `ProposalValidator` as any other proposal. Cold latency observed
+  between roughly 9 and 15 seconds, which is far too slow to feel interactive and is the clearest
+  finding of this round. Reproduce with
+  `KOLLIO_REAL_MODEL=1 swift test --package-path packages/KollioApp --filter RealOnDeviceModelTests`.
+- **The running app holds no network socket.** Checked with `lsof` against the app's own pid. This is
+  evidence about the on-device path specifically, not a claim that no Mac feature the user turns on
+  will ever reach the network.
+
 ## Implemented and tested
 
 - The entry point: a launch with no stored document shows the initial input, a stored document is
@@ -34,6 +51,19 @@ An honest inventory. Nothing here is a surprise: this is the prototype, not the 
   remains the explicit reframe. Tested.
 - A collapsed direction is selectable, so its contextual "Reopen" button is reachable by click, and
   reopening is also a named accessibility action rather than a double-click only.
+- The on-device adapter behind the existing `SuggestionService` seam: a compact `@Generable`
+  candidate, a trusted conversion that mints identifiers and refuses kinds the canvas cannot render,
+  a branch bounded to a few ideas, and `noChange` / `needsInput` passed through as themselves. Tested
+  with a stubbed probe, so every unavailable state is reachable and no test needs Apple Intelligence.
+- Availability is read from the reasons the SDK actually reports, and each maps to a distinct
+  explanation. An unavailable model is a refusal: the app never falls back to the demo engine, never
+  calls a network, and never claims an answer it did not get. Tested.
+- Service selection: with no preference a usable on-device model is preferred over the offline engine;
+  an explicit `demo` is respected even when the model works; `server` without a token falls back and
+  says so. Tested.
+- The deterministic suite never touches a real model. It runs in under two seconds and passes
+  identically on a Mac with and without a usable system model, because every test pins the engine
+  explicitly.
 - `.kollio` document: versioned JSON, exact round-trip, stable ids, portable geometry, no renderer type
   in the file. Tested.
 - Commands, transactions, atomicity, undo and redo. Tested.
@@ -64,8 +94,10 @@ An honest inventory. Nothing here is a surprise: this is the prototype, not the 
   seen in the launched app (`build/01-entry.png`). **Typing a sentence and pressing the action was not
   done by a human or a script**: keystroke injection needs accessibility access, which this
   environment refuses. The behaviour behind it is covered by tests against the real model, and the
-  transport it triggers is covered by the local server run, but the two have not been joined by an
-  actual person typing.
+  transport it triggers is covered separately, but the two have not been joined by an actual person
+  typing.
+- A full run with a ghost branch proposed by the **real on-device model** has not been captured. The
+  generation, the conversion and the validation are each verified; the assembled screenshot is not.
 
 ## Simulated or approximated
 
@@ -83,6 +115,18 @@ An honest inventory. Nothing here is a surprise: this is the prototype, not the 
 - A service is chosen by environment variable, not by UI. A `server` mode with no token in the
   Keychain falls back to the offline engine, and the status line says which source is in use. There is
   no provider control panel, and a live-mode error is reported rather than silently downgraded.
+- **On-device generation is far too slow to feel interactive.** Measured at roughly 9 to 15 seconds
+  for a small candidate, cold. That is the dominant finding of this round: the path works, the
+  latency does not yet. Nothing is streamed to the canvas, so the user waits on a pending state.
+  Whether this is a cold-start cost, a size of `gpt-oss` on this class of Mac, or both, is **not
+  measured**. Warm latency and a second identical call were not timed.
+- The on-device candidate is a small, fixed shape: an outcome, one sentence, and a bounded list of
+  ideas. It cannot propose decisions, question existing objects, or edit a relationship's meaning,
+  because the adapter does not yet convert those. This is a limitation of the conversion, not of the
+  model.
+- **Apple Private Cloud Compute is not implemented and not evaluated.** Entitlement, distribution
+  route, quota and runtime availability are all unverified on this machine. No request leaves the Mac
+  today, and nothing in the code path would send anything.
 
 ## Not built
 

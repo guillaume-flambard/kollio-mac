@@ -160,10 +160,10 @@ struct CanvasView: View {
             }
             // The mode is stated plainly, once, and only when it is not the
             // offline default. No panel and no badge on the canvas.
-            if model.serviceMode.requiresNetwork {
+            if let note = sourceNote {
                 VStack {
                     Spacer()
-                    Text("source: \(model.serviceMode.label)")
+                    Text(note)
                         .font(TypeScale.metadata)
                         .foregroundStyle(theme.textSecondary)
                         .padding(.horizontal, Space.m)
@@ -212,6 +212,23 @@ struct CanvasView: View {
             x: min(max((left + right) / 2, card.width / 2), max(viewport.width - card.width / 2, card.width / 2)),
             y: min(bottom + card.height / 2 + Space.xl, max(viewport.height - card.height / 2, card.height / 2))
         )
+    }
+
+    // MARK: - Source of intelligence
+
+    /// One short line saying where proposals actually come from.
+    ///
+    /// "On this Mac" rather than "local", because "local" is ambiguous for an
+    /// API proxy that forwards data to the internet. A model that is not
+    /// available is named as unavailable, never shown as though it answered.
+    private var sourceNote: String? {
+        if model.serviceMode.requiresNetwork {
+            return "source: \(model.serviceMode.label)"
+        }
+        guard let availability = model.appleAvailability else { return nil }
+        return availability.isUsable
+            ? L10n.sourceOnDevice
+            : L10n.sourceUnavailable(availability.explanation)
     }
 
     private func estimate(of objectID: ObjectID, in preview: ProposalPreview) -> Size {

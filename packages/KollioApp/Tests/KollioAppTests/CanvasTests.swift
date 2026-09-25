@@ -243,13 +243,13 @@ struct ConnectorRoutingTests {
 struct KollioModelTests {
     @Test("A new document is empty and asks one question")
     func firstExperience() {
-        let model = KollioModel(document: KollioDocument(), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
+        let model = KollioModel(document: KollioDocument(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
         #expect(model.isEmpty)
     }
 
     @Test("The first statement becomes the context, and nothing else")
     func startWithStatement() {
-        let model = KollioModel(document: KollioDocument(), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
+        let model = KollioModel(document: KollioDocument(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
         let context = model.start(with: "Recover our prospect list without the CRM")
         // No canned hypotheses: what the person wrote is the document.
         #expect(model.document.content.count == 1)
@@ -260,7 +260,7 @@ struct KollioModelTests {
 
     @Test("The demo document shows Sarah and nothing else")
     func sarahFixture() {
-        let model = KollioModel(document: SarahFixture.document(), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
         #expect(model.document.content.count == 6)
         #expect(model.visibleInstances.count == 6)
         #expect(model.relationshipsToRender().count == 5)
@@ -268,7 +268,7 @@ struct KollioModelTests {
 
     @Test("Explore previews a ghost branch without touching the document")
     func explorePreviewsWithoutMutating() async {
-        let model = KollioModel(document: SarahFixture.document(), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
         let before = model.document
         await model.explore(KollioID.object("sarah-csv"))
         #expect(model.preview != nil)
@@ -278,7 +278,7 @@ struct KollioModelTests {
 
     @Test("Keep applies the proposal as one transaction, undo restores everything")
     func keepAndUndo() async {
-        let model = KollioModel(document: SarahFixture.document(), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
         let before = model.document
         await model.explore(KollioID.object("sarah-csv"))
         model.keepPreview()
@@ -290,7 +290,7 @@ struct KollioModelTests {
 
     @Test("Set aside collapses the branch and keeps the reason")
     func setAside() {
-        let model = KollioModel(document: SarahFixture.document(), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
         model.setAside(KollioID.object("sarah-csv"), reason: "Pas maintenant")
         #expect(model.canReopen(KollioID.object("sarah-csv")))
         // The direction stays on the canvas, compact; its two children collapse.
@@ -303,7 +303,7 @@ struct KollioModelTests {
 
     @Test("Reopen restores the branch exactly where it was")
     func reopen() {
-        let model = KollioModel(document: SarahFixture.document(), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
         let positions = Dictionary(uniqueKeysWithValues: model.document.presentation.instances.map { ($0.objectID, $0.position) })
         model.setAside(KollioID.object("sarah-csv"), reason: "Pas maintenant")
         model.reopen(KollioID.object("sarah-csv"))
@@ -315,7 +315,7 @@ struct KollioModelTests {
 
     @Test("A drag is applied once, on release")
     func dragCommitsOnce() {
-        let model = KollioModel(document: SarahFixture.document(), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: DocumentFileStore(directory: URL(fileURLWithPath: NSTemporaryDirectory())))
         let id = KollioID.object("sarah-csv")
         let start = model.document.presentation.instance(for: id)?.position
         model.beginDrag(id, screenTranslation: CGSize(width: 0, height: 0))
@@ -330,12 +330,12 @@ struct KollioModelTests {
     func saveAndReopen() async {
         let directory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("kollio-tests-\(UUID().uuidString)")
         let store = DocumentFileStore(directory: directory)
-        let model = KollioModel(document: SarahFixture.document(), fileStore: store)
+        let model = KollioModel(document: SarahFixture.document(), service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         await model.explore(KollioID.object("sarah-csv"))
         model.keepPreview()
         model.save()
 
-        let reopened = KollioModel(document: nil, fileStore: store)
+        let reopened = KollioModel(document: nil, service: KollioModel.makeDemoService(languageCode: "fr"), fileStore: store)
         #expect(reopened.document.content.count == model.document.content.count)
         #expect(reopened.document.semanticRevision == model.document.semanticRevision)
         try? FileManager.default.removeItem(at: directory)

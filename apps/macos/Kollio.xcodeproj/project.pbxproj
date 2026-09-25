@@ -19,6 +19,9 @@
 		00D7CB0981F9B01187718397 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C7E575628E93E7F5B7B314D /* Theme.swift */; };
 		BC95C2ABA26D1B42C7EE1D7A /* KollioModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273245039D6F21FD6ABF9DF4 /* KollioModel.swift */; };
 		8CD037E8A401D0323A3772E3 /* SarahFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD7D59809DEE0ABB5166D00 /* SarahFixture.swift */; };
+		3150B6416DCE9ED7639DE2C1 /* AppleCandidate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 074B2192F731A442C71DCD6C /* AppleCandidate.swift */; };
+		2E3B9EB6A32DEC83AD7BF461 /* AppleLocalSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB2ABAEF30FAD8489C742327 /* AppleLocalSuggestionService.swift */; };
+		CB7DAD4C1AFA753D7337BACD /* AppleModelAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E0A9DDA5DE4384D450F1347 /* AppleModelAvailability.swift */; };
 		FC58297587EDA09BD788229B /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5AA53ABAB9E944F1F26625 /* L10n.swift */; };
 		17B4920FF13B62C2F9AB3500 /* RemoteSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E1FC3E3575E691B54510EFF /* RemoteSuggestionService.swift */; };
 		29AA8DD5F1AB989FA6DAC299 /* ServiceConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 450FCC2FAF25328A906A4F82 /* ServiceConfiguration.swift */; };
@@ -40,6 +43,9 @@
 		4C7E575628E93E7F5B7B314D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Theme.swift; path = ../../packages/KollioApp/Sources/KollioApp/DesignSystem/Theme.swift; sourceTree = SOURCE_ROOT; };
 		273245039D6F21FD6ABF9DF4 /* KollioModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = KollioModel.swift; path = ../../packages/KollioApp/Sources/KollioApp/Documents/KollioModel.swift; sourceTree = SOURCE_ROOT; };
 		8DD7D59809DEE0ABB5166D00 /* SarahFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SarahFixture.swift; path = ../../packages/KollioApp/Sources/KollioApp/Documents/SarahFixture.swift; sourceTree = SOURCE_ROOT; };
+		074B2192F731A442C71DCD6C /* AppleCandidate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppleCandidate.swift; path = ../../packages/KollioApp/Sources/KollioApp/Intelligence/Apple/AppleCandidate.swift; sourceTree = SOURCE_ROOT; };
+		CB2ABAEF30FAD8489C742327 /* AppleLocalSuggestionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppleLocalSuggestionService.swift; path = ../../packages/KollioApp/Sources/KollioApp/Intelligence/Apple/AppleLocalSuggestionService.swift; sourceTree = SOURCE_ROOT; };
+		9E0A9DDA5DE4384D450F1347 /* AppleModelAvailability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppleModelAvailability.swift; path = ../../packages/KollioApp/Sources/KollioApp/Intelligence/Apple/AppleModelAvailability.swift; sourceTree = SOURCE_ROOT; };
 		4C5AA53ABAB9E944F1F26625 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = L10n.swift; path = ../../packages/KollioApp/Sources/KollioApp/Localization/L10n.swift; sourceTree = SOURCE_ROOT; };
 		8E1FC3E3575E691B54510EFF /* RemoteSuggestionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RemoteSuggestionService.swift; path = ../../packages/KollioApp/Sources/KollioApp/Networking/RemoteSuggestionService.swift; sourceTree = SOURCE_ROOT; };
 		450FCC2FAF25328A906A4F82 /* ServiceConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ServiceConfiguration.swift; path = ../../packages/KollioApp/Sources/KollioApp/Networking/ServiceConfiguration.swift; sourceTree = SOURCE_ROOT; };
@@ -68,6 +74,7 @@
 				353ED2007F9D7FBFF5C0CB75 /* Canvas */,
 				132D4E0BBF7CDB76520B439E /* DesignSystem */,
 				B837DD26924365EFAE8F8615 /* Documents */,
+				4346F55A2C511817ECD33BCA /* Intelligence */,
 				786FA564B216918DA2F165B6 /* Localization */,
 				D2698074F197869D93E6D480 /* Networking */,
 				B34B0507FE00BF36365A62E0 /* Info.plist */,
@@ -145,6 +152,24 @@
 				367A889D5201569FFE38E099 /* SarahFixture.swift */,
 			);
 			name = Documents;
+			sourceTree = "<group>";
+		};
+		4346F55A2C511817ECD33BCA /* Intelligence */ = {
+			isa = PBXGroup;
+			children = (
+				DF7879114DE2359E2E62A1C8 /* Apple */,
+			);
+			name = Intelligence;
+			sourceTree = "<group>";
+		};
+		DF7879114DE2359E2E62A1C8 /* Apple */ = {
+			isa = PBXGroup;
+			children = (
+				0F0B28A42ACAFE8231532969 /* AppleCandidate.swift */,
+				D05D16B4D74EE1081E3AB9DA /* AppleLocalSuggestionService.swift */,
+				98E43B03B1C6DB340E0A06C0 /* AppleModelAvailability.swift */,
+			);
+			name = Apple;
 			sourceTree = "<group>";
 		};
 		786FA564B216918DA2F165B6 /* Localization */ = {
@@ -249,6 +274,9 @@
 				00D7CB0981F9B01187718397 /* Theme.swift in Sources */,
 				BC95C2ABA26D1B42C7EE1D7A /* KollioModel.swift in Sources */,
 				8CD037E8A401D0323A3772E3 /* SarahFixture.swift in Sources */,
+				3150B6416DCE9ED7639DE2C1 /* AppleCandidate.swift in Sources */,
+				2E3B9EB6A32DEC83AD7BF461 /* AppleLocalSuggestionService.swift in Sources */,
+				CB7DAD4C1AFA753D7337BACD /* AppleModelAvailability.swift in Sources */,
 				FC58297587EDA09BD788229B /* L10n.swift in Sources */,
 				17B4920FF13B62C2F9AB3500 /* RemoteSuggestionService.swift in Sources */,
 				29AA8DD5F1AB989FA6DAC299 /* ServiceConfiguration.swift in Sources */,
