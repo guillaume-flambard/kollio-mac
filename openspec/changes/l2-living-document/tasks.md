@@ -20,8 +20,8 @@
 - [x] A set-aside direction keeps its memory and reopens with a named action.
       `swift test --filter InteractionReliabilityTests`
 - [x] One Keep undoes as one action. `swift test --filter VerticalSliceTests`
-- [ ] **Warm latency and a second identical call, to tell cold asset loading from
-      generation.** Owed. Cold is 9–15 s, which is the blocking finding.
+- [x] **Warm latency: three identical calls in one process.** 2.50 s, 2.68 s, 2.29 s,
+      measured serially. Mostly a per-call cost, not a large one-off asset load.
 - [ ] **A real proposal kept, set aside and reopened by a person.** Owed.
 - [ ] The `at most 3 ideas` bound and the refused-kind rule exercised against a
       real model, not only the converter.
@@ -29,7 +29,15 @@
 
 ## Findings, not assumptions
 
-Cold latency of 9 to 15 seconds on this class of Mac. It is a real path working,
-and it is far too slow to feel interactive. A pending state that lasts ten seconds
-is the next thing a user will complain about, and the cause is not yet separated
-into asset loading versus generation.
+Steady-state latency is about 2.3 s, and the first call in a fresh process is about 3.6 s. That is
+the real cost of generation on this class of Mac, and it is too slow to feel interactive. Nothing is
+streamed, so a person waits on a pending state for seconds.
+
+An earlier round measured 9 to 15 s and recorded it as the blocking finding. It does not reproduce.
+The identified confounder is parallel execution: the suite runs tests concurrently by default and two
+of them share one on-device model. Every latency figure in this project must be taken with
+`--no-parallel`, and the earlier figure should be treated as an unconfirmed one-off, most likely the
+very first load of the model assets on the machine.
+
+The conclusion did not change, only the size of the number: streaming partial output to the canvas is
+the fix, and it is not built.

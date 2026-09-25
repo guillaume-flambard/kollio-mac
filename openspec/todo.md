@@ -38,7 +38,7 @@ Counts: 11 automatedVerified, 1 humanVerified, 59 specified. 71 features, 169 ac
 - [x] **AI-01** Availability and choice of intelligence · `automatedVerified` · 3 AC
       AppleAdapterTests: every availability state is a refusal, never a fallback.
 - [x] **AI-02** First exploration of your own context · `humanVerified` · 2 AC
-      Real on-device generation on two non-Sarah contexts, FR and EN, through the adapter. Cold latency 9-15 s is too slow to feel interactive.
+      Real on-device generation on two non-Sarah contexts, FR and EN, through the adapter. Steady state is about 2.3 s, first call in a fresh process about 3.6 s: still too slow to feel interactive, and nothing is streamed.
 - [ ] **AI-03** Explore a branch · `specified` · 2 AC
 - [ ] **AI-04** Answer a clarification · `specified` · 2 AC
 - [x] **AI-07** Examine and correct a proposal · `automatedVerified` · 3 AC

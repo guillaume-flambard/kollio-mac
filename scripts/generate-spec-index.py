@@ -87,7 +87,8 @@ STATUS_NOTES = {
               "AppleAdapterTests: every availability state is a refusal, never a fallback."),
     "AI-02": ("humanVerified",
               "Real on-device generation on two non-Sarah contexts, FR and EN, through the "
-              "adapter. Cold latency 9-15 s is too slow to feel interactive."),
+              "adapter. Steady state is about 2.3 s, first call in a fresh process about 3.6 s: "
+              "still too slow to feel interactive, and nothing is streamed."),
     "AI-07": ("automatedVerified",
               "AppleAdapterTests: minted ids, dropped kinds, bounded branch, noChange."),
     "AI-08": ("automatedVerified",

@@ -115,11 +115,20 @@ Recorded 2026-09-25, on an arm64 Mac, macOS 27.0 (26A428), Xcode 27.0, SDK 27.0.
 - A service is chosen by environment variable, not by UI. A `server` mode with no token in the
   Keychain falls back to the offline engine, and the status line says which source is in use. There is
   no provider control panel, and a live-mode error is reported rather than silently downgraded.
-- **On-device generation is far too slow to feel interactive.** Measured at roughly 9 to 15 seconds
-  for a small candidate, cold. That is the dominant finding of this round: the path works, the
-  latency does not yet. Nothing is streamed to the canvas, so the user waits on a pending state.
-  Whether this is a cold-start cost, a size of `gpt-oss` on this class of Mac, or both, is **not
-  measured**. Warm latency and a second identical call were not timed.
+- **On-device generation is slow enough to need streaming, and an earlier 9 to 15
+  second figure does not reproduce.** Measured 2026-09-26 on the same Mac, serially:
+  the first call in a fresh process is 3.6 s, later calls are 2.2 to 2.7 s, and a
+  three-call series in one process runs 2.50 s, 2.68 s, 2.29 s. So the cost is
+  mostly per call rather than a large one-off asset load.
+  An earlier round reported 9 to 15 s and called it the dominant finding. That
+  number is not reproducible and the cause is unconfirmed. The most likely
+  explanation is contention: the real-model suite runs in parallel by default and
+  two tests hit the same on-device model at once, which pushed the first
+  measured call to 7.08 s. Real-model latency must therefore be measured with
+  `--no-parallel`.
+  What survives is the conclusion, not the number: 2.3 s is still far too slow to
+  feel interactive, nothing is streamed to the canvas, and the user waits on a
+  pending state. Streaming partial output is the fix, and it is not built.
 - The on-device candidate is a small, fixed shape: an outcome, one sentence, and a bounded list of
   ideas. It cannot propose decisions, question existing objects, or edit a relationship's meaning,
   because the adapter does not yet convert those. This is a limitation of the conversion, not of the

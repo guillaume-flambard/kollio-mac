@@ -56,7 +56,7 @@
       "section": "Intelligence",
       "lot": "L2",
       "status": "humanVerified",
-      "evidence": "Real on-device generation on two non-Sarah contexts, FR and EN, through the adapter. Cold latency 9-15 s is too slow to feel interactive."
+      "evidence": "Real on-device generation on two non-Sarah contexts, FR and EN, through the adapter. Steady state is about 2.3 s, first call in a fresh process about 3.6 s: still too slow to feel interactive, and nothing is streamed."
     },
     {
       "id": "AI-03",

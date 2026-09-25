@@ -30,6 +30,7 @@ project outruns its proof.
 | Deterministic suite is offline and fast | `AppleAdapterTests` | L2 |
 | A real model produced a valid proposal, FR and EN | `RealOnDeviceModelTests` | L2 |
 | The running app holds no network socket | `netstat` against the app's pid | L2 |
+| Steady-state latency, three calls in one process | `RealOnDeviceModelTests`, `--no-parallel` | L2 |
 | One keep undoes as one action | `VerticalSliceTests` | L2 |
 
 ## What is owed to a person
@@ -41,8 +42,6 @@ These cannot be automated here, and no line of code substitutes for them.
 - A real two-finger scroll on a trackpad, and the feel of it. The wiring is
   proved; the gesture is not.
 - Keeping, setting aside and reopening a real proposal by hand.
-- Warm latency, and a second identical call, to separate cold asset loading from
-  generation.
 
 ## Known discrepancies, left visible
 
@@ -53,6 +52,11 @@ These cannot be automated here, and no line of code substitutes for them.
   two documents are written in the same second. A short uniquifier was added; the
   directory is still acting as an index, which is fragile and should become an
   explicit property of the document.
+- The latency reported in an earlier round, 9 to 15 s, does not reproduce. Measured serially it is
+  3.6 s for the first call in a fresh process and 2.2 to 2.7 s afterwards. The identified confounder
+  is that the real-model suite runs its tests in parallel by default, so two of them hit the same
+  on-device model at once. Any latency figure taken without `--no-parallel` is measuring contention,
+  not the model. The conclusion is unchanged and the number is smaller than reported.
 - A previous version of the deterministic suite inherited the launch default
   engine, took 35 seconds and started failing on a Mac with a usable model. Fixed
   by pinning the engine in every test; recorded because it is the failure mode

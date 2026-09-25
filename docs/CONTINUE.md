@@ -32,7 +32,7 @@ was probed directly, not inferred from the SDK being installed.
 | No network socket held by the running app | Done, `lsof` against the app pid |
 | **Human trackpad and pointer pass** | **Owed** |
 | **Ghost branch from the real model, captured on screen** | **Owed** |
-| **Warm latency and a second identical call** | **Not measured** |
+| Warm latency, three calls in one process | Done, real model: 2.50 s, 2.68 s, 2.29 s |
 | **Network-disabled run after system resources exist** | **Not done**: it needs the firewall changed, which is the owner's call |
 
 The deterministic suite never touches a real model, and stays under two seconds. Reproduce the
@@ -42,8 +42,23 @@ real-model check:
 KOLLIO_REAL_MODEL=1 swift test --package-path packages/KollioApp --filter RealOnDeviceModelTests
 ```
 
-Measured cold latency for a small candidate: **9 to 15 seconds**. That is the dominant finding of
-this round. The path works; the latency does not yet feel interactive.
+Measured latency for a small candidate, serially on this Mac: the first call in a fresh process
+is **3.6 s**, later calls are **2.2 to 2.7 s**. A three-call series in one process runs
+2.50 s, 2.68 s, 2.29 s, so the cost is mostly per call and not a large one-off asset load.
+
+An earlier round reported 9 to 15 s and treated it as the dominant finding. **That number does not
+reproduce and the cause is unconfirmed.** The likely explanation is contention: the real-model suite
+runs in parallel by default, and two tests hitting the same on-device model pushed the first measured
+call to 7.08 s. Measure it with `--no-parallel`:
+
+```bash
+KOLLIO_REAL_MODEL=1 swift test --package-path packages/KollioApp \
+  --filter RealOnDeviceModelTests --no-parallel
+```
+
+What survives the correction is the conclusion rather than the figure: 2.3 s is still too slow to
+feel interactive, nothing is streamed to the canvas, and the user waits on a pending state. Streaming
+partial output is the fix, and it is not built.
 
 ## Where the code is
 

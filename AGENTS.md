@@ -19,8 +19,13 @@ decomposes it into capabilities and lots.
 Real on-device model, opt-in and skipped otherwise:
 
 ```bash
-KOLLIO_REAL_MODEL=1 swift test --package-path packages/KollioApp --filter RealOnDeviceModelTests
+KOLLIO_REAL_MODEL=1 swift test --package-path packages/KollioApp \
+  --filter RealOnDeviceModelTests --no-parallel
 ```
+
+`--no-parallel` is not optional when the number matters. The suite runs tests
+concurrently by default and there is only one on-device model, so a parallel run
+measures contention instead of latency.
 
 `run-app.sh --shot` prints a path whether or not the capture worked. Check the
 file exists and shows the app. Protect the user's documents before any demo
