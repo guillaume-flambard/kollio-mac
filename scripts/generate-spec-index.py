@@ -147,6 +147,12 @@ STATUS_NOTES = {
               "AppleAdapterTests: minted ids, dropped kinds, bounded branch, noChange."),
     "AI-08": ("automatedVerified",
               "VerticalSliceTests: one Keep undoes as one action."),
+    "AI-04": ("automatedVerified",
+               "AC01 an answer is in the document and survives a reload; AC02 'I don't know' is a "
+               "real state and is never an empty answer; AC03 a question resolves beside its object "
+               "with no panel anywhere. ClarificationTests, ClarificationInterfaceTests. "
+               "Intelligence may ask but may not answer. Still missing: a question the document has "
+               "moved past, proposed for reassessment, and resuming the request with the answer."),
     "CAN-08": ("automatedVerified",
                "AC01 keeping does not shift the ghosts; AC02 earlier objects stay still; AC03 undo "
                "restores the view exactly. ProposalPlacementTests, against the real model. A "

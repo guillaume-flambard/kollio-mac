@@ -816,3 +816,75 @@ struct ClaimStanceView: View {
         }
     }
 }
+
+/// A question intelligence asked, with an input attached to it.
+///
+/// AI-04 says "a local question and an attached input", and "no chat": there is no
+/// transcript here, no scrollback, and no conversation. The question is a thing in
+/// the document that can be answered, and "I don't know" is offered as a real
+/// answer rather than leaving the field empty, because an empty answer reads as
+/// something a person considered and had nothing to say about.
+///
+/// It appears beside the object the question is about and goes away when it is
+/// answered. There is no panel anywhere else in the application.
+struct ClarificationView: View {
+    let model: KollioModel
+    let clarification: Clarification
+
+    @Environment(\.kollioTheme) private var theme
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.s) {
+            HStack(alignment: .top, spacing: Space.xs) {
+                Image(systemName: "questionmark.circle")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(theme.accent)
+                Text(clarification.question.resolve(languageCode: model.languageCode))
+                    .font(TypeScale.body.weight(.medium))
+                    .foregroundStyle(theme.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if model.openClarificationID == clarification.id, model.clarificationDraft != nil {
+                TextField(
+                    L10n.clarificationAnswerPlaceholder,
+                    text: Binding(
+                        get: { model.clarificationDraft?.text ?? "" },
+                        set: { model.clarificationDraft?.text = $0 }
+                    ),
+                    axis: .vertical
+                )
+                .font(TypeScale.body)
+                .focused($focused)
+                .onSubmit { _ = model.resolveClarification() }
+
+                HStack(spacing: Space.s) {
+                    ActionButton(title: L10n.clarificationAnswer, isDefault: true) {
+                        _ = model.resolveClarification()
+                    }
+                    // Offered on its own terms, not as a way of clearing the field.
+                    ActionButton(title: L10n.clarificationUnknown, isDefault: false) {
+                        _ = model.resolveClarification(asUnknown: true)
+                    }
+                    .help(L10n.clarificationUnknownHint)
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .padding(Space.l)
+        .frame(width: 320, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
+                .fill(theme.surfacePrimary)
+                .shadow(color: .black.opacity(theme.isDark ? 0.4 : 0.14), radius: 18, y: 8)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
+                .strokeBorder(theme.accent.opacity(0.35), lineWidth: 1)
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(clarification.question.resolve(languageCode: model.languageCode))
+        .onAppear { focused = true }
+    }
+}

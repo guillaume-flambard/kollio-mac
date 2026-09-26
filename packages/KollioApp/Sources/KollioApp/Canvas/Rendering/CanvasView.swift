@@ -173,6 +173,11 @@ struct CanvasView: View {
             if let composer = model.composer {
                 ComposerView(model: model, anchor: composer.anchorID)
             }
+            if let id = model.openClarificationID,
+               let clarification = model.document.clarifications.clarification(id) {
+                ClarificationView(model: model, clarification: clarification)
+                    .position(composerPosition(clarification.objectID, viewport: viewport))
+            }
             if model.claimDraft != nil, let draft = model.claimDraft {
                 ClaimComposerView(model: model)
                     .position(composerPosition(draft.anchor, viewport: viewport))

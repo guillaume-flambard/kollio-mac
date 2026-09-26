@@ -67,6 +67,15 @@ public enum L10n {
     public static var claimScopeEmpty: String { callAsFunction("claim.scopeEmpty") }
     public static var undoAssertClaim: String { callAsFunction("undo.assertClaim") }
     public static var undoRecordStance: String { callAsFunction("undo.recordStance") }
+    public static var undoAskClarification: String { callAsFunction("undo.askClarification") }
+    public static var undoAnswerClarification: String { callAsFunction("undo.answerClarification") }
+    public static var undoMarkUnknown: String { callAsFunction("undo.markUnknown") }
+    public static var clarificationEmpty: String { callAsFunction("clarification.empty") }
+    public static var clarificationAnswerPlaceholder: String { callAsFunction("clarification.answerPlaceholder") }
+    public static var clarificationAnswer: String { callAsFunction("clarification.answer") }
+    public static var clarificationUnknown: String { callAsFunction("clarification.unknown") }
+    public static var clarificationUnknownHint: String { callAsFunction("clarification.unknownHint") }
+    public static var clarificationUnknownDone: String { callAsFunction("clarification.unknownDone") }
     public static func claimScopeTitle(default object: String) -> String {
         String(format: callAsFunction("claim.scopeTitle"), object)
     }

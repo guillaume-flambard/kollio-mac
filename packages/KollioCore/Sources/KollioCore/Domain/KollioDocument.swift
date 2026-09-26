@@ -27,6 +27,10 @@ public struct KollioDocument: Codable, Hashable, Sendable {
     /// Claims with an explicit scope and a stance. Part of the document for the
     /// same reason sources are: a claim and the ground it applies to are one thing.
     public var claims: ClaimLedger
+    /// Questions intelligence asked, and the state of their answers. Part of the
+    /// document because an answer is a contribution: it has to survive a failure,
+    /// a restart and a share, which is the whole of AI-04's first criterion.
+    public var clarifications: ClarificationLedger
 
     public init(
         schemaVersion: Int = KollioDocument.currentSchemaVersion,
@@ -42,7 +46,8 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         products: [ObjectID: ProductComposition] = [:],
         presentation: Presentation = Presentation(),
         sources: SourceLedger = SourceLedger(),
-        claims: ClaimLedger = ClaimLedger()
+        claims: ClaimLedger = ClaimLedger(),
+        clarifications: ClarificationLedger = ClarificationLedger()
     ) {
         self.schemaVersion = schemaVersion
         self.documentId = documentId
@@ -58,11 +63,12 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         self.presentation = presentation
         self.sources = sources
         self.claims = claims
+        self.clarifications = clarifications
     }
 
     /// 2 added the `sources` ledger. A file written at version 1 has no `sources`
     /// key and decodes as a document with no sources, which is the truth about it.
-    public static let currentSchemaVersion = 3
+    public static let currentSchemaVersion = 4
 
     // MARK: - Codable
 
@@ -72,7 +78,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case schemaVersion, documentId, revision, semanticRevision, createdAt, updatedAt
         case content, relationships, decisions, contributions, products
-        case presentation, sources, claims
+        case presentation, sources, claims, clarifications
     }
 
     private struct IdKey: CodingKey {
@@ -101,6 +107,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         // no sources rather than a corrupt one.
         sources = try container.decodeIfPresent(SourceLedger.self, forKey: .sources) ?? SourceLedger()
         claims = try container.decodeIfPresent(ClaimLedger.self, forKey: .claims) ?? ClaimLedger()
+        clarifications = try container.decodeIfPresent(ClarificationLedger.self, forKey: .clarifications) ?? ClarificationLedger()
     }
 
     private static func decodeMap<Key: KollioIdentifier, Value: Decodable>(
@@ -134,6 +141,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         try container.encode(presentation, forKey: .presentation)
         try container.encode(sources, forKey: .sources)
         try container.encode(claims, forKey: .claims)
+        try container.encode(clarifications, forKey: .clarifications)
     }
 
     private static func encodeMap<Key: KollioIdentifier, Value: Encodable>(

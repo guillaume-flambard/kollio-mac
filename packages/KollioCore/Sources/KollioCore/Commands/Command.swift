@@ -26,6 +26,9 @@ public enum Command: Codable, Hashable, Sendable {
     case assertClaim(AssertClaim)
     case assessHypothesis(AssessHypothesis)
     case resolveConstraint(ResolveConstraint)
+    case askClarification(AskClarification)
+    case answerClarification(AnswerClarification)
+    case markClarificationUnknown(MarkClarificationUnknown)
 
     /// Presentation-only commands never change the meaning of the document.
     public var isSemantic: Bool {
@@ -41,7 +44,8 @@ public enum Command: Codable, Hashable, Sendable {
              .addContributionToProduct, .applyProposal, .rejectProposal,
              .attachSource, .importSourceRevision, .addCitation, .recordVerification,
              .removeSource, .assertClaim, .assessHypothesis, .resolveConstraint,
-             .duplicateObject, .removeObject:
+             .duplicateObject, .removeObject,
+             .askClarification, .answerClarification, .markClarificationUnknown:
             return true
         }
     }
@@ -72,6 +76,9 @@ public enum Command: Codable, Hashable, Sendable {
         case .assertClaim: return "undo.assertClaim"
         case .assessHypothesis: return "undo.assessHypothesis"
         case .resolveConstraint: return "undo.resolveConstraint"
+        case .askClarification: return "undo.askClarification"
+        case .answerClarification: return "undo.answerClarification"
+        case .markClarificationUnknown: return "undo.markClarificationUnknown"
         }
     }
 }
@@ -463,6 +470,50 @@ public struct ResolveConstraint: Codable, Hashable, Sendable {
     public init(claimID: ClaimID, resolution: ConstraintResolution, provenance: Provenance) {
         self.claimID = claimID
         self.resolution = resolution
+        self.provenance = provenance
+    }
+}
+
+
+// MARK: - Clarifications
+//
+// A question is asked by intelligence and answered by a person, so these commands
+// exist in both directions. The empty case is refused at the command layer and
+// nowhere else: an empty field is not a fact, and letting it through would put a
+// blank answer in the document looking like a considered one.
+
+public struct AskClarification: Codable, Hashable, Sendable {
+    public var clarification: Clarification
+    public var provenance: Provenance
+
+    public init(clarification: Clarification, provenance: Provenance) {
+        self.clarification = clarification
+        self.provenance = provenance
+    }
+}
+
+/// A person answering, which becomes a linked contribution.
+public struct AnswerClarification: Codable, Hashable, Sendable {
+    public var clarificationID: ClarificationID
+    public var text: String
+    public var provenance: Provenance
+
+    public init(clarificationID: ClarificationID, text: String, provenance: Provenance) {
+        self.clarificationID = clarificationID
+        self.text = text
+        self.provenance = provenance
+    }
+}
+
+/// A person saying they do not know. A real answer, and not an empty one.
+public struct MarkClarificationUnknown: Codable, Hashable, Sendable {
+    public var clarificationID: ClarificationID
+    public var reason: String?
+    public var provenance: Provenance
+
+    public init(clarificationID: ClarificationID, reason: String? = nil, provenance: Provenance) {
+        self.clarificationID = clarificationID
+        self.reason = reason
         self.provenance = provenance
     }
 }

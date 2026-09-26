@@ -46,6 +46,10 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
     /// something that is not a constraint.
     case wrongClaimRole(ClaimID, expected: String)
     case duplicateClaim(ClaimID)
+    case duplicateClarification(ClarificationID)
+    case emptyClarification(ClarificationID)
+    case alreadyAnswered(ClarificationID)
+    case unknownClarification(ClarificationID)
 
     public var description: String {
         switch self {
@@ -81,6 +85,10 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
         case .unknownClaim(let id): return "Unknown claim \(id)"
         case .wrongClaimRole(let id, let expected): return "Claim \(id) is not a \(expected)"
         case .duplicateClaim(let id): return "Duplicate claim \(id)"
+        case .duplicateClarification(let id): return "Duplicate clarification \(id)"
+        case .emptyClarification(let id): return "Clarification \(id) has no question"
+        case .alreadyAnswered(let id): return "Clarification \(id) already has an answer"
+        case .unknownClarification(let id): return "Unknown clarification \(id)"
         }
     }
 }
@@ -180,6 +188,12 @@ public struct DocumentStore: Sendable {
             try assessHypothesis(assessment, in: &document)
         case .resolveConstraint(let resolution):
             try resolveConstraint(resolution, in: &document)
+        case .askClarification(let ask):
+            try askClarification(ask, in: &document)
+        case .answerClarification(let answer):
+            try answerClarification(answer, in: &document)
+        case .markClarificationUnknown(let unknown):
+            try markClarificationUnknown(unknown, in: &document)
         }
     }
 
@@ -675,5 +689,62 @@ extension DocumentStore {
         var ledger = document.claims
         ledger.upsert(claim)
         document.claims = ledger
+    }
+
+    // MARK: - Clarifications
+
+    private static func askClarification(_ ask: AskClarification, in document: inout KollioDocument) throws {
+        let clarification = ask.clarification
+        guard document.content[clarification.objectID] != nil else {
+            throw DocumentError.unknownObject(clarification.objectID)
+        }
+        guard !clarification.question.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw DocumentError.emptyClarification(clarification.id)
+        }
+        guard document.clarifications.clarification(clarification.id) == nil else {
+            throw DocumentError.duplicateClarification(clarification.id)
+        }
+        var ledger = document.clarifications
+        ledger.upsert(clarification)
+        document.clarifications = ledger
+    }
+
+    private static func answerClarification(
+        _ answer: AnswerClarification,
+        in document: inout KollioDocument
+    ) throws {
+        guard var clarification = document.clarifications.clarification(answer.clarificationID) else {
+            throw DocumentError.unknownClarification(answer.clarificationID)
+        }
+        let text = answer.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        // An empty field is not sent as a fact. It is refused here rather than
+        // stored as a blank answer, because a blank answer in the document reads as
+        // something a person considered and had nothing to say about.
+        guard text.isEmpty == false else {
+            throw DocumentError.emptyClarification(answer.clarificationID)
+        }
+        clarification.state = .answered(.init(
+            text: text,
+            by: answer.provenance.actor,
+            at: answer.provenance.kind == .human ? Date() : Date(timeIntervalSince1970: 0)
+        ))
+        var ledger = document.clarifications
+        ledger.upsert(clarification)
+        document.clarifications = ledger
+    }
+
+    private static func markClarificationUnknown(
+        _ unknown: MarkClarificationUnknown,
+        in document: inout KollioDocument
+    ) throws {
+        guard var clarification = document.clarifications.clarification(unknown.clarificationID) else {
+            throw DocumentError.unknownClarification(unknown.clarificationID)
+        }
+        // A reason is optional here. "I do not know" is a complete answer; being
+        // pressed for a reason would turn an honest gap back into a task.
+        clarification.state = .unknown(unknown.reason ?? "")
+        var ledger = document.clarifications
+        ledger.upsert(clarification)
+        document.clarifications = ledger
     }
 }

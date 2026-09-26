@@ -5,9 +5,9 @@
     "features": 71,
     "acceptanceCriteria": 213,
     "byStatus": {
-      "automatedVerified": 23,
+      "automatedVerified": 24,
       "humanVerified": 1,
-      "specified": 47
+      "specified": 46
     },
     "byLot": {
       "L1": 10,
@@ -105,7 +105,8 @@
       ],
       "section": "Intelligence",
       "lot": "L2",
-      "status": "specified"
+      "status": "automatedVerified",
+      "evidence": "AC01 an answer is in the document and survives a reload; AC02 'I don't know' is a real state and is never an empty answer; AC03 a question resolves beside its object with no panel anywhere. ClarificationTests, ClarificationInterfaceTests. Intelligence may ask but may not answer. Still missing: a question the document has moved past, proposed for reassessment, and resuming the request with the answer."
     },
     {
       "id": "AI-05",

@@ -856,6 +856,64 @@ public final class KollioModel {
     }
 
     // MARK: Sources
+    // MARK: Clarifications
+
+    /// The question being answered, and what has been typed into it.
+    ///
+    /// A draft that lives on the model rather than in the view, because a refused
+    /// answer must not lose the sentence: AC01 is about the answer surviving, and
+    /// the first place it is lost is on the way in.
+    public struct ClarificationDraft: Equatable, Identifiable {
+        public var id = UUID()
+        public var clarificationID: ClarificationID
+        public var text: String = ""
+
+        public init(clarificationID: ClarificationID) {
+            self.clarificationID = clarificationID
+        }
+    }
+
+    public var openClarificationID: ClarificationID?
+    public var clarificationDraft: ClarificationDraft?
+
+    /// The open question about an object, if there is one.
+    public func openClarification(for objectID: ObjectID) -> Clarification? {
+        document.clarifications.open(for: objectID)
+    }
+
+    /// Records an answer, or an explicit "I don't know".
+    ///
+    /// Both are the same gesture: the person has dealt with the question. Neither is
+    /// the absence of a gesture, which is why an empty field is refused rather than
+    /// stored.
+    @discardableResult
+    public func resolveClarification(asUnknown: Bool = false) -> Bool {
+        guard let draft = clarificationDraft else { return false }
+        let by = ActorID("local-user")
+        let command: Command
+        if asUnknown {
+            command = .markClarificationUnknown(.init(
+                clarificationID: draft.clarificationID, provenance: .human(by)
+            ))
+        } else {
+            let text = draft.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard text.isEmpty == false else {
+                status = L10n.clarificationEmpty
+                return false
+            }
+            command = .answerClarification(.init(
+                clarificationID: draft.clarificationID, text: text, provenance: .human(by)
+            ))
+        }
+        guard perform([command], label: asUnknown
+            ? L10n.undoMarkUnknown
+            : L10n.undoAnswerClarification
+        ) else { return false }
+        openClarificationID = nil
+        clarificationDraft = nil
+        return true
+    }
+
     // MARK: Claims
 
     /// A claim being written, before it is stated.
@@ -1393,7 +1451,7 @@ public final class KollioModel {
                 response = try await service.respond(to: request, document: document)
             }
             progress = nil
-            handle(response, anchor: id)
+            handle(response, anchor: id, requestId: request.requestId)
             return true
         } catch is CancellationError {
             // A cancelled request publishes nothing. The draft and the context
@@ -1415,7 +1473,14 @@ public final class KollioModel {
     }
 
     /// The offline engine can be driven directly, with no request round-trip.
-    public func handle(_ response: ProposalResponse, anchor: ObjectID) {
+    /// Handles a response the service did not produce itself, such as the demo
+    /// engine's. `requestId` attributes a question to something; without one the
+    /// question still exists, it is simply not traceable to a request.
+    public func handle(
+        _ response: ProposalResponse,
+        anchor: ObjectID,
+        requestId: String = "local-request"
+    ) {
         switch response.status {
         case .noChange:
             // AI-03 AC03: "a new request offers to keep or hide the previous one
@@ -1425,8 +1490,34 @@ public final class KollioModel {
             // later question produced no answer.
             status = L10n.statusNoChange
         case .needsInput:
-            composer = ComposerState(anchorID: anchor, intent: .add)
-            status = response.questions.first?.resolve(languageCode: languageCode)
+            // A question is a thing in the document now, not a line of status that
+            // disappears. It has to survive a failure, a restart and a share, which
+            // is the whole of AI-04's first criterion, and none of that is true of a
+            // transient message.
+            guard let question = response.questions.first else {
+                status = L10n.statusNoChange
+                return
+            }
+            let text = question.resolve(languageCode: languageCode)
+            guard text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
+                status = L10n.statusNoChange
+                return
+            }
+            let clarification = Clarification(
+                id: ClarificationID("clarification:" + UUID().uuidString),
+                originatingRequestId: requestId,
+                objectID: anchor,
+                question: LocalizedText(text)
+            )
+            guard perform([.askClarification(.init(
+                clarification: clarification,
+                provenance: Provenance(actor: "local-user", kind: .human)
+            ))], label: L10n.undoAskClarification) else { return }
+            openClarificationID = clarification.id
+            // The input is attached to the question, not replaced by a generic
+            // composer: answering a question and adding an idea are different acts.
+            clarificationDraft = .init(clarificationID: clarification.id)
+            status = nil
         case .proposed:
             guard let proposal = response.proposal else {
                 status = L10n.statusNoChange

@@ -133,6 +133,19 @@ public struct ProposalValidator: Sendable {
                 throw DocumentError.forbiddenOperation("nested applyProposal")
             case .rejectProposal:
                 throw DocumentError.forbiddenOperation("rejectProposal")
+            case .askClarification(let ask):
+                // Asking is the one thing intelligence is allowed to do here. The
+                // question is attached to an object and carries no answer, so a
+                // proposal cannot pre-empt a person or write their reply for them.
+                guard ask.clarification.state == .open else {
+                    throw DocumentError.forbiddenOperation("a proposed question arrives open")
+                }
+            case .answerClarification, .markClarificationUnknown:
+                // Only a person answers. A model that could answer its own question
+                // would be manufacturing the contribution the answer is supposed to
+                // be, and would be able to record "I do not know" as a fact about
+                // somebody else's uncertainty.
+                throw DocumentError.forbiddenOperation("answering a question is the user's to do")
             case .assessHypothesis, .resolveConstraint:
                 // Intelligence may suggest a claim and the role it plays, and the
                 // person corrects it. It may not record how the claim stands: a

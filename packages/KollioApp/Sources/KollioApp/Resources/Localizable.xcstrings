@@ -2122,6 +2122,168 @@
           }
         }
       }
+    },
+    "undo.askClarification": {
+      "comment": "Undo label for a question intelligence asked.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the question"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler la question"
+          }
+        }
+      }
+    },
+    "undo.answerClarification": {
+      "comment": "Undo label for answering a question.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the answer"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler la réponse"
+          }
+        }
+      }
+    },
+    "undo.markUnknown": {
+      "comment": "Undo label for saying a question is not known.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler"
+          }
+        }
+      }
+    },
+    "clarification.empty": {
+      "comment": "An empty field is not an answer and is not sent.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write something, or say you do not know"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écrivez quelque chose, ou dites que vous ne savez pas"
+          }
+        }
+      }
+    },
+    "clarification.answerPlaceholder": {
+      "comment": "The input attached to a question. There is no chat and no transcript.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your answer"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre réponse"
+          }
+        }
+      }
+    },
+    "clarification.answer": {
+      "comment": "The action that records an answer to a question.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answer"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Répondre"
+          }
+        }
+      }
+    },
+    "clarification.unknown": {
+      "comment": "Says a question is not known. A real answer, not an empty one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I don't know"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je ne sais pas"
+          }
+        }
+      }
+    },
+    "clarification.unknownHint": {
+      "comment": "Why saying 'I don't know' is offered: it is a real answer, and the uncertainty is preserved rather than becoming an empty field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep the uncertainty as it is. It stays unknown rather than becoming a blank answer"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gardez l’incertitude telle quelle. Elle reste inconnue plutôt qu’une réponse vide"
+          }
+        }
+      }
+    },
+    "clarification.unknownDone": {
+      "comment": "Confirms that a question is not known.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It stays unknown"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elle reste inconnue"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

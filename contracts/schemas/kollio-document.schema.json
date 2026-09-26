@@ -19,8 +19,8 @@
     "schemaVersion": {
       "type": "integer",
       "minimum": 1,
-      "maximum": 3,
-      "description": "2 added the optional `sources` ledger. 3 added the optional `claims` ledger. A file written before either is a document without them, not a broken one."
+      "maximum": 4,
+      "description": "2 added `sources`, 3 added `claims`, 4 added `clarifications`. A file written before any of them is a document without them, not a broken one."
     },
     "documentId": {
       "type": "string"
@@ -107,6 +107,19 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/claim"
+          }
+        }
+      }
+    },
+    "clarifications": {
+      "type": "object",
+      "description": "Questions intelligence asked, and the state of their answers. Absent before version 4.",
+      "additionalProperties": false,
+      "properties": {
+        "clarifications": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/clarification"
           }
         }
       }
@@ -1016,6 +1029,112 @@
             },
             "_0": {
               "$ref": "#/$defs/evidence"
+            }
+          }
+        }
+      ]
+    },
+    "clarification": {
+      "type": "object",
+      "description": "A question and its answer. `unknown` is a real answer and is not an empty one.",
+      "required": [
+        "id",
+        "originatingRequestId",
+        "objectID",
+        "question",
+        "state",
+        "askedAt"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "originatingRequestId": {
+          "type": "string"
+        },
+        "objectID": {
+          "type": "string"
+        },
+        "askedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "isObsolete": {
+          "type": "boolean",
+          "description": "The document moved on. The answer is kept, not discarded."
+        },
+        "obsoleteReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "question": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "state": {
+          "$ref": "#/$defs/clarificationState"
+        }
+      }
+    },
+    "clarificationState": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "open"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "open": {
+              "type": "object"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "answered",
+            "_0"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "answered": {
+              "type": "object"
+            },
+            "_0": {
+              "type": "object",
+              "required": [
+                "text",
+                "by",
+                "at"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "by": {
+                  "type": "string"
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "unknown"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "unknown": {
+              "type": "string"
             }
           }
         }
