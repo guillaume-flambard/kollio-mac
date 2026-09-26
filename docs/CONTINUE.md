@@ -295,10 +295,27 @@ The one implemented item is measurement of the intelligence that already existed
     commands: a model that could hand over a deliverable would be handing over
     something nobody agreed to.
 
-    What does not exist yet: the export itself, the compact block in the
-    interface, and the local engine that fills the sections. AI-06 stays
-    `specified` until a named test proves what a *person receives*, and those
-    three are why.
+    The export and the composer are in now, both deterministic and neither
+    needing a model. `SummaryExport` writes Markdown that names the revision it
+    read in the header, says plainly when a decision has moved since, exports a
+    section that recorded nothing as exactly that, and carries every correction in
+    an appendix so an edited line is never presented as the model's own words. It
+    also produces the compact block, which omits rather than shortens: three
+    current-state lines in a compact block would read as a summary of the section.
+
+    `SummaryComposer` fills a draft from the document. Every line it writes rests
+    on something, so nothing it produces is caught by the assertion rule. It never
+    offers a set-aside direction as a direction, it turns a rejection with no
+    reason into an uncertainty, and it refuses a selection wider than 40 objects
+    by proposing the narrower scope it would have preferred. Its one asymmetry is
+    deliberate: it declares *nothing recorded* for the sections where absence is a
+    fact, and leaves **uncertainties absent**, because a deterministic reader knows
+    what the document says and has no way of knowing what it failed to say.
+
+    71 tests cover the domain, the commands, the export and the composer. What
+    does not exist yet is the interface: nothing draws the compact block, and no
+    menu composes or exports. AI-06 stays `specified` until a named test proves
+    what a person receives *on a screen*, and that is the remaining reason.
 8. Only then, and only with explicit permission: a small live Groq test, or a PCC eligibility check.
    Everything the transport needs is in place and mocked; what is missing is evidence about a live
    model, not plumbing.

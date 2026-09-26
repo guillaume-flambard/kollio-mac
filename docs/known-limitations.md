@@ -49,11 +49,18 @@ SDK 27.0.
   nothing. It is shared with comparisons, and it is recorded here rather than
   fixed for syntheses alone, which would leave the two behaviours divergent for
   the sake of tidiness.
-- **A synthesis has no export, no compact block and no local engine yet.** The
-  model, the commands, the refusals and the file format are in place; the three
-  parts that would make it useful to a person are not. AI-06 stays `specified`
-  until they are, because the acceptance criteria are about what a person
-  receives, not about what the document can store.
+- **A synthesis has no interface.** The model, the commands, the refusals, the
+  file format, the Markdown export and the deterministic composer are all in, and
+  all covered by 71 tests. Nothing draws the compact block, no menu composes or
+  exports, and no person has ever seen a synthesis. AI-06 stays `specified` until
+  a named test proves what someone receives on a screen, and a screenshot proves
+  what it looks like.
+- **The composer is deterministic and has no model behind it.** It writes only
+  what it can point at: active objects, rejections with their reasons, hypotheses
+  no claim touches. It cannot conclude, and it cannot tell that nothing is
+  uncertain, which is why it leaves that one section absent rather than declaring
+  it empty. A model-backed composer belongs here later and inherits the same
+  budget: an engine line that rests on nothing is refused at the command layer.
 - **The running app holds no network socket.** Checked with `lsof` against the app's own pid. This is
   evidence about the on-device path specifically, not a claim that no Mac feature the user turns on
   will ever reach the network.
