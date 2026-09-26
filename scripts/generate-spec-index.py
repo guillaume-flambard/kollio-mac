@@ -30,7 +30,12 @@ TODO = ROOT / "openspec" / "todo.md"
 
 # A feature heading: **DOC-02 — Enter a context and begin.** *SOLO. DOC-01.*
 FEATURE = re.compile(
-    r"^\*\*(?P<id>[A-Z]+-\d{2}) — (?P<title>.+?)\.\*\*\s*"
+    # The prefix allows a digit because the Apple 27 capabilities are named
+    # A27-06 and friends, and `[A-Z]+` silently refused every one of them: the
+    # feature was written, the generator agreed with the count of 71, and nothing
+    # said so. A parser that cannot see a feature is a parser that will one day
+    # hide a feature.
+    r"^\*\*(?P<id>[A-Z0-9]+-\d{2}) — (?P<title>.+?)\.\*\*\s*"
     # The delivery-set group is non-greedy on purpose. With a greedy `[^*]+` it
     # swallowed the prerequisites as well, so all 71 features were generated with
     # an empty dependency list, and anything scheduling from those views would
@@ -52,6 +57,10 @@ CAPABILITY_OF_PREFIX = {
     "STU": "studio",
     "COM": "commerce",
     "EXT": "ecosystem",
+    # Apple 27 system-integration and measurement work belongs to the same
+    # capability as the rest of the intelligence: it is about the model Kollio
+    # already calls, not about a new surface.
+    "A27": "intelligence",
 }
 
 # Which lot a capability first belongs to. Mirrors the lot table in the spec.
@@ -69,6 +78,7 @@ LOT_OVERRIDES = {
     "CTX-02": "L3", "CTX-03": "L3", "CTX-04": "L3", "CTX-05": "L3",
     "CTX-06": "L3", "CTX-07": "L3",
     "CAN-06": "L3", "CAN-07": "L3", "CAN-08": "L2", "CAN-09": "L3",
+    "A27-06": "L3",
     "CAN-10": "L3",
     "AI-05": "L3", "AI-06": "L3", "AI-10": "L8", "AI-11": "L3", "AI-12": "L3",
     "DEC-04": "L4", "DEC-05": "L4", "DEC-06": "L4",
@@ -218,6 +228,28 @@ STATUS_NOTES = {
                "card before the selection, and the mark is drawn on the object. Owed: the card has "
                "never been seen on a screen, and an assessment records only the first moved "
                "citation of a claim when two sources have both moved."),
+    "A27-06": ("inProgress",
+               "KollioEvaluationKitTests (23 tests, no model involved) prove AC01: the "
+               "structural gate is a pure function of an expectation and an observation, "
+               "so the model cannot change the verdict by changing its taste, and each "
+               "refusal is exercised with numbers chosen to fail - an unknown reference, "
+               "a rejected direction reached for again, applyProposal or removeObject "
+               "minted, a document whose revision moved, a bound the code does not "
+               "enforce. AC03 is proved by 'An encoded outcome carries no authored text' "
+               "and by a grep of the produced report: no fragment of authored or "
+               "generated text, which took encoding the expectation without its own text "
+               "because includeTranscripts: false redacts nothing. AC04 is proved by the "
+               "three judged.dimensions reporting ignore. AC02 is enforced in the script "
+               "and in the suite's require, and 'The script's availability marker is a "
+               "string the suite emits' keeps the two from drifting, but the end-to-end "
+               "exit 3 has not been observed on a Mac whose model is unavailable. Three "
+               "measurements were demoted out of the gate after running, not before: the "
+               "shape of an answer flipped between runs on the same case, the language "
+               "check is a stop-word heuristic that reads none on a short answer, and a "
+               "bound stated in a case's instruction is enforced nowhere. Status is "
+               "inProgress rather than automatedVerified for that one unobserved path, "
+               "and not because the code is missing. Owed: a run on a Mac with no model, "
+               "and a model judge for the three dimensions that stay unjudged."),
     "CAN-07": ("automatedVerified",
                "FrameTests: AC01 folding changes no business status at all, asserted field by "
                "field and with semanticRevision unmoved, and a fold is not a way to reopen a "

@@ -191,6 +191,10 @@ links, or a type with no Swift declaration, is `APPLE_AVAILABLE` and not
   is deterministic and testable without a model.
 - **Priority.** P1, now.
 - **Next gate.** Phase 1, this batch.
+- **Normative feature.** `A27-06` in
+  [specs/SPECIFICATIONS.md](specs/SPECIFICATIONS.md). The feature and this map
+  use the same identifier on purpose: the same work carrying two names is how a
+  roadmap and a specification drift apart without anybody noticing.
 - **Status.** `AUTOMATED_VERIFIED` for the structural gate only. The behavioural
   dimensions are explicitly **not** measured: relevance, usefulness of the next
   step and language quality need a model judge, which is not implemented, so they

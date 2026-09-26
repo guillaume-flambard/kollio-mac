@@ -663,6 +663,62 @@ rather than being dropped. Thresholds are read from the runtime when exposed.
 AC01 a limit does not lose text. AC02 known constraints do not disappear silently.
 AC03 the output states its scope.
 
+
+**A27-06 — Measure the local model before changing it.** *SOLO. AI-01, AI-03.*
+Kollio already calls a real on-device model and has never measured what comes
+back. This feature is the measurement, and it exists before any second prompt,
+any inference profile and any system integration, because those are all changes
+whose effect can only be known against a baseline. The suite is deliberately
+separate from the deterministic one: a machine without Apple Intelligence must
+still be able to run every other test, and an unavailable model is reported as
+unavailable rather than as a pass. It separates what can be asserted from what
+can only be judged. **Structural** findings are facts about the pipeline and are
+asserted: the answer survived `ProposalValidator`, the operation count stayed
+inside the enforced bound, every reference resolves, every created kind is
+renderable, no forbidden command was minted, and the document did not move.
+**Behavioural** findings are judgements and are reported, never gated: whether the
+answer was relevant, whether its next step is useful, and whether its language is
+right. A dimension that is not judged is named as unjudged, because a dimension
+that is silently absent reads like a dimension that passed. The report carries
+counts, revisions and identifiers, and no authored or generated text, so it can
+be committed and compared between runs without carrying the document with it.
+AC01 a structural gate decides pass or fail, and it is testable with no model
+present. AC02 an unavailable model is refused with its own outcome, never
+reported as a pass and never skipped silently. AC03 a report records the dataset
+version, the profile, the revisions read and the findings, and contains no
+authored or generated text. AC04 the dimensions that were not judged are named as
+unjudged rather than omitted.
+
+### Apple 27 capabilities that are not features yet
+
+One capability above is a feature because it is implemented and measured. It
+keeps the identifier the capability map already gave it, so the map and the
+specification cannot end up naming the same work two different ways. The rest
+of the Apple 27 landscape is mapped, not specified: each status was read out of
+the installed SDK rather than out of a release note, and the map with its
+evidence, prerequisites, privacy notes and dependency order lives in
+[../../docs/apple-intelligence-27-roadmap.md](../../docs/apple-intelligence-27-roadmap.md).
+
+| Capability | Status in this SDK | Why it is not a feature |
+|---|---|---|
+| `LanguageModel` adapter | `RELEVANT` | the protocol exists; the reason to adopt it is a capability check nothing needs yet |
+| Private Cloud Compute | `BLOCKED_EXTERNAL` | blocked on an entitlement and a consent, not on code |
+| Image input | `UNKNOWN` | there is no `ImageInput` type; attachments exist and the exact spelling must be read before use |
+| OCR and Vision | `RELEVANT` | deterministic extraction belongs with image input, in the same lot |
+| Dynamic Profiles | `RELEVANT` | a second profile without a measurement is a guess; A27-06 is the prerequisite |
+| App Entities, App Schemas, App Intents | `RELEVANT` | gate G2.5, after the SOLO human journey |
+| App Intents testing | `APPLE_AVAILABLE` | cannot exist before there is an entity to resolve |
+| View annotations | `UNKNOWN` | the symbol is in a binary stub with no Swift declaration |
+| App Shortcuts and donations | `RELEVANT` | follows the intents, and needs a spoken journey |
+| Spotlight search tool | `UNKNOWN` | no such type in the installed App Intents interface |
+| Core AI | `RELEVANT` | a later R&D capability, one measured task only |
+| Transfer, sync, ownership | `RELEVANT` | TEAM era; the journeys do not exist yet |
+
+A capability becomes a feature the day it is written here with acceptance
+criteria, and earns a status the day a named test proves it. Until then it is a
+line in the map above, and nothing in the product may be built on the assumption
+that it will arrive.
+
 ## Decisions and memory
 
 **DEC-01 — Take an explicit decision.** *SOLO. CTX-04.*
@@ -1674,7 +1730,7 @@ score.
 | L0 | The existing base understood, data protected | Read CONTINUE, scripts, repo state | Baseline; no reconstruction of fixed work |
 | L1 | I start with my own context | DOC-01…04, CAN-01…05, CTX-01 | Input, distinct file, gestures, reliable saving |
 | L2 | The idea becomes a living document | AI-01…09, DEC-01…03, CAN-08 | Real local Apple when available; explicit fallback only |
-| L3 | The document works with its sources | CTX-02…07, CAN-06/07/09/10, AI-05/06/11/12 | Sources, comparisons, history, exports, accessibility |
+| L3 | The document works with its sources | CTX-02…07, CAN-06/07/09/10, AI-05/06/11/12, A27-06 | Sources, comparisons, history, exports, accessibility |
 | L4 | I verify an idea and find it again | DEC-04…06, DOC-05…08 | Experiments, resumption, recents, recovery, settings |
 | L5 | Two people can really work | TEAM-01…04, identity and document API, PostgreSQL | Isolated test auth and ACL contracts; real provider conditional |
 | L6 | The group contributes, discusses, synchronises | TEAM-05…13 | Two clients, conflicts, offline, comments, presence |

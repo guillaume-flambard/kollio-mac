@@ -133,11 +133,12 @@
       "spec": "specs/intelligence.md",
       "change": "changes/l2-living-document",
       "delivered": "specified",
-      "features": 12,
-      "acceptanceCriteria": 36,
+      "features": 13,
+      "acceptanceCriteria": 40,
       "byStatus": {
         "automatedVerified": 7,
         "humanVerified": 1,
+        "inProgress": 1,
         "specified": 4
       },
       "proved": [
@@ -284,11 +285,12 @@
     }
   },
   "totals": {
-    "features": 71,
-    "acceptanceCriteria": 213,
+    "features": 72,
+    "acceptanceCriteria": 217,
     "byStatus": {
       "automatedVerified": 29,
       "humanVerified": 1,
+      "inProgress": 1,
       "specified": 41
     }
   }
