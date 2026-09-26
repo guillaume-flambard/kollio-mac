@@ -516,7 +516,8 @@ public struct DocumentStore: Sendable {
         decision.status = .superseded
         document.decisions[revoke.id] = decision
         if decision.kind == .setAside {
-            for id in decision.branchObjectIDs.map { ObjectID($0.rawValue) } {
+            let branch: [ObjectID] = decision.branchObjectIDs.map { ObjectID($0.rawValue) }
+            for id in branch {
                 guard var object = document.content[id] else { continue }
                 guard object.setAsideByDecision == revoke.id else { continue }
                 object.lifecycle = .active

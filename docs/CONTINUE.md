@@ -515,23 +515,25 @@ tests.
 
 ## The next things worth doing, in this order
 
-1. **CAN-07, the keyboard and the pointer journey**, or the human pass, whichever
-   comes first. Both are owed and no test substitutes for either. A human pass has
-   three things only a person can settle: **type a sentence into the entry point and
+1. **CAN-07, group and fold visually.** A named frame with explicit members, moving
+   it moving its occurrences, folding hiding them in this view without a decision.
+   The next eligible lot with verified prerequisites.
+2. The human pass, which is owed and which no test substitutes for. Three things
+   only a person can settle: **type a sentence into the entry point and
    press the action**, **scroll with two fingers** (the code says it does nothing; confirm or
    refute), and **watch a real-model proposal arrive and be kept**. Then drag, double-click to
    explore, contextual buttons, `Cmd+0` / `Cmd+1` / `Cmd+Z` / `Cmd+S`, and quit without `Cmd+S`.
-2. Latency, because it is the blocking finding: measure a warm call, a second identical call, and
+3. Latency, because it is the blocking finding: measure a warm call, a second identical call, and
    whether the first cost is asset loading or generation. A pending state that lasts ten seconds is
    the next thing the user will complain about.
-3. Relationship selection: a label, a wider hit area than the visible stroke, and a contextual action.
-4. Performance: generate 100 objects and 200 relationships, measure pan, zoom and drag, then use the
+4. Relationship selection: a label, a wider hit area than the visible stroke, and a contextual action.
+5. Performance: generate 100 objects and 200 relationships, measure pan, zoom and drag, then use the
    camera's visible rectangle to cull. Connector routing samples its curve, so this is where the
    cost will show.
-5. Keyboard traversal between objects, so the canvas is usable without a pointer.
-6. **AI-05, AI-06, AI-11, AI-12**, the rest of L3, then CAN-09 and CAN-10. They
+6. Keyboard traversal between objects, so the canvas is usable without a pointer.
+7. **AI-05, AI-06, AI-11, AI-12**, the rest of L3, then CAN-09 and CAN-10. They
    are the remaining lots with verified prerequisites, and CTX-05 was the last of
    the context chapter.
-7. Only then, and only with explicit permission: a small live Groq test, or a PCC eligibility check.
+8. Only then, and only with explicit permission: a small live Groq test, or a PCC eligibility check.
    Everything the transport needs is in place and mocked; what is missing is evidence about a live
    model, not plumbing.

@@ -30,7 +30,7 @@
 		4DAFF2352F8ECB94CC937E42 /* CSVTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1890109BA63EC19403BA959 /* CSVTable.swift */; };
 		534AD1AD15A5AAF4241E7484 /* SourcePreviewPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8EAE57F4CA04F29987C9D5E /* SourcePreviewPanel.swift */; };
 		7D3B1C69F370518572309708 /* SourceReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6F7FA74392B6E7F0D3C7EA /* SourceReader.swift */; };
-		0A5DB5547C54A2B2E1140E6E /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 3BBC4A255F74D2A1B53AE951 /* Localizable.xcstrings */; };
+		C48C4FF8CD106E48C1CC74F1 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 8A4724B06916EE6A9F73228F /* Localizable.xcstrings */; };
 		26C70343164791EB7E0D636E /* KollioCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8F00A5AE310737084590BBD6 /* KollioCore */; };
 		862E11B013B7E3490389CCC2 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B34B0507FE00BF36365A62E0 /* Info.plist */; };
 /* End PBXBuildFile section */
@@ -59,7 +59,7 @@
 		C1890109BA63EC19403BA959 /* CSVTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CSVTable.swift; path = ../../packages/KollioApp/Sources/KollioApp/Sources/CSVTable.swift; sourceTree = SOURCE_ROOT; };
 		A8EAE57F4CA04F29987C9D5E /* SourcePreviewPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SourcePreviewPanel.swift; path = ../../packages/KollioApp/Sources/KollioApp/Sources/SourcePreviewPanel.swift; sourceTree = SOURCE_ROOT; };
 		4E6F7FA74392B6E7F0D3C7EA /* SourceReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SourceReader.swift; path = ../../packages/KollioApp/Sources/KollioApp/Sources/SourceReader.swift; sourceTree = SOURCE_ROOT; };
-		3BBC4A255F74D2A1B53AE951 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = ../../packages/KollioApp/Sources/KollioApp/Localizable.xcstrings; sourceTree = SOURCE_ROOT; };
+		8A4724B06916EE6A9F73228F /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = ../../packages/KollioApp/Sources/KollioApp/Resources/Localizable.xcstrings; sourceTree = SOURCE_ROOT; };
 		B34B0507FE00BF36365A62E0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F5BF48AA40CAD7891EB709FC /* Kollio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kollio.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -79,7 +79,6 @@
 		2A44C54E23411059C3A1A1E1 = {
 			isa = PBXGroup;
 			children = (
-				D1FB5A21859A354159B69A14 /* Localizable.xcstrings */,
 				AC6545EDE5A39074A15E6244 /* App */,
 				353ED2007F9D7FBFF5C0CB75 /* Canvas */,
 				132D4E0BBF7CDB76520B439E /* DesignSystem */,
@@ -87,6 +86,7 @@
 				4346F55A2C511817ECD33BCA /* Intelligence */,
 				786FA564B216918DA2F165B6 /* Localization */,
 				D2698074F197869D93E6D480 /* Networking */,
+				5CB925814CB9D325B98F666D /* Resources */,
 				0E2C2D148CD03FDE80E5926A /* Sources */,
 				B34B0507FE00BF36365A62E0 /* Info.plist */,
 				C863DA5204F95EC573510473 /* Products */,
@@ -104,7 +104,7 @@
 		AC6545EDE5A39074A15E6244 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				749F962E91E367E652AEF3EF /* KollioApp.swift */,
+				D0CE6A9133B8E50289B0A87E /* KollioApp.swift */,
 			);
 			name = App;
 			sourceTree = "<group>";
@@ -122,9 +122,9 @@
 		F3B06D14FE62ECBB42E2B074 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				1394F7728AA17DC0B712CB62 /* ContextualActionSet.swift */,
-				6D3AA3D42050DD42E1F26C45 /* ContextualViews.swift */,
-				F389F7433915ED2219CC33F6 /* ProposalViews.swift */,
+				E00B9378EF955013031F86DA /* ContextualActionSet.swift */,
+				327F089F1E9542437CF4D0BA /* ContextualViews.swift */,
+				1562A6F0E1A1E1FB3F4E6C20 /* ProposalViews.swift */,
 			);
 			name = Components;
 			sourceTree = "<group>";
@@ -132,9 +132,9 @@
 		708A45DF2D8D73611047CF45 /* Geometry */ = {
 			isa = PBXGroup;
 			children = (
-				F552D897CADAB8E0B973743F /* Camera.swift */,
-				E2521772D829F64AD7F115C5 /* RelationshipGeometry.swift */,
-				401A541F530358CB58660F5D /* ScrollCatcher.swift */,
+				57F0D306F6B02200C92CF2C4 /* Camera.swift */,
+				08F9C7FEA54F8BAE07EED8B5 /* RelationshipGeometry.swift */,
+				20EF188E338A54D90C16D77B /* ScrollCatcher.swift */,
 			);
 			name = Geometry;
 			sourceTree = "<group>";
@@ -142,9 +142,9 @@
 		CF90BC23455F7E5A358E0717 /* Rendering */ = {
 			isa = PBXGroup;
 			children = (
-				0B094496530D7EA95BA69DB3 /* CanvasView.swift */,
-				22AA84250320BFC5B624CBE0 /* ObjectNodeView.swift */,
-				355A699D18BFBD03AD882A02 /* RelationshipLayer.swift */,
+				39DEC28D8E8BBC9B1227A22A /* CanvasView.swift */,
+				C273C77BEB9BBF817307596E /* ObjectNodeView.swift */,
+				2A7DCDE74DBB93E3EAD6097B /* RelationshipLayer.swift */,
 			);
 			name = Rendering;
 			sourceTree = "<group>";
@@ -152,8 +152,8 @@
 		132D4E0BBF7CDB76520B439E /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
-				FF67D09DCE7300321C50B6ED /* DesignTokens.swift */,
-				461EC1C00C6088ED0A63ACF9 /* Theme.swift */,
+				A4155C7B22DF3C3EC1209850 /* DesignTokens.swift */,
+				4C7E575628E93E7F5B7B314D /* Theme.swift */,
 			);
 			name = DesignSystem;
 			sourceTree = "<group>";
@@ -161,8 +161,8 @@
 		B837DD26924365EFAE8F8615 /* Documents */ = {
 			isa = PBXGroup;
 			children = (
-				CD0AD6287B24B34AA06DF8F1 /* KollioModel.swift */,
-				367A889D5201569FFE38E099 /* SarahFixture.swift */,
+				273245039D6F21FD6ABF9DF4 /* KollioModel.swift */,
+				8DD7D59809DEE0ABB5166D00 /* SarahFixture.swift */,
 			);
 			name = Documents;
 			sourceTree = "<group>";
@@ -178,9 +178,9 @@
 		DF7879114DE2359E2E62A1C8 /* Apple */ = {
 			isa = PBXGroup;
 			children = (
-				0F0B28A42ACAFE8231532969 /* AppleCandidate.swift */,
-				D05D16B4D74EE1081E3AB9DA /* AppleLocalSuggestionService.swift */,
-				98E43B03B1C6DB340E0A06C0 /* AppleModelAvailability.swift */,
+				074B2192F731A442C71DCD6C /* AppleCandidate.swift */,
+				CB2ABAEF30FAD8489C742327 /* AppleLocalSuggestionService.swift */,
+				9E0A9DDA5DE4384D450F1347 /* AppleModelAvailability.swift */,
 			);
 			name = Apple;
 			sourceTree = "<group>";
@@ -188,7 +188,7 @@
 		786FA564B216918DA2F165B6 /* Localization */ = {
 			isa = PBXGroup;
 			children = (
-				4391C6ACA1646A3B30C64A4F /* L10n.swift */,
+				4C5AA53ABAB9E944F1F26625 /* L10n.swift */,
 			);
 			name = Localization;
 			sourceTree = "<group>";
@@ -196,18 +196,26 @@
 		D2698074F197869D93E6D480 /* Networking */ = {
 			isa = PBXGroup;
 			children = (
-				17D0157EE1A142E72B36E08A /* RemoteSuggestionService.swift */,
-				D0DE0CCF729D1B49D6B1174E /* ServiceConfiguration.swift */,
+				8E1FC3E3575E691B54510EFF /* RemoteSuggestionService.swift */,
+				450FCC2FAF25328A906A4F82 /* ServiceConfiguration.swift */,
 			);
 			name = Networking;
+			sourceTree = "<group>";
+		};
+		5CB925814CB9D325B98F666D /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				8A4724B06916EE6A9F73228F /* Localizable.xcstrings */,
+			);
+			name = Resources;
 			sourceTree = "<group>";
 		};
 		0E2C2D148CD03FDE80E5926A /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				4E50AD9C44636B3A4D1C0A8E /* CSVTable.swift */,
-				125906FD65BA2711C74CE9A5 /* SourcePreviewPanel.swift */,
-				F7282FC390600151FD531825 /* SourceReader.swift */,
+				C1890109BA63EC19403BA959 /* CSVTable.swift */,
+				A8EAE57F4CA04F29987C9D5E /* SourcePreviewPanel.swift */,
+				4E6F7FA74392B6E7F0D3C7EA /* SourceReader.swift */,
 			);
 			name = Sources;
 			sourceTree = "<group>";
@@ -274,7 +282,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0A5DB5547C54A2B2E1140E6E /* Localizable.xcstrings in Resources */,
+				C48C4FF8CD106E48C1CC74F1 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

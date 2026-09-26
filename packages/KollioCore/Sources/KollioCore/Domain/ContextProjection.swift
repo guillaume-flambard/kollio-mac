@@ -141,7 +141,6 @@ public struct ContextProjector: Sendable {
         locality: ContextProjection.Locality
     ) -> ContextProjection {
         var requiredSeen: Set<ContextProjection.Item> = []
-        var optionalItems: [ItemCost] = []
         var included: [ContextProjection.Item] = []
         var omissions: [ContextProjection.Omission] = []
         var missingRequired: [ContextProjection.Item] = []

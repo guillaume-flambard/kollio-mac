@@ -37,6 +37,19 @@ def uid(*parts):
     return digest[:24].upper()
 
 
+def file_uid(relative_path):
+    """The object id of a source file, from one place.
+
+    A group child, a `PBXFileReference` and a `PBXBuildFile` must all agree on this
+    id, and the first version of this script computed it in three slightly
+    different ways. The groups then pointed at 24 objects the project never defined,
+    which is what Xcode was reporting as "file format integrity issues": the build
+    still worked, because the build phases resolve through their own references, so
+    the damage was confined to the navigator and to Xcode's opinion of the file.
+    """
+    return uid("file", os.path.join(RELATIVE_APP_SOURCES, relative_path))
+
+
 def collect(root, extensions):
     found = []
     for base, dirs, files in os.walk(root):
@@ -62,9 +75,10 @@ def group_tree(paths):
 def emit_group_defs(tree, ids_parent="", path_prefix=None):
     """Full PBXGroup definitions, written at the top level of `objects`.
 
-    Every group carries an explicit `path` relative to the project directory, so
-    the file references resolve on disk, while the navigator shows the short
-    folder name.
+    A group carries a `name` and no `path`: the file references themselves resolve
+    from `SOURCE_ROOT` with a path relative to the project directory, so the
+    navigator shows the short folder name and the disk resolution does not depend
+    on where the group sits in the tree.
     """
     lines = []
     for name in sorted(tree.keys()):
@@ -90,13 +104,21 @@ def emit_group_defs(tree, ids_parent="", path_prefix=None):
 
 
 def child_references(node, parent):
-    """A group's children are references only, never inline definitions."""
+    """A group's children are references only, never inline definitions.
+
+    The file paths in the tree are already relative to the app source root, so they
+    are looked up as they are. Prefixing them with the group's own path a second
+    time is what made every group child point at an object the project never
+    defined: 23 sources and one resource, all of them dangling, which Xcode reports
+    as a file format integrity issue while the build itself carries on working
+    because the build phases resolve through their own references.
+    """
     references = []
     for name in sorted(node.keys()):
         if name == "":
             for file_path in sorted(node[name]):
                 references.append("%s /* %s */," % (
-                    uid("file", os.path.join(parent, file_path)),
+                    file_uid(file_path),
                     os.path.basename(file_path),
                 ))
         else:
@@ -105,7 +127,7 @@ def child_references(node, parent):
 
 
 def emit_file_ref(relative_path):
-    file_id = uid("file", os.path.join(RELATIVE_APP_SOURCES, relative_path))
+    file_id = file_uid(relative_path)
     name = os.path.basename(relative_path)
     extension = os.path.splitext(name)[1]
     file_type = {
@@ -123,7 +145,7 @@ def emit_file_ref(relative_path):
 
 
 def build_file(relative_path):
-    file_id = uid("file", os.path.join(RELATIVE_APP_SOURCES, relative_path))
+    file_id = file_uid(relative_path)
     return "\t\t%s /* %s in Sources */ = {isa = PBXBuildFile; fileRef = %s /* %s */; };" % (
         uid("build", relative_path),
         os.path.basename(relative_path),
@@ -133,7 +155,7 @@ def build_file(relative_path):
 
 
 def build_resource(relative_path):
-    file_id = uid("file", os.path.join(RELATIVE_APP_SOURCES, relative_path))
+    file_id = file_uid(relative_path)
     return "\t\t%s /* %s in Resources */ = {isa = PBXBuildFile; fileRef = %s /* %s */; };" % (
         uid("resource", relative_path),
         os.path.basename(relative_path),
@@ -146,7 +168,12 @@ def main():
     sources = collect(APP_SOURCES, {".swift"})
     # Resource paths are kept relative to the source root too, so the group
     # layout is identical for code and resources.
-    resources = collect(APP_RESOURCES, {".xcstrings"})
+    # Both lists are expressed relative to the app source root, so one file path
+    # means one object id everywhere it appears.
+    resources = [
+        os.path.join("Resources", path)
+        for path in collect(APP_RESOURCES, {".xcstrings"})
+    ]
     if not sources:
         sys.exit("No Swift sources found under %s" % APP_SOURCES)
 
