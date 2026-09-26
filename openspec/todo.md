@@ -13,7 +13,7 @@ A view, not a source of truth. Status meanings:
 | `blockedExternal` | Blocked on a capability or authorisation. |
 | `notInCurrentRelease` | Deliberately out of this product. |
 
-Counts: 19 automatedVerified, 1 humanVerified, 51 specified. 71 features, 213 acceptance criteria.
+Counts: 20 automatedVerified, 1 humanVerified, 50 specified. 71 features, 213 acceptance criteria.
 
 ## L1 — 10 features
 
@@ -25,7 +25,8 @@ Counts: 19 automatedVerified, 1 humanVerified, 51 specified. 71 features, 213 ac
       MovingInstancesTests: a group drag is one transaction and one undo, AC01 asserted with the zoom division and with the three results differing so it cannot pass on a constant, and a move leaves content and semanticRevision untouched. Two occurrences of one object move independently, which needed instances(of:) and an InstanceID in the drag state. Still owed to a person: whether the drag feels direct on a trackpad.
 - [x] **CAN-04** Edit content in place · `automatedVerified` · 3 AC
       EditingContentTests: the exact characters typed are stored, an edit is one transaction, the document's undo cannot reach an open draft, and changing the interface language leaves authored text byte-identical. A conflict is refused as staleObjectText and keeps both the draft and the current text. DocumentFormatTests proves a file written before objectVersion existed still opens. Still owed: the two versions side by side, and Cmd+Z inside the field, which is an interaction between two undo systems this repository does not own.
-- [ ] **CAN-05** Create, duplicate, remove · `specified` · 3 AC
+- [x] **CAN-05** Create, duplicate, remove · `automatedVerified` · 3 AC
+      CreatingAndRemovingTests: an idea is written down before its kind is known, and locally, proved with a service that throws if consulted. Duplicate and delete each exist twice, once for an occurrence and once for an object, and the two are never the same gesture. AC01 duplicating does not double royalties, because a copy carries a reference to a contribution rather than a second one. AC02 undo restores links and positions exactly, and undoing a variant removes the link as well as the object. Intelligence is refused both removals. Owed: no command registers a contribution, so AC01 is proved against a seeded ledger; nothing moves an object out of .unclear; and the menu has not been seen by a person on a screen.
 - [ ] **CTX-01** Add information at a precise place · `specified` · 3 AC
 - [x] **DOC-01** First launch and restoration · `automatedVerified` · 3 AC
       Covered by InitialContextTests: fresh launch, restore, unreadable reported.

@@ -148,6 +148,17 @@ public enum L10n {
 
     // Undo labels
     public static var undoMove: String { callAsFunction("undo.move") }
+    public static var actionDuplicateOccurrence: String { callAsFunction("action.duplicateOccurrence") }
+    public static var actionDuplicateVariant: String { callAsFunction("action.duplicateVariant") }
+    public static var actionRemoveOccurrence: String { callAsFunction("action.removeOccurrence") }
+    public static var actionRemoveObject: String { callAsFunction("action.removeObject") }
+    public static var actionKeepOccurrence: String { callAsFunction("action.keepOccurrence") }
+    public static var actionLoseIdea: String { callAsFunction("action.loseIdea") }
+    public static var undoCreate: String { callAsFunction("undo.create") }
+    public static var undoDuplicateOccurrence: String { callAsFunction("undo.duplicateOccurrence") }
+    public static var undoDuplicateVariant: String { callAsFunction("undo.duplicateVariant") }
+    public static var undoRemoveOccurrence: String { callAsFunction("undo.removeOccurrence") }
+    public static var undoRemoveObject: String { callAsFunction("undo.removeObject") }
     public static var undoKeepProposal: String { callAsFunction("undo.keepProposal") }
     public static var undoSetAside: String { callAsFunction("undo.setAside") }
     public static var undoReopen: String { callAsFunction("undo.reopen") }

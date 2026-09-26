@@ -176,3 +176,62 @@ A field with a default in its *initializer* is not a migration.
       so `objectVersion` decreases. A draft open across an undo is therefore
       reported as a conflict, which is honest (its text is against text that is no
       longer there) but is untested with a real person deciding.
+
+## CAN-05, create, duplicate, remove
+
+The chapter was absent from the domain. There was no command to duplicate anything and
+none to remove anything, so "duplicate" in the interface had nothing behind it and the
+one "Delete" that would have existed could not have told an occurrence from an object.
+
+- [x] `ContentObject.Kind.unclear`, so an idea can be written down before its kind is
+      known. "Create an idea without choosing a category, then clarify its meaning": a
+      person who knows they have an idea usually does not know what kind it is, and a
+      forced choice either blocks them or makes them guess.
+- [x] `createIdea` is local and immediate. It never calls a model, proved with a service
+      that throws if consulted: writing down your own idea must not depend on Apple
+      Intelligence being there, and must not turn an unavailable model into a network
+      call (invariant 7).
+- [x] **Four commands, not two.** `DuplicateNodeInstance` and `RemoveNodeInstance` touch
+      only what is drawn and do not move `semanticRevision`. `DuplicateObject` and
+      `RemoveObject` change what the document says and do.
+- [x] A variant is a new object related by `derivedFrom`, so the document can still
+      answer why it exists. It starts at `objectVersion` 0 rather than inheriting the
+      version of the text it was copied from, which would make the copy look stale
+      against text it was never written against.
+- [x] **AC01: duplicating does not double royalties.** An occurrence copies nothing; a
+      variant copies the `contributionID` as a *reference*. Two objects can point at one
+      contribution and the ledger keeps one record, one membership and one share.
+- [x] **AC02: undo restores links and positions.** Undoing a variant removes the object
+      *and* the link, because a link left pointing at a removed object is a document that
+      lies. Positions are compared exactly, so a restored world is indistinguishable from
+      an untouched one.
+- [x] The two removals are separate entries and the difference is written in the menu,
+      each label saying what happens to the idea rather than to the button. The
+      destructive one asks first, and the question names what is lost.
+- [x] **Intelligence is refused both removals**, next to the existing refusals for
+      `createScenario` and `removeRelationship`. A proposal that deletes is not a bounded
+      addition, it is a decision, and the only actor allowed to take it is the person
+      whose thinking it removes. A proposal may make a variant, charged against the same
+      new-object budget as any other creation.
+
+### Refusals added, and why they are refusals rather than cleanups
+
+- `lastOccurrence`: removing the only drawing of an object would leave a node nothing
+  draws, and the next save would write a document nobody can see. That is a decision to
+  remove the idea, so it is taken as one, through `removeObject`.
+- `objectHasDecision`: a decision that set an object aside is durable and keeps its
+  memory. Removing the object would orphan a record that says something happened here.
+  The decision is revoked first, by a person.
+
+### Owed
+
+- [ ] **No command registers a contribution.** `addContributionToProduct` only adds a
+      share to a contribution that is already in the ledger, so AC01 is proved against a
+      seeded ledger and there is no way yet to earn one from the interface. This is the
+      real gap behind AC01, not a test artefact.
+- [ ] **Changing a kind.** "Then clarify its meaning" ends at editing the text: nothing
+      moves an object from `.unclear` to the kind it turns out to be. AC01 and AC02 do
+      not require it, which is why it is owed rather than done.
+- [ ] **The menu has not been seen.** The four entries and the confirmation are covered
+      by tests; the labels have not been read by a person on a screen. See
+      `known-limitations.md` for why the capture could not be trusted.

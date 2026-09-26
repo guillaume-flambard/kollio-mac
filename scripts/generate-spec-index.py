@@ -103,6 +103,16 @@ STATUS_NOTES = {
                "proves a file written before objectVersion existed still opens. Still owed: the "
                "two versions side by side, and Cmd+Z inside the field, which is an interaction "
                "between two undo systems this repository does not own."),
+    "CAN-05": ("automatedVerified",
+               "CreatingAndRemovingTests: an idea is written down before its kind is known, and "
+               "locally, proved with a service that throws if consulted. Duplicate and delete each "
+               "exist twice, once for an occurrence and once for an object, and the two are never "
+               "the same gesture. AC01 duplicating does not double royalties, because a copy carries "
+               "a reference to a contribution rather than a second one. AC02 undo restores links and "
+               "positions exactly, and undoing a variant removes the link as well as the object. "
+               "Intelligence is refused both removals. Owed: no command registers a contribution, "
+               "so AC01 is proved against a seeded ledger; nothing moves an object out of .unclear; "
+               "and the menu has not been seen by a person on a screen."),
     "AI-01": ("automatedVerified",
               "AppleAdapterTests: every availability state is a refusal, never a fallback."),
     "AI-02": ("humanVerified",

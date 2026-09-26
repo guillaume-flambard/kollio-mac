@@ -608,6 +608,136 @@ public final class KollioModel {
         return true
     }
 
+    // MARK: Create, duplicate, remove
+
+    /// Writes an idea down, without asking what kind of idea it is.
+    ///
+    /// CAN-05: "Create an idea without choosing a category, then clarify its
+    /// meaning." This is local and immediate. It does not call a model, because a
+    /// person who already knows what they want to say should never wait on a network
+    /// to say it, and a model cannot be assumed to be there (invariant 7). The
+    /// object is created as `.unclear` and its meaning is settled later, by editing
+    /// it or by exploring from it.
+    @discardableResult
+    public func createIdea(
+        _ text: String,
+        near anchor: ObjectID?,
+        at position: Position? = nil
+    ) -> ObjectID? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        let id = ObjectID("object:" + UUID().uuidString)
+        // The creation point is previewed at the anchor when there is one, and
+        // offset from it so the new idea does not land exactly on the thing it was
+        // written next to.
+        let place = position
+            ?? anchor.flatMap { document.presentation.instance(for: $0)?.position.offset(dx: 0, dy: 180) }
+            ?? .zero
+        let create = CreateObject(
+            id: id,
+            kind: .unclear,
+            text: LocalizedText(trimmed),
+            position: place,
+            provenance: .human("local-user")
+        )
+        guard perform([.createObject(create)], label: L10n.undoCreate) else { return nil }
+        select(id)
+        return id
+    }
+
+    /// A second drawing of the same idea, in another place.
+    ///
+    /// This is the operation people mean most of the time by "duplicate", and it is
+    /// the one that must not touch meaning: no new object, no new author, no second
+    /// share. Offsets by a visible step so the copy is not hidden under the
+    /// original.
+    @discardableResult
+    public func duplicateOccurrence(of instanceID: InstanceID) -> InstanceID? {
+        guard document.presentation.instance(id: instanceID) != nil else { return nil }
+        let newID = InstanceID("instance:" + UUID().uuidString)
+        let source = document.presentation.instance(id: instanceID)
+        let command = Command.duplicateNodeInstance(
+            DuplicateNodeInstance(
+                instanceID: instanceID,
+                id: newID,
+                position: source?.position.offset(dx: 40, dy: 40)
+            )
+        )
+        guard perform([command], label: L10n.undoDuplicateOccurrence) else { return nil }
+        return newID
+    }
+
+    /// The same thought said again as a new idea, related to the original.
+    ///
+    /// A variant can be changed without changing what it came from, which is the
+    /// reason it is a new object and not a second occurrence. The link is
+    /// `derivedFrom`, so the document can still answer "why is this here".
+    @discardableResult
+    public func duplicateAsVariant(of id: ObjectID) -> ObjectID? {
+        guard document.object(id) != nil else { return nil }
+        let newObject = ObjectID("object:" + UUID().uuidString)
+        let command = Command.duplicateObject(
+            DuplicateObject(
+                sourceID: id,
+                id: newObject,
+                instanceID: InstanceID("instance:" + UUID().uuidString),
+                relationshipID: RelationshipID("relationship:" + UUID().uuidString),
+                position: document.presentation.instance(for: id)?.position.offset(dx: 40, dy: 40),
+                provenance: .human("local-user")
+            )
+        )
+        guard perform([command], label: L10n.undoDuplicateVariant) else { return nil }
+        select(newObject)
+        return newObject
+    }
+
+    /// Takes one drawing off the canvas and keeps the idea.
+    @discardableResult
+    public func removeOccurrence(_ instanceID: InstanceID) -> Bool {
+        perform(
+            [.removeNodeInstance(RemoveNodeInstance(instanceID: instanceID))],
+            label: L10n.undoRemoveOccurrence
+        )
+    }
+
+    /// Removes the idea from the document.
+    ///
+    /// Deliberately a separate call from `removeOccurrence`, with its own label, so
+    /// the two are never the same gesture. The interface asks for a confirmation
+    /// here and not there, because this one loses the thinking and that one does
+    /// not.
+    @discardableResult
+    public func removeFromDocument(_ id: ObjectID) -> Bool {
+        perform([.removeObject(RemoveObject(id: id))], label: L10n.undoRemoveObject)
+    }
+
+    /// An object waiting for the person to answer the one question the two removals
+    /// share: does this keep the idea or remove it.
+    ///
+    /// The two are never the same gesture and never the same button, but they are
+    /// also never both applied on a first click. This is that moment, held in the
+    /// model so the view does not have to hold a destructive intent of its own.
+    public var pendingRemoval: ObjectID?
+
+    public func requestRemoveFromDocument(_ id: ObjectID) {
+        guard document.object(id) != nil else { return }
+        pendingRemoval = id
+    }
+
+    /// Answers the pending question, either way. Cancelling is a first-class answer
+    /// and leaves the document untouched.
+    public func resolvePendingRemoval(keepingIdea: Bool) {
+        guard let id = pendingRemoval else { return }
+        pendingRemoval = nil
+        if keepingIdea {
+            if let instance = document.presentation.instance(for: id) {
+                _ = removeOccurrence(instance.id)
+            }
+        } else {
+            _ = removeFromDocument(id)
+        }
+    }
+
     // MARK: Sources
     // MARK: Claims
 

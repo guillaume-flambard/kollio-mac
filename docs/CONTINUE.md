@@ -304,6 +304,49 @@ Eleven tests in `EditingContentTests`, two more in `DocumentFormatTests`.
 Owed: the two versions side by side in the conflict surface, and Cmd+Z inside the
 field, which is an interaction between two undo systems this repository does not own.
 
+## Latest batch: CAN-05, create, duplicate, remove
+
+The chapter was simply absent from the domain: no command could duplicate anything and
+none could remove anything. So there is now a fifth distinction the document keeps, and
+the one the rest of the product already implied: an **occurrence** is something drawn,
+an **object** is something said. Duplicate and delete each exist twice, and the two are
+never the same gesture.
+
+- `DuplicateNodeInstance` / `RemoveNodeInstance` touch only the canvas and do not move
+  `semanticRevision`.
+- `DuplicateObject` / `RemoveObject` change what the document says and do.
+- A variant is linked by `derivedFrom`, so the document can still answer why it exists,
+  and starts at version 0 rather than inheriting one.
+- `ContentObject.Kind.unclear` lets an idea be written down before its kind is known.
+  `createIdea` never calls a model, proved with a service that throws if consulted.
+
+**AC01** holds because a copy carries a *reference* to a contribution, never a second
+one: two objects may point at one contribution, and the ledger keeps one record, one
+membership and one share.
+
+**Two refusals, not two cleanups.** Removing the last drawing of an idea would leave a
+node nothing draws, and the next save would write a document nobody can see, so it is
+refused as `lastOccurrence`. Removing an object a decision points at would orphan a
+durable record, so it is refused as `objectHasDecision` and the decision is revoked
+first. Intelligence is refused both removals outright, next to the existing refusals for
+`createScenario` and `removeRelationship`: a proposal that deletes is not a bounded
+addition, it is a decision.
+
+Twenty tests in `CreatingAndRemovingTests`. `verify.sh`: 87 KollioCore, 184 KollioApp,
+29 server, exit 0.
+
+### Two honest gaps
+
+There is **no command that registers a contribution**. `addContributionToProduct` only
+adds a share to one already in the ledger, so AC01 is proved against a seeded ledger and
+there is no way yet to earn one from the interface. That is the real gap behind AC01.
+
+And the **menu has not been seen on screen**. `run-app.sh --shot` captures the whole
+screen, another application kept taking the foreground back, and a crop to Kollio's
+coordinates captured that application instead. The four entries and the confirmation rest
+on the twenty tests alone. The script should capture by window id and fail when the
+frontmost process is not Kollio.
+
 ## The next things worth doing, in this order
 
 1. A human pass. Three things only a human can settle: **type a sentence into the entry point and

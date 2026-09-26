@@ -35,7 +35,14 @@ public struct ContextualActionSet: Hashable, Sendable {
         case assertClaim
         case link
         case comment
-        case duplicate
+        /// A second drawing of the same idea.
+        case duplicateOccurrence
+        /// The same thought as a new, linked idea.
+        case duplicateVariant
+        /// Take one drawing off the canvas.
+        case removeOccurrence
+        /// Take the idea out of the document.
+        case removeObject
 
         /// The French and English label lives in `L10n`, not here, so the String
         /// Catalog stays the only place an interface string is written.
@@ -50,7 +57,10 @@ public struct ContextualActionSet: Hashable, Sendable {
             case .assertClaim: return "claimComposerPrompt"
             case .link: return "link"
             case .comment: return "comment"
-            case .duplicate: return "duplicate"
+            case .duplicateOccurrence: return "action.duplicateOccurrence"
+            case .duplicateVariant: return "action.duplicateVariant"
+            case .removeOccurrence: return "action.removeOccurrence"
+            case .removeObject: return "action.removeObject"
             }
         }
     }
@@ -72,6 +82,41 @@ public struct ContextualActionSet: Hashable, Sendable {
         self.primary = primary
         self.secondary = secondary
         self.isDefault = isDefault
+    }
+
+    /// What an action does to the idea, as opposed to to the canvas. Used to group
+    /// the menu and, in a confirmation, to say which of the two is being asked for.
+    public enum Reach: Hashable, Sendable {
+        /// Touches only what is drawn.
+        case presentation
+        /// Changes what the document says.
+        case meaning
+    }
+
+    public func reach(of kind: Kind) -> Reach {
+        switch kind {
+        case .duplicateOccurrence, .removeOccurrence:
+            return .presentation
+        case .duplicateVariant, .removeObject:
+            return .meaning
+        case .explore, .add, .setAside, .reopen, .edit, .addSource,
+             .assertClaim, .link, .comment:
+            return .meaning
+        }
+    }
+
+    /// The question the two removals both have to answer, in the words of the one
+    /// being considered. The specification requires the difference to be written
+    /// out rather than left to the person to infer from a destructive button.
+    public static func confirmation(for kind: Kind) -> (question: String, keeps: Kind)? {
+        switch kind {
+        case .removeOccurrence:
+            return (L10n.actionKeepOccurrence, .removeOccurrence)
+        case .removeObject:
+            return (L10n.actionLoseIdea, .removeObject)
+        default:
+            return nil
+        }
     }
 
     public func contains(_ kind: Kind) -> Bool {
@@ -102,7 +147,15 @@ public struct ContextualActionSet: Hashable, Sendable {
         //
         // if linked { secondary.append(.link) }
         // if discussable { secondary.append(.comment) }
-        // if duplicable { secondary.append(.duplicate) }
+
+        // CAN-05: "The difference between occurrence and variant is written in the
+        // menu." So they are two entries and never one "Duplicate": their labels
+        // say what happens to the idea, not what happens to the button. The two
+        // removals are the same pair, and the destructive one is last.
+        secondary.append(.duplicateOccurrence)
+        secondary.append(.duplicateVariant)
+        secondary.append(.removeOccurrence)
+        secondary.append(.removeObject)
 
         return ContextualActionSet(
             primary: [.explore, .add, .setAside],

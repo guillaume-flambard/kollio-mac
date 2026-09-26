@@ -95,6 +95,38 @@ public struct ProposalValidator: Sendable {
                 guard (0...1).contains(add.share) else {
                     throw DocumentError.invalidShareRange(add.share)
                 }
+            case .duplicateObject(let duplicate):
+                // A variant is an addition, so a proposal may make one. It is
+                // charged against the same new-object budget as any other creation:
+                // a patch that can fork the world is not bounded.
+                guard scope.allowNewObjects else {
+                    throw DocumentError.forbiddenOperation("duplicateObject outside scope")
+                }
+                guard document.content[duplicate.sourceID] != nil else {
+                    throw DocumentError.unknownObject(duplicate.sourceID)
+                }
+                guard document.content[duplicate.id] == nil else {
+                    throw DocumentError.duplicateObject(duplicate.id)
+                }
+                guard document.relationships[duplicate.relationshipID] == nil else {
+                    throw DocumentError.duplicateRelationship(duplicate.relationshipID)
+                }
+                newObjectCount += 1
+                guard newObjectCount <= limits.maxNewObjects else {
+                    throw DocumentError.tooManyOperations(proposal.operations.count)
+                }
+                virtual.insert(duplicate.id)
+            case .duplicateNodeInstance(let duplicate):
+                guard document.presentation.instance(id: duplicate.instanceID) != nil else {
+                    throw DocumentError.unknownInstance(duplicate.instanceID)
+                }
+            case .removeObject:
+                // Intelligence never removes what a person wrote. A proposal is a
+                // bounded addition; deletion is a decision, and the only actor
+                // allowed to make it is the person whose thinking it would remove.
+                throw DocumentError.forbiddenOperation("removeObject from a proposal")
+            case .removeNodeInstance:
+                throw DocumentError.forbiddenOperation("removeNodeInstance from a proposal")
             case .createScenario:
                 throw DocumentError.forbiddenOperation("createScenario from a proposal")
             case .applyProposal:

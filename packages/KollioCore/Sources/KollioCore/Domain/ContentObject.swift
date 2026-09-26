@@ -24,6 +24,14 @@ public struct LocalizedText: Codable, Hashable, Sendable {
 /// rich result) without hiding the semantics from the system.
 public struct ContentObject: Codable, Hashable, Sendable, Identifiable {
     public enum Kind: String, Codable, Sendable, CaseIterable {
+        /// An idea whose meaning has not been settled yet.
+        ///
+        /// CAN-05: "Create an idea without choosing a category, then clarify its
+        /// meaning." A person who knows they have an idea usually does not yet
+        /// know what kind it is, and forcing a choice at creation time either
+        /// blocks them or makes them guess. The kind is corrected later, or never,
+        /// and neither is a failure.
+        case unclear
         case context
         case need
         case method
@@ -126,7 +134,7 @@ public struct ContentObject: Codable, Hashable, Sendable, Identifiable {
             return .richResult
         case .evidence, .contribution:
             return .reference
-        case .context, .need, .hypothesis, .constraint, .question,
+        case .unclear, .context, .need, .hypothesis, .constraint, .question,
              .scenario, .decision, .note:
             return .thought
         }

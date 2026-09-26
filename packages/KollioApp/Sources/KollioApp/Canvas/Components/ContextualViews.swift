@@ -92,7 +92,22 @@ struct ContextualActions: View {
             chooseSource()
         case .assertClaim:
             model.startClaim(role: .hypothesis, anchor: target)
-        case .link, .comment, .duplicate:
+        case .duplicateOccurrence:
+            // The occurrence the pointer is on, not the object: two drawings of one
+            // idea are two different things to duplicate.
+            if let instance = model.document.presentation.instance(for: target) {
+                model.duplicateOccurrence(of: instance.id)
+            }
+        case .duplicateVariant:
+            model.duplicateAsVariant(of: target)
+        case .removeOccurrence:
+            if let instance = model.document.presentation.instance(for: target) {
+                model.removeOccurrence(instance.id)
+            }
+        case .removeObject:
+            // The destructive one asks first, and the question says what is lost.
+            model.requestRemoveFromDocument(target)
+        case .link, .comment:
             // Not reachable: the set never offers them until they are implemented.
             // An action that exists and does nothing is worse than an absent one.
             break

@@ -74,12 +74,18 @@ struct SelectionAndActionsTests {
             let set = model.contextualActions(for: id)
             let all = set.primary + set.secondary
             #expect(Set(all).count == all.count)
-            // Link, Comment and Duplicate are named in the specification but are
-            // not implemented, so they are not offered. An action that exists and
-            // does nothing is worse than an absent one.
+            // Link and Comment are named in the specification but are not
+            // implemented, so they are not offered. An action that exists and does
+            // nothing is worse than an absent one.
             #expect(!all.contains(.link))
             #expect(!all.contains(.comment))
-            #expect(!all.contains(.duplicate))
+            // CAN-05 replaced the single Duplicate with the pair the specification
+            // distinguishes, and the two removals with their pair, so none of the
+            // four is reachable as one ambiguous action.
+            #expect(all.contains(.duplicateOccurrence))
+            #expect(all.contains(.duplicateVariant))
+            #expect(all.contains(.removeOccurrence))
+            #expect(all.contains(.removeObject))
         }
     }
 

@@ -18,6 +18,13 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
     /// Named apart from a stale proposal because the recovery is different: a
     /// person has to choose between two texts, not recalculate a branch.
     case staleObjectText(id: ObjectID, expected: Int, actual: Int)
+    /// The last drawing of an object was removed, which would leave the idea
+    /// invisible rather than gone. Removing the idea is a different decision
+    /// and has to be taken as one.
+    case lastOccurrence(ObjectID)
+    /// A decision still points at this object, so removing it would orphan a
+    /// durable record. The decision is revoked first, never silently dropped.
+    case objectHasDecision(ObjectID, DecisionID)
     case tooManyOperations(Int)
     case forbiddenOperation(String)
     case unknownContributionReference(ObjectID, ActorID)
@@ -55,6 +62,10 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
         case .unknownDecision(let id): return "Unknown decision \(id)"
         case .decisionTargetNotFound(let id): return "Decision target \(id) not found"
         case .staleProposal(let reason): return "Stale proposal: \(reason)"
+        case .objectHasDecision(let object, let decision):
+            return "Object \(object) is the target of decision \(decision); revoke or reopen it first"
+        case .lastOccurrence(let id):
+            return "Object \(id) has only one occurrence left; removing it would hide the idea rather than remove it"
         case .staleObjectText(let id, let expected, let actual):
             return "Object \(id) was edited by someone else: expected version \(expected), found \(actual)"
         case .tooManyOperations(let n): return "Too many operations: \(n)"
@@ -132,6 +143,14 @@ public struct DocumentStore: Sendable {
             try removeRelationship(remove, from: &document)
         case .moveNodeInstances(let moves):
             try move(moves, in: &document)
+        case .duplicateObject(let duplicate):
+            try duplicateObject(duplicate, in: &document)
+        case .duplicateNodeInstance(let duplicate):
+            try duplicateNodeInstance(duplicate, in: &document)
+        case .removeObject(let remove):
+            try removeObject(remove, from: &document)
+        case .removeNodeInstance(let remove):
+            try removeNodeInstance(remove, from: &document)
         case .createScenario(let scenario):
             try createScenario(scenario, in: &document, at: date)
         case .recordDecision(let decision):
@@ -244,6 +263,131 @@ public struct DocumentStore: Sendable {
             }
             document.presentation.instances[index].position = one.position
         }
+    }
+
+    /// A second occurrence of one object.
+    ///
+    /// Nothing here copies an object, a contribution or a share, and that is the
+    /// whole of AC01: a person who puts the same thing in two places has not
+    /// created a second author or a second claim. If the source is a reference to
+    /// somebody else's contribution, the copy is a reference to the *same*
+    /// contribution id, which is what makes the share count stay at one.
+    private static func duplicateNodeInstance(
+        _ duplicate: DuplicateNodeInstance,
+        in document: inout KollioDocument
+    ) throws {
+        guard let source = document.presentation.instance(id: duplicate.instanceID) else {
+            throw DocumentError.unknownInstance(duplicate.instanceID)
+        }
+        guard document.presentation.instance(id: duplicate.id) == nil else {
+            throw DocumentError.duplicateInstance(duplicate.id)
+        }
+        document.presentation.instances.append(
+            NodeInstance(
+                id: duplicate.id,
+                objectID: source.objectID,
+                position: duplicate.position ?? source.position,
+                size: source.size,
+                hidden: source.hidden
+            )
+        )
+    }
+
+    /// A variant: a new object, related to the one it came from.
+    ///
+    /// The text is copied because a variant starts as the same thought, and the
+    /// `contributionID` is copied as a *reference*. The contribution record itself
+    /// is never touched, so two variants of a contributed object still owe the
+    /// original owner one share between them, not two.
+    private static func duplicateObject(
+        _ duplicate: DuplicateObject,
+        in document: inout KollioDocument
+    ) throws {
+        guard let source = document.content[duplicate.sourceID] else {
+            throw DocumentError.unknownObject(duplicate.sourceID)
+        }
+        guard document.content[duplicate.id] == nil else {
+            throw DocumentError.duplicateObject(duplicate.id)
+        }
+        guard document.relationships[duplicate.relationshipID] == nil else {
+            throw DocumentError.duplicateRelationship(duplicate.relationshipID)
+        }
+        var copy = source
+        copy.id = duplicate.id
+        copy.provenance = duplicate.provenance
+        // A fresh object has never been edited, so it starts at zero rather than
+        // inheriting the version of the thing it was copied from.
+        copy.objectVersion = 0
+        document.content[duplicate.id] = copy
+
+        if let contributionID = source.contributionID, document.contributions[contributionID] == nil {
+            throw DocumentError.unknownContributionReference(duplicate.id, contributionID)
+        }
+
+        let origin = document.presentation.instance(for: duplicate.sourceID)
+        document.presentation.instances.append(
+            NodeInstance(
+                id: duplicate.instanceID,
+                objectID: duplicate.id,
+                position: duplicate.position ?? origin?.position ?? .zero,
+                size: origin?.size
+            )
+        )
+        try addRelationship(
+            AddRelationship(
+                id: duplicate.relationshipID,
+                from: duplicate.id,
+                to: duplicate.sourceID,
+                kind: .derivedFrom,
+                provenance: duplicate.provenance
+            ),
+            in: &document
+        )
+    }
+
+    /// Removes one occurrence and keeps the idea.
+    private static func removeNodeInstance(
+        _ remove: RemoveNodeInstance,
+        from document: inout KollioDocument
+    ) throws {
+        guard let index = document.presentation.instances.firstIndex(where: { $0.id == remove.instanceID }) else {
+            throw DocumentError.unknownInstance(remove.instanceID)
+        }
+        // The last occurrence of an object is not an occurrence any more: removing
+        // it would leave a node with nothing drawing it, and the next save would
+        // write a document nobody can see. That is a decision to remove the idea,
+        // so it is refused here and has to be asked for as `removeObject`.
+        let objectID = document.presentation.instances[index].objectID
+        let remaining = document.presentation.instances.filter { $0.objectID == objectID }.count
+        guard remaining > 1 else {
+            throw DocumentError.lastOccurrence(objectID)
+        }
+        document.presentation.instances.remove(at: index)
+    }
+
+    /// Removes an object from the document, with everything that pointed at it.
+    ///
+    /// A decision that set an object aside keeps its memory, so a decision pointing
+    /// here is a reason to refuse rather than to clean up: removing the object would
+    /// leave a durable record about something that no longer exists, and deciding
+    /// what that record meant is the owner's call, not a side effect. Revoke or
+    /// reopen the decision first.
+    private static func removeObject(
+        _ remove: RemoveObject,
+        from document: inout KollioDocument
+    ) throws {
+        guard document.content[remove.id] != nil else {
+            throw DocumentError.unknownObject(remove.id)
+        }
+        if let decision = document.decisions.values.first(where: { $0.targetObjectID == remove.id }) {
+            throw DocumentError.objectHasDecision(remove.id, decision.id)
+        }
+        document.content[remove.id] = nil
+        for (id, relationship) in document.relationships where
+            relationship.from == remove.id || relationship.to == remove.id {
+            document.relationships[id] = nil
+        }
+        document.presentation.instances.removeAll { $0.objectID == remove.id }
     }
 
     private static func createScenario(_ scenario: CreateScenario, in document: inout KollioDocument, at date: Date) throws {

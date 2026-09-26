@@ -98,6 +98,15 @@ Recorded 2026-09-25, on an arm64 Mac, macOS 27.0 (26A428), Xcode 27.0, SDK 27.0.
   typing.
 - A full run with a ghost branch proposed by the **real on-device model** has not been captured. The
   generation, the conversion and the validation are each verified; the assembled screenshot is not.
+- `scripts/run-app.sh --shot` captures the **whole screen**, not Kollio, and focusing Kollio first is
+  not enough: on this machine another application takes the foreground back within a second or two,
+  and has been observed submitting its own input while a capture was being taken. A capture taken by
+  this script is therefore evidence of nothing unless the file has been looked at. During CAN-05 two
+  attempts produced Mail and then another app, and a third attempt to crop to Kollio's window
+  coordinates captured the other app again, because the coordinates are where the window *is*, not what
+  is drawn there. The CAN-05 menu was **not** seen on screen; its behaviour rests on the twenty tests.
+  The script should capture the window by id (`screencapture -l`) and should fail loudly when the
+  frontmost process is not Kollio, rather than printing a path either way.
 
 ## Simulated or approximated
 

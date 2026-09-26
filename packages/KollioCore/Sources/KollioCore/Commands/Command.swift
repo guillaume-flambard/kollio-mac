@@ -8,6 +8,10 @@ public enum Command: Codable, Hashable, Sendable {
     case addRelationship(AddRelationship)
     case removeRelationship(RemoveRelationship)
     case moveNodeInstances(MoveNodeInstances)
+    case duplicateObject(DuplicateObject)
+    case duplicateNodeInstance(DuplicateNodeInstance)
+    case removeObject(RemoveObject)
+    case removeNodeInstance(RemoveNodeInstance)
     case createScenario(CreateScenario)
     case recordDecision(RecordDecision)
     case revokeDecision(RevokeDecision)
@@ -26,13 +30,18 @@ public enum Command: Codable, Hashable, Sendable {
     /// Presentation-only commands never change the meaning of the document.
     public var isSemantic: Bool {
         switch self {
-        case .moveNodeInstances:
+        case .moveNodeInstances, .duplicateNodeInstance, .removeNodeInstance:
+            // An occurrence is presentation. Putting a second one on the canvas, or
+            // taking one away, changes where something is drawn and nothing about
+            // what it means, so it must not move semanticRevision. A *variant* is a
+            // new claim, and is deliberately not in this list.
             return false
         case .createObject, .updateObjectText, .addRelationship, .removeRelationship,
              .createScenario, .recordDecision, .revokeDecision,
              .addContributionToProduct, .applyProposal, .rejectProposal,
              .attachSource, .importSourceRevision, .addCitation, .recordVerification,
-             .removeSource, .assertClaim, .assessHypothesis, .resolveConstraint:
+             .removeSource, .assertClaim, .assessHypothesis, .resolveConstraint,
+             .duplicateObject, .removeObject:
             return true
         }
     }
@@ -45,6 +54,10 @@ public enum Command: Codable, Hashable, Sendable {
         case .addRelationship: return "undo.addRelationship"
         case .removeRelationship: return "undo.removeRelationship"
         case .moveNodeInstances: return "undo.move"
+        case .duplicateObject: return "undo.duplicateObject"
+        case .duplicateNodeInstance: return "undo.duplicateNodeInstance"
+        case .removeObject: return "undo.removeObject"
+        case .removeNodeInstance: return "undo.removeNodeInstance"
         case .createScenario: return "undo.createScenario"
         case .recordDecision: return "undo.recordDecision"
         case .revokeDecision: return "undo.revokeDecision"
@@ -156,6 +169,87 @@ public struct AddRelationship: Codable, Hashable, Sendable {
 
 public struct RemoveRelationship: Codable, Hashable, Sendable {
     public var id: RelationshipID
+}
+
+/// A second appearance of the *same* object.
+///
+/// CAN-05 separates this from `DuplicateObject` in one sentence: "Duplicating an
+/// occurrence keeps the referenced object." The person sees two of the same thing
+/// on the canvas; the document still contains one object, one author, one
+/// contribution and one share. Nothing semantic changes, which is why this is
+/// presentation-only.
+public struct DuplicateNodeInstance: Codable, Hashable, Sendable {
+    public var instanceID: InstanceID
+    /// The instance handed to the new one. Nil places the copy where the camera
+    /// is looking rather than exactly on top of the original.
+    public var id: InstanceID
+    public var position: Position?
+
+    public init(instanceID: InstanceID, id: InstanceID, position: Position? = nil) {
+        self.instanceID = instanceID
+        self.id = id
+        self.position = position
+    }
+}
+
+/// A new object that says the same thing differently.
+///
+/// This is a *variant*: a new claim, related to its origin by `derivedFrom` so
+/// the reasoning stays readable. It is a new object rather than a second
+/// occurrence precisely because a variant can be changed without changing the
+/// thing it came from.
+public struct DuplicateObject: Codable, Hashable, Sendable {
+    public var sourceID: ObjectID
+    public var id: ObjectID
+    public var instanceID: InstanceID
+    public var relationshipID: RelationshipID
+    public var position: Position?
+    public var provenance: Provenance
+
+    public init(
+        sourceID: ObjectID,
+        id: ObjectID,
+        instanceID: InstanceID,
+        relationshipID: RelationshipID,
+        position: Position? = nil,
+        provenance: Provenance
+    ) {
+        self.sourceID = sourceID
+        self.id = id
+        self.instanceID = instanceID
+        self.relationshipID = relationshipID
+        self.position = position
+        self.provenance = provenance
+    }
+}
+
+/// Removes an object from the document: its relationships and its instances go
+/// with it.
+///
+/// CAN-05 requires this to be a *distinct action* from removing an occurrence,
+/// because they lose different things. Removing an occurrence leaves the idea;
+/// this one does not, which is why the interface never offers it behind the same
+/// gesture.
+public struct RemoveObject: Codable, Hashable, Sendable {
+    public var id: ObjectID
+
+    // Written out rather than left to the memberwise initialiser, which Swift makes
+    // internal even on a public struct. Without it this type is constructible only
+    // inside KollioCore, and the next module to try gets `init(from:)` instead, with
+    // an error about a Decoder rather than about visibility.
+    public init(id: ObjectID) {
+        self.id = id
+    }
+}
+
+/// Removes one occurrence, and leaves the object it was drawing.
+public struct RemoveNodeInstance: Codable, Hashable, Sendable {
+    public var instanceID: InstanceID
+
+    // Public for the reason given on RemoveObject.
+    public init(instanceID: InstanceID) {
+        self.instanceID = instanceID
+    }
 }
 
 public struct MoveNodeInstance: Codable, Hashable, Sendable {

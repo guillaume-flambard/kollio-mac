@@ -650,6 +650,204 @@
         }
       }
     },
+    "undo.create": {
+      "comment": "Undo label: create an idea.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo create"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler la cr\u00e9ation"
+          }
+        }
+      }
+    },
+    "undo.duplicateOccurrence": {
+      "comment": "Undo label: show the same idea again in another place. The idea itself is untouched.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo duplicate"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler le doublon"
+          }
+        }
+      }
+    },
+    "undo.duplicateVariant": {
+      "comment": "Undo label: create a new idea related to the one it came from.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo variant"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler la variante"
+          }
+        }
+      }
+    },
+    "undo.removeOccurrence": {
+      "comment": "Undo label: remove one drawing from the canvas and keep the idea.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo remove from canvas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler le retrait du canevas"
+          }
+        }
+      }
+    },
+    "undo.removeObject": {
+      "comment": "Undo label: remove the idea from the document, with its links and its drawings.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo remove from document"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler le retrait du document"
+          }
+        }
+      }
+    },
+    "action.duplicateOccurrence": {
+      "comment": "Show the same idea in another place. The idea, its author and its shares do not change.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate on the canvas (same idea)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dupliquer sur le canevas (m\u00eame id\u00e9e)"
+          }
+        }
+      }
+    },
+    "action.duplicateVariant": {
+      "comment": "Create a new idea related to the original. Changing one will not change the other.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New variant (linked idea)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouvelle variante (id\u00e9e li\u00e9e)"
+          }
+        }
+      }
+    },
+    "action.removeOccurrence": {
+      "comment": "Remove this drawing from the canvas. The idea stays in the document.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from the canvas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer du canevas"
+          }
+        }
+      }
+    },
+    "action.removeObject": {
+      "comment": "Remove the idea from the document, with its links and its other drawings. This can be undone.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from the document"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer du document"
+          }
+        }
+      }
+    },
+    "action.keepOccurrence": {
+      "comment": "Keeps the idea and removes only this drawing. Used to answer the question the two removals ask.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keeps the idea"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserve l'id\u00e9e"
+          }
+        }
+      }
+    },
+    "action.loseIdea": {
+      "comment": "Removes the idea itself, not only this drawing. Used to answer the question the two removals ask.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removes the idea too"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprime aussi l'id\u00e9e"
+          }
+        }
+      }
+    },
     "undo.move": {
       "extractionState": "manual",
       "localizations": {
