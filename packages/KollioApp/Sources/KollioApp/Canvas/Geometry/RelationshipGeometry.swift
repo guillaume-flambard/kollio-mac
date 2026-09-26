@@ -92,6 +92,37 @@ public struct ConnectorRoute: Equatable {
     public var start: Position? { segments.first?.start }
     public var end: Position? { segments.last?.end }
 
+    /// How far a point is from this route.
+    ///
+    /// Hit testing a connector needs a distance, and a cubic Bézier has no closed
+    /// form worth writing here. Twenty-four samples per segment is far denser than
+    /// the tolerance it is compared against, so the answer is stable for the only
+    /// question asked: is this point near the line.
+    public func distance(to point: Position) -> Double {
+        var closest = Double.greatestFiniteMagnitude
+        for segment in segments {
+            var previous = segment.start
+            for step in 1...24 {
+                let t = Double(step) / 24
+                let sample = segment.point(at: t)
+                closest = min(closest, distance(from: point, toSegmentBetween: previous, and: sample))
+                previous = sample
+            }
+        }
+        return closest
+    }
+
+    private func distance(from point: Position, toSegmentBetween a: Position, and b: Position) -> Double {
+        let dx = b.x - a.x
+        let dy = b.y - a.y
+        let lengthSquared = dx * dx + dy * dy
+        guard lengthSquared > 0 else {
+            return hypot(point.x - a.x, point.y - a.y)
+        }
+        let t = max(0, min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSquared))
+        return hypot(point.x - (a.x + t * dx), point.y - (a.y + t * dy))
+    }
+
     public func path() -> Path {
         var path = Path()
         guard let first = segments.first else { return path }

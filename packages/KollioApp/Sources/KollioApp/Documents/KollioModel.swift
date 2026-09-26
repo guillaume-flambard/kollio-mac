@@ -94,6 +94,8 @@ public final class KollioModel {
     public var camera: Camera = .identity
     public var viewport: Size = Size(width: 1200, height: 800)
     public var selection: Set<ObjectID> = []
+    /// The relation on screen, if one is. Never alongside an object selection.
+    public var selectedRelationshipID: RelationshipID?
     public var hoveredObjectID: ObjectID?
     public var frames: [ObjectID: Rect] = [:]
     public var preview: ProposalPreview?
@@ -321,6 +323,105 @@ public final class KollioModel {
             .sorted { $0.id.rawValue < $1.id.rawValue }
     }
 
+    // MARK: Selecting a relation
+
+    /// The relation under a point on screen, if the point is close enough to it.
+    ///
+    /// CAN-06 AC01: "the line is clickable at several zooms." The tolerance is the
+    /// link's own `hitArea` at the current zoom, which is wider than the stroke and
+    /// grows as the view shrinks, so a distant link stays as easy to catch as a
+    /// nearby one. Hit testing uses the same routed path the layer draws, so what
+    /// is catchable is what is visible.
+    public func relationship(near point: Position) -> RelationshipID? {
+        let zoom = camera.zoom
+        let obstacles = hitTestObstacles()
+        var best: (RelationshipID, Double)?
+        for relationship in relationshipsToRender() {
+            guard let route = routedRoute(for: relationship, obstacles: obstacles) else { continue }
+            let distance = route.distance(to: point)
+            let tolerance = relationship.hitArea(zoom: zoom) / 2
+            guard distance <= tolerance else { continue }
+            // Two links crossing: the nearer one wins, so the answer does not depend
+            // on the order the document happens to store them in.
+            if best == nil || distance < best!.1 {
+                best = (relationship.id, distance)
+            }
+        }
+        return best?.0
+    }
+
+    private func hitTestObstacles() -> [ObjectID: Rect] {
+        var rects: [ObjectID: Rect] = [:]
+        for instance in visibleInstances {
+            guard let frame = frame(of: instance.objectID) else { continue }
+            rects[instance.objectID] = camera.toScreen(frame)
+        }
+        return rects
+    }
+
+    private func routedRoute(for relationship: Relationship, obstacles: [ObjectID: Rect]) -> ConnectorRoute? {
+        guard let fromFrame = frame(of: relationship.from),
+              let toFrame = frame(of: relationship.to) else { return nil }
+        let fromRect = offsetRect(fromFrame, by: relationship.from)
+        let toRect = offsetRect(toFrame, by: relationship.to)
+        let (start, end) = RelationshipGeometry.endpoints(of: relationship, from: fromRect, to: toRect)
+        let others = obstacles.compactMap { id, rect in
+            id == relationship.from || id == relationship.to ? nil : rect
+        }
+        return RelationshipGeometry.routedRoute(
+            from: AnchorPoint(point: camera.toScreen(start.point), direction: start.direction),
+            to: AnchorPoint(point: camera.toScreen(end.point), direction: end.direction),
+            obstacles: others
+        )
+    }
+
+    private func offsetRect(_ rect: Rect, by objectID: ObjectID) -> Rect {
+        let offset = dragOffset(for: objectID)
+        guard offset != .zero else { return rect }
+        return Rect(origin: rect.origin.offset(dx: offset.x, dy: offset.y), size: rect.size)
+    }
+
+    /// The relation on screen, or nothing.
+    ///
+    /// Selecting a relation is its own thing, separate from the object selection:
+    /// a link is not an object, and selecting it must not quietly add two nodes to
+    /// the selection and put their inspector up.
+    public func selectRelationship(_ id: RelationshipID?, extending: Bool = false) {
+        if let id, extending {
+            if selectedRelationshipID == id { selectedRelationshipID = nil } else { selectedRelationshipID = id }
+        } else {
+            selectedRelationshipID = id
+        }
+        if selectedRelationshipID != nil { selection = [] }
+    }
+
+    public var selectedRelationship: Relationship? {
+        selectedRelationshipID.flatMap { document.relationship($0) }
+    }
+
+    /// What a selected relation says, or nothing.
+    ///
+    /// Nil when either end is not in the document: a sentence with a missing end
+    /// reads as a fact about something that is not there.
+    public func sentence(for id: RelationshipID) -> RelationshipSentence? {
+        document.relationship(id)?.sentence(in: document, languageCode: languageCode)
+    }
+
+    /// Change what a relation says.
+    ///
+    /// CAN-06 makes this explicit rather than a drag, so it goes through a named
+    /// command and the same validated transaction as everything else. A refused edit
+    /// is reported, not swallowed: "this link already says that" is the answer a
+    /// person needs when they try to reverse something that means the same either
+    /// way.
+    @discardableResult
+    public func editRelationship(_ id: RelationshipID, _ edit: RelationshipEdit) -> Bool {
+        perform(
+            [.editRelationship(.init(id: id, edit: edit, provenance: .human(ActorID("owner"))))],
+            label: "undo.editRelationship"
+        )
+    }
+
     public func connectionsToRender(around objectID: ObjectID) -> [Relationship] {
         relationshipsToRender().filter { $0.from == objectID || $0.to == objectID }
     }
@@ -356,6 +457,10 @@ public final class KollioModel {
     // MARK: Selection
 
     public func select(_ id: ObjectID?, extending: Bool = false) {
+        // Choosing an object puts the selected link down. A link and an object are
+        // two different selections with two different inspectors, and holding both
+        // after one click is a state nothing in the interface can explain.
+        if id != nil { selectedRelationshipID = nil }
         if let id {
             if extending {
                 if selection.contains(id) { selection.remove(id) } else { selection.insert(id) }

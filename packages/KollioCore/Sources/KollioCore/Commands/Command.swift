@@ -29,6 +29,7 @@ public enum Command: Codable, Hashable, Sendable {
     case askClarification(AskClarification)
     case answerClarification(AnswerClarification)
     case markClarificationUnknown(MarkClarificationUnknown)
+    case editRelationship(EditRelationship)
 
     /// Presentation-only commands never change the meaning of the document.
     public var isSemantic: Bool {
@@ -45,7 +46,8 @@ public enum Command: Codable, Hashable, Sendable {
              .attachSource, .importSourceRevision, .addCitation, .recordVerification,
              .removeSource, .assertClaim, .assessHypothesis, .resolveConstraint,
              .duplicateObject, .removeObject,
-             .askClarification, .answerClarification, .markClarificationUnknown:
+             .askClarification, .answerClarification, .markClarificationUnknown,
+             .editRelationship:
             return true
         }
     }
@@ -79,6 +81,7 @@ public enum Command: Codable, Hashable, Sendable {
         case .askClarification: return "undo.askClarification"
         case .answerClarification: return "undo.answerClarification"
         case .markClarificationUnknown: return "undo.markClarificationUnknown"
+        case .editRelationship: return "undo.editRelationship"
         }
     }
 }
@@ -514,6 +517,26 @@ public struct MarkClarificationUnknown: Codable, Hashable, Sendable {
     public init(clarificationID: ClarificationID, reason: String? = nil, provenance: Provenance) {
         self.clarificationID = clarificationID
         self.reason = reason
+        self.provenance = provenance
+    }
+}
+
+
+// MARK: - Editing a relationship
+
+/// Changing what a link means, as a named operation.
+///
+/// CAN-06 insists the change is explicit rather than a drag, because a reversed
+/// link looks identical before and after and only the sentence differs. Reversing
+/// therefore carries the pair it was requested for, and the store checks it.
+public struct EditRelationship: Codable, Hashable, Sendable {
+    public var id: RelationshipID
+    public var edit: RelationshipEdit
+    public var provenance: Provenance
+
+    public init(id: RelationshipID, edit: RelationshipEdit, provenance: Provenance) {
+        self.id = id
+        self.edit = edit
         self.provenance = provenance
     }
 }

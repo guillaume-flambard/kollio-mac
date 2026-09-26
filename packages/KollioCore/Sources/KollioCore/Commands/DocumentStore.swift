@@ -50,6 +50,9 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
     case emptyClarification(ClarificationID)
     case alreadyAnswered(ClarificationID)
     case unknownClarification(ClarificationID)
+    /// A reverse was asked for on a pair it was not requested for, so it would have
+    /// turned into a different link.
+    case relationshipEditPreconditionFailed(RelationshipID, RelationshipEditPrecondition)
 
     public var description: String {
         switch self {
@@ -89,6 +92,7 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
         case .emptyClarification(let id): return "Clarification \(id) has no question"
         case .alreadyAnswered(let id): return "Clarification \(id) already has an answer"
         case .unknownClarification(let id): return "Unknown clarification \(id)"
+        case .relationshipEditPreconditionFailed(let id, let reason): return "Cannot edit \(id): \(reason)"
         }
     }
 }
@@ -194,6 +198,8 @@ public struct DocumentStore: Sendable {
             try answerClarification(answer, in: &document)
         case .markClarificationUnknown(let unknown):
             try markClarificationUnknown(unknown, in: &document)
+        case .editRelationship(let edit):
+            try editRelationship(edit, in: &document)
         }
     }
 
@@ -746,5 +752,37 @@ extension DocumentStore {
         var ledger = document.clarifications
         ledger.upsert(clarification)
         document.clarifications = ledger
+    }
+
+    // MARK: - Editing a relationship
+
+    private static func editRelationship(_ edit: EditRelationship, in document: inout KollioDocument) throws {
+        guard var relationship = document.relationships[edit.id] else {
+            throw DocumentError.unknownRelationship(edit.id)
+        }
+        // The precondition is part of the request, not a hope. A reverse names the
+        // pair it was asked about, so it cannot be applied to whatever happens to be
+        // at that identifier later.
+        if let precondition = edit.edit.precondition(for: relationship) {
+            guard precondition.isSatisfied(relationship) else {
+                throw DocumentError.relationshipEditPreconditionFailed(edit.id, precondition)
+            }
+        }
+        switch edit.edit {
+        case .retitle(let label):
+            relationship.label = label
+        case .changeKind(let kind):
+            relationship.kind = kind
+        case .reverse:
+            // The swap is the edit. A self-relation cannot be produced by reversing
+            // one, but a link that was made between two different objects and now
+            // has a single object on both ends is refused rather than stored.
+            let (first, second) = (relationship.from, relationship.to)
+            guard first != second else { throw DocumentError.selfRelationship(edit.id) }
+            relationship.from = second
+            relationship.to = first
+        }
+        relationship.provenance = edit.provenance
+        document.relationships[edit.id] = relationship
     }
 }

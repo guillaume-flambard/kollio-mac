@@ -13,7 +13,7 @@ A view, not a source of truth. Status meanings:
 | `blockedExternal` | Blocked on a capability or authorisation. |
 | `notInCurrentRelease` | Deliberately out of this product. |
 
-Counts: 25 automatedVerified, 1 humanVerified, 45 specified. 71 features, 213 acceptance criteria.
+Counts: 26 automatedVerified, 1 humanVerified, 44 specified. 71 features, 213 acceptance criteria.
 
 ## L1 — 10 features
 
@@ -69,7 +69,8 @@ Counts: 25 automatedVerified, 1 humanVerified, 45 specified. 71 features, 213 ac
 - [ ] **AI-06** Synthesise and prepare a deliverable · `specified` · 3 AC
 - [ ] **AI-11** See a proposal's reasons and destination · `specified` · 3 AC
 - [ ] **AI-12** Manage a large context · `specified` · 3 AC
-- [ ] **CAN-06** Link, select and edit a relation · `specified` · 3 AC
+- [x] **CAN-06** Link, select and edit a relation · `automatedVerified` · 3 AC
+      AC01 the line is clickable at several zooms: the catch area is wider than the stroke and grows as the view shrinks, and hit testing uses the same routed path the layer draws, at 0.35x through 3x. AC02 the text explains the direction: a sentence derived from the relationship and the two objects, in EN and FR, and refused rather than half-printed when an end is missing. AC03 objects do not become true because they are linked. Reversing is a named command, refused for intelligence, and a duplicate reveals the link that already says it. Still missing: a per-kind label on the connector itself, and the edit cannot be undone across a save.
 - [ ] **CAN-07** Group and fold visually · `specified` · 3 AC
 - [ ] **CAN-09** Search and navigate · `specified` · 3 AC
 - [ ] **CAN-10** Presentation and accessible reading · `specified` · 3 AC

@@ -5,9 +5,9 @@
     "features": 71,
     "acceptanceCriteria": 213,
     "byStatus": {
-      "automatedVerified": 25,
+      "automatedVerified": 26,
       "humanVerified": 1,
-      "specified": 45
+      "specified": 44
     },
     "byLot": {
       "L1": 10,
@@ -399,7 +399,8 @@
         "L3"
       ],
       "lot": "L3",
-      "status": "specified"
+      "status": "automatedVerified",
+      "evidence": "AC01 the line is clickable at several zooms: the catch area is wider than the stroke and grows as the view shrinks, and hit testing uses the same routed path the layer draws, at 0.35x through 3x. AC02 the text explains the direction: a sentence derived from the relationship and the two objects, in EN and FR, and refused rather than half-printed when an end is missing. AC03 objects do not become true because they are linked. Reversing is a named command, refused for intelligence, and a duplicate reveals the link that already says it. Still missing: a per-kind label on the connector itself, and the edit cannot be undone across a save."
     },
     {
       "id": "CAN-07",

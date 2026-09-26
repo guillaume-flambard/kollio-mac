@@ -140,6 +140,12 @@ public struct ProposalValidator: Sendable {
                 guard ask.clarification.state == .open else {
                     throw DocumentError.forbiddenOperation("a proposed question arrives open")
                 }
+            case .editRelationship:
+                // Reversing a link is the most dangerous edit in the document: the
+                // two ends look identical before and after and only the sentence
+                // inverts. That is a person's to do, and so is rewriting what a
+                // link is claimed to mean.
+                throw DocumentError.forbiddenOperation("editing a relation is the user's to do")
             case .answerClarification, .markClarificationUnknown:
                 // Only a person answers. A model that could answer its own question
                 // would be manufacturing the contribution the answer is supposed to

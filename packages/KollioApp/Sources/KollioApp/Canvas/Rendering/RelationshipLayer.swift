@@ -22,7 +22,11 @@ struct RelationshipLayer: View {
 
             for relationship in model.relationshipsToRender() {
                 guard let endpoints = screenEndpoints(for: relationship) else { continue }
-                let isSelected = model.selection.contains(relationship.from)
+                // A relation on its own is emphasised too, and more strongly: it was
+                // chosen deliberately, rather than dragged into the selection as one
+                // of two ends.
+                let isChosen = model.selectedRelationshipID == relationship.id
+                let isSelected = isChosen || model.selection.contains(relationship.from)
                     || model.selection.contains(relationship.to)
                 let color = isSelected ? theme.accent : theme.connector
 
@@ -35,7 +39,7 @@ struct RelationshipLayer: View {
                     route.path(),
                     with: .color(color.opacity(isSelected ? 0.95 : 0.8)),
                     style: StrokeStyle(
-                        lineWidth: isSelected ? 2 : 1.4,
+                        lineWidth: isChosen ? 2.6 : (isSelected ? 2 : 1.4),
                         lineCap: .round,
                         dash: model.preview?.relationshipIDs.contains(relationship.id) == true ? [6, 5] : []
                     )

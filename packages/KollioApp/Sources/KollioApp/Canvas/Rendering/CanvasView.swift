@@ -166,6 +166,10 @@ struct CanvasView: View {
             if let id = model.primarySelection, model.selection.count == 1, model.preview == nil {
                 ContextualActions(model: model, target: id)
             }
+            if let id = model.selectedRelationshipID, model.preview == nil {
+                RelationshipCardView(model: model, id: id)
+                    .position(relationshipCardPosition(id, viewport: viewport))
+            }
             if let preview = model.preview {
                 ProposalDecisionView(model: model)
                     .position(proposalDecisionPosition(preview, viewport: viewport))
@@ -224,6 +228,25 @@ struct CanvasView: View {
 
     /// Claim cards sit under the object they are about, the same place the
     /// composer and the citations go, so only one card is ever under one object.
+    /// Where the relation's card opens: at the middle of the connector, so the
+    /// sentence is read where the arrow is. The midpoint of the two ends is
+    /// approximated by the frames, which is close enough to place a card and
+    /// cannot be far from the line a person just clicked.
+    private func relationshipCardPosition(_ id: RelationshipID, viewport: CGSize) -> CGPoint {
+        guard let relationship = model.document.relationship(id),
+              let from = model.frame(of: relationship.from),
+              let to = model.frame(of: relationship.to) else {
+            return CGPoint(x: viewport.width / 2, y: viewport.height / 2)
+        }
+        let centre = Position(
+            x: (from.center.x + to.center.x) / 2,
+            y: (from.center.y + to.center.y) / 2
+        )
+        let screen = model.camera.toScreen(centre)
+        return CGPoint(x: min(max(screen.x, 190), viewport.width - 190),
+                       y: min(max(screen.y + 96, 150), viewport.height - 150))
+    }
+
     private func composerPosition(_ anchor: ObjectID, viewport: CGSize) -> CGPoint {
         guard let frame = model.frame(of: anchor) else {
             return CGPoint(x: viewport.width / 2, y: viewport.height / 2)
@@ -328,7 +351,17 @@ struct CanvasView: View {
                 appliedPan = value.translation
                 model.camera.pan(byScreenDelta: Position(x: delta.width, y: delta.height))
             }
-            .onEnded { _ in appliedPan = .zero }
+            .onEnded { value in
+                appliedPan = .zero
+                // A tap that is not a pan lands on a relation if it lands near one.
+                // Objects sit in front of the connectors and consume their own taps,
+                // so this only ever sees canvas: the priority CAN-06 asks for is the
+                // view hierarchy's, not a z-order this code has to maintain.
+                if abs(value.translation.height) < 3, abs(value.translation.width) < 3 {
+                    let point = Position(x: value.startLocation.x, y: value.startLocation.y)
+                    model.selectRelationship(model.relationship(near: point))
+                }
+            }
     }
 
     private var magnifyGesture: some Gesture {

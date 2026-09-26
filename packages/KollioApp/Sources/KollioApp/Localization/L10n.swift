@@ -79,6 +79,15 @@ public enum L10n {
     public static var clarificationAnswer: String { callAsFunction("clarification.answer") }
     public static var clarificationUnknown: String { callAsFunction("clarification.unknown") }
     public static var clarificationUnknownHint: String { callAsFunction("clarification.unknownHint") }
+
+    // Relations: what a link says, and the explicit ways to change it.
+    public static var relationshipIncomplete: String { callAsFunction("relationship.incomplete") }
+    public static var relationshipFromPerson: String { callAsFunction("relationship.fromPerson") }
+    public static var relationshipFromModel: String { callAsFunction("relationship.fromModel") }
+    public static var relationshipChangeKind: String { callAsFunction("relationship.changeKind") }
+    public static var relationshipChangeKindHint: String { callAsFunction("relationship.changeKindHint") }
+    public static var relationshipReverse: String { callAsFunction("relationship.reverse") }
+    public static var relationshipReverseHint: String { callAsFunction("relationship.reverseHint") }
     public static var clarificationUnknownDone: String { callAsFunction("clarification.unknownDone") }
     public static func claimScopeTitle(default object: String) -> String {
         String(format: callAsFunction("claim.scopeTitle"), object)

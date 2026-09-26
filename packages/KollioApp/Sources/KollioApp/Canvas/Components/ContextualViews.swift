@@ -888,3 +888,107 @@ struct ClarificationView: View {
         .onAppear { focused = true }
     }
 }
+
+/// What a link says, and the three ways a person can change it.
+///
+/// CAN-06: selecting a link "exposes meaning and provenance", and editing "changes
+/// the meaning explicitly, not just the arrow". So the card leads with the sentence
+/// and the arrow is not the only thing on offer.
+///
+/// Reversing is a button and not a drag, deliberately. The two ends look the same
+/// before and after and only the sentence inverts, so the change is named, spelled
+/// out in the label, and never something a movement of the hand does by accident.
+struct RelationshipCardView: View {
+    let model: KollioModel
+    let id: RelationshipID
+
+    @Environment(\.kollioTheme) private var theme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.s) {
+            if let relationship = model.document.relationship(id) {
+                if let sentence = model.sentence(for: id) {
+                    // The sentence, not the arrow: it says which end is the source
+                    // and what is being claimed about it.
+                    Text(sentence.text)
+                        .font(TypeScale.body.weight(.medium))
+                        .foregroundStyle(theme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityLabel(sentence.text)
+                } else {
+                    // An end is missing, so there is nothing true to say. Saying the
+                    // kind alone would read as a claim about something absent.
+                    Text(L10n.relationshipIncomplete)
+                        .font(TypeScale.body)
+                        .foregroundStyle(theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                provenanceLine(for: relationship)
+
+                HStack(spacing: Space.s) {
+                    Menu {
+                        ForEach(Relationship.Kind.choosable(languageCode: model.languageCode), id: \.self) { kind in
+                            Button {
+                                model.editRelationship(id, .changeKind(kind))
+                            } label: {
+                                Text(kind.readsAs(languageCode: model.languageCode))
+                            }
+                        }
+                    } label: {
+                        ActionButton(title: L10n.relationshipChangeKind, isDefault: false) { }
+                    }
+                    .help(L10n.relationshipChangeKindHint)
+
+                    ActionButton(title: L10n.relationshipReverse, isDefault: false) {
+                        model.editRelationship(id, .reverse)
+                    }
+                    .help(L10n.relationshipReverseHint)
+
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .padding(Space.l)
+        .frame(width: 340, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
+                .fill(theme.surfacePrimary)
+                .shadow(color: .black.opacity(theme.isDark ? 0.4 : 0.14), radius: 18, y: 8)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
+                .strokeBorder(theme.accent.opacity(0.35), lineWidth: 1)
+        )
+        .accessibilityElement(children: .contain)
+    }
+
+    /// Who said it, and that it was a person if it was.
+    ///
+    /// A link is a claim like any other, so where it came from belongs next to what
+    /// it says. A generated link says so rather than passing for a person's.
+    private func provenanceLine(for relationship: Relationship) -> some View {
+        // The kind, not the actor's spelling: whether a link came from a person or a
+        // model is a property the document records, and matching on a prefix of a
+        // name would be a guess that stops being true the day a provider changes.
+        let machine = relationship.provenance.kind != .human
+        return HStack(spacing: Space.xs) {
+            Image(systemName: machine ? "sparkles" : "person")
+                .font(.system(size: 10))
+                .foregroundStyle(theme.textSecondary.opacity(0.7))
+            Text(machine ? L10n.relationshipFromModel : L10n.relationshipFromPerson)
+                .font(TypeScale.metadata)
+                .foregroundStyle(theme.textSecondary.opacity(0.7))
+        }
+    }
+}
+
+public extension Relationship.Kind {
+    /// How the kind is offered in a menu: the verb, in the interface's language.
+    ///
+    /// The same wording the sentence uses, so a person choosing "contraint" knows
+    /// they will get "A contraint B" and not a different claim.
+    func readsAs(languageCode: String) -> String {
+        verb(languageCode: languageCode)
+    }
+}

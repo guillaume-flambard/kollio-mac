@@ -2357,6 +2357,118 @@
           }
         }
       }
+    },
+    "relationship.incomplete": {
+      "localization": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One end of this link is no longer in the document, so there is nothing to say about it."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un bout de ce lien n'est plus dans le document, il n'y a donc rien à en dire."
+          }
+        }
+      }
+    },
+    "relationship.fromPerson": {
+      "localization": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linked by you"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lié par vous"
+          }
+        }
+      }
+    },
+    "relationship.fromModel": {
+      "localization": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposed by the model"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposé par le modèle"
+          }
+        }
+      }
+    },
+    "relationship.changeKind": {
+      "localization": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What it says"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce qu'il dit"
+          }
+        }
+      }
+    },
+    "relationship.changeKindHint": {
+      "localization": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change what this link claims, in words rather than by moving the arrow."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changer ce que ce lien affirme, en mots et non en déplaçant la flèche."
+          }
+        }
+      }
+    },
+    "relationship.reverse": {
+      "localization": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reverse"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inverser"
+          }
+        }
+      }
+    },
+    "relationship.reverseHint": {
+      "localization": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swap the two ends. Nothing about them looks different afterwards, so this is a deliberate act."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échanger les deux bouts. Rien ne les distingue ensuite, c'est donc un acte délibéré."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -147,6 +147,16 @@ STATUS_NOTES = {
               "AppleAdapterTests: minted ids, dropped kinds, bounded branch, noChange."),
     "AI-08": ("automatedVerified",
               "VerticalSliceTests: one Keep undoes as one action."),
+    "CAN-06": ("automatedVerified",
+               "AC01 the line is clickable at several zooms: the catch area is wider than the "
+               "stroke and grows as the view shrinks, and hit testing uses the same routed path "
+               "the layer draws, at 0.35x through 3x. AC02 the text explains the direction: a "
+               "sentence derived from the relationship and the two objects, in EN and FR, and "
+               "refused rather than half-printed when an end is missing. AC03 objects do not "
+               "become true because they are linked. Reversing is a named command, refused for "
+               "intelligence, and a duplicate reveals the link that already says it. Still "
+               "missing: a per-kind label on the connector itself, and the edit cannot be undone "
+               "across a save."),
     "AI-09": ("automatedVerified",
                "AC01 a late answer after a switch, an undo or a close is dropped rather than "
                "published; AC02 the draft is kept; AC03 a refusal starts no loop. "
