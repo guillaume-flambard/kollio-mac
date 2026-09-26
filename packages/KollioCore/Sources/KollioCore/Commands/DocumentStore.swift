@@ -26,6 +26,23 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
     /// fold would then have to guess which one owns the drawing, and one of the two
     /// would hide something the person expected to see.
     case occurrenceAlreadyFramed(InstanceID, FrameID)
+    /// A cell wants a number and the criterion has no measure. AC01 refused at the
+    /// only place where refusing is worth anything.
+    case criterionHasNoMeasure(CriterionID)
+    case unknownComparison(ComparisonID)
+    case unknownCriterion(CriterionID)
+    case duplicateComparison(ComparisonID)
+    /// A cell recorded against a criterion the person has not confirmed. A draft is
+    /// a question, and a question cannot hold a value.
+    case comparisonIsDraft(ComparisonID)
+    case notAComparisonDirection(ComparisonID, ObjectID)
+    /// A weight that is not a number a person could mean.
+    case invalidWeight(Double)
+    /// A measure with no unit, which would let a number exist without saying what it
+    /// counts.
+    case emptyMeasureUnit(CriterionID)
+    /// A comparison over fewer than two directions, which compares nothing.
+    case comparisonNeedsTwoDirections(ComparisonID)
     case decisionTargetNotFound(ObjectID)
     case staleProposal(reason: String)
     /// Someone else changed this object's text after the writer last looked.
@@ -88,6 +105,19 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
         case .unknownInstanceForFrame(let id): return "Frame member \(id) is not drawn anywhere"
         case .occurrenceAlreadyFramed(let instance, let frame):
             return "\(instance) is already in frame \(frame)"
+        case .criterionHasNoMeasure(let id):
+            return "Criterion \(id) has no measure, so it cannot hold a number"
+        case .unknownComparison(let id): return "Unknown comparison \(id)"
+        case .unknownCriterion(let id): return "Unknown criterion \(id)"
+        case .duplicateComparison(let id): return "Duplicate comparison \(id)"
+        case .comparisonIsDraft(let id):
+            return "Comparison \(id) is still a draft: confirm its criteria first"
+        case .notAComparisonDirection(let comparison, let object):
+            return "\(object) is not a direction of comparison \(comparison)"
+        case .invalidWeight(let value): return "Invalid weight \(value)"
+        case .emptyMeasureUnit(let id): return "Criterion \(id) has no unit to measure in"
+        case .comparisonNeedsTwoDirections(let id):
+            return "Comparison \(id) compares fewer than two directions"
         case .decisionTargetNotFound(let id): return "Decision target \(id) not found"
         case .staleProposal(let reason): return "Stale proposal: \(reason)"
         case .objectHasDecision(let object, let decision):
@@ -235,6 +265,20 @@ public struct DocumentStore: Sendable {
             try setFrameFolded(folded, in: &document)
         case .removeFrame(let remove):
             try removeFrame(remove, from: &document)
+        case .startComparison(let start):
+            try startComparison(start, in: &document)
+        case .setComparisonCriteria(let criteria):
+            try setComparisonCriteria(criteria, in: &document)
+        case .confirmComparisonCriteria(let confirm):
+            try confirmComparisonCriteria(confirm, in: &document)
+        case .recordComparisonCell(let record):
+            try recordComparisonCell(record, in: &document)
+        case .setCriterionWeight(let weight):
+            try setCriterionWeight(weight, in: &document)
+        case .setCriterionMeasure(let measure):
+            try setCriterionMeasure(measure, in: &document)
+        case .keepDirection(let keep):
+            try keepDirection(keep, in: &document)
         }
     }
 
@@ -1027,3 +1071,192 @@ extension DocumentStore {
         }
     }
 }
+
+
+// MARK: - Comparison
+//
+// Four refusals carry the whole of AI-05, and each of them is a thing the
+// specification names: a number needs a measure, a draft holds nothing, keeping
+// removes nothing, and a total is never invented.
+
+extension DocumentStore {
+    private static func startComparison(_ start: StartComparison, in document: inout KollioDocument) throws {
+        let comparison = start.comparison
+        guard document.comparisons.comparison(comparison.id) == nil else {
+            throw DocumentError.duplicateComparison(comparison.id)
+        }
+        // A comparison of one thing is a note with extra steps.
+        guard comparison.directionIDs.count >= 2 else {
+            throw DocumentError.comparisonNeedsTwoDirections(comparison.id)
+        }
+        for direction in comparison.directionIDs where document.content[direction] == nil {
+            throw DocumentError.unknownObject(direction)
+        }
+        var criteria = comparison.criteria
+        for criterion in criteria {
+            guard criterion.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
+                throw DocumentError.emptyText(ObjectID(criterion.id.rawValue))
+            }
+            if let weight = criterion.weight, (weight.isFinite == false || weight < 0) {
+                throw DocumentError.invalidWeight(weight)
+            }
+        }
+        criteria = unique(criteria)
+        var stored = comparison
+        stored.criteria = criteria
+        var ledger = document.comparisons
+        ledger.upsert(stored)
+        document.comparisons = ledger
+    }
+
+    /// Replaces the criteria and keeps the draft state.
+    private static func setComparisonCriteria(
+        _ command: SetComparisonCriteria,
+        in document: inout KollioDocument
+    ) throws {
+        var comparison = try requireComparison(command.comparisonID, in: document)
+        for criterion in command.criteria {
+            guard criterion.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
+                throw DocumentError.emptyText(ObjectID(criterion.id.rawValue))
+            }
+        }
+        // A cell whose criterion is no longer asked is dropped, because a value
+        // recorded against a question that is not being asked any more is a number
+        // on screen that nothing can be checked against.
+        let keptIDs = Set(command.criteria.map(\.id))
+        comparison.criteria = unique(command.criteria)
+        comparison.cells = comparison.cells.filter { keptIDs.contains($0.criterionID) }
+        var ledger = document.comparisons
+        ledger.upsert(comparison)
+        document.comparisons = ledger
+    }
+
+    /// Clears the draft flag, and nothing else. The criteria are whatever is on
+    /// screen, so this cannot be used to confirm a list the person never saw.
+    private static func confirmComparisonCriteria(
+        _ confirm: ConfirmComparisonCriteria,
+        in document: inout KollioDocument
+    ) throws {
+        var comparison = try requireComparison(confirm.comparisonID, in: document)
+        guard comparison.isDraft else { return }
+        comparison.isDraft = false
+        var ledger = document.comparisons
+        ledger.upsert(comparison)
+        document.comparisons = ledger
+    }
+
+    private static func recordComparisonCell(
+        _ record: RecordComparisonCell,
+        in document: inout KollioDocument
+    ) throws {
+        var comparison = try requireComparison(record.comparisonID, in: document)
+        guard comparison.isDraft == false else {
+            throw DocumentError.comparisonIsDraft(comparison.id)
+        }
+        guard let criterion = comparison.criterion(record.cell.criterionID) else {
+            throw DocumentError.unknownCriterion(record.cell.criterionID)
+        }
+        guard comparison.directionIDs.contains(record.cell.directionID) else {
+            throw DocumentError.notAComparisonDirection(comparison.id, record.cell.directionID)
+        }
+        // AC01. A number without a measure is a rating, and a rating is an opinion.
+        if case .number = record.cell.value, criterion.measure == nil {
+            throw DocumentError.criterionHasNoMeasure(criterion.id)
+        }
+        for reference in record.cell.references {
+            switch reference.kind {
+            case .citation where document.sources.citation(CitationID(reference.id)) == nil:
+                throw DocumentError.unknownCitation(CitationID(reference.id))
+            case .source where document.sources.source(SourceID(reference.id)) == nil:
+                throw DocumentError.unknownSource(SourceID(reference.id))
+            case .object where document.content[ObjectID(reference.id)] == nil:
+                throw DocumentError.unknownObject(ObjectID(reference.id))
+            case .claim where document.claims.claim(ClaimID(reference.id)) == nil:
+                throw DocumentError.unknownClaim(ClaimID(reference.id))
+            case .citation, .source, .object, .claim, .note:
+                break
+            }
+        }
+        // Correcting a cell is an ordinary record: the previous value is replaced
+        // and the new one says who wrote it and when, so a comparison that changed
+        // its mind is readable rather than mysterious.
+        comparison.cells.removeAll {
+            $0.criterionID == record.cell.criterionID && $0.directionID == record.cell.directionID
+        }
+        comparison.cells.append(record.cell)
+        comparison.cells.sort { $0.id < $1.id }
+        var ledger = document.comparisons
+        ledger.upsert(comparison)
+        document.comparisons = ledger
+    }
+
+    private static func setCriterionWeight(
+        _ command: SetCriterionWeight,
+        in document: inout KollioDocument
+    ) throws {
+        var comparison = try requireComparison(command.comparisonID, in: document)
+        guard let index = comparison.criteria.firstIndex(where: { $0.id == command.criterionID }) else {
+            throw DocumentError.unknownCriterion(command.criterionID)
+        }
+        if let weight = command.weight {
+            guard weight.isFinite, weight >= 0 else { throw DocumentError.invalidWeight(weight) }
+        }
+        comparison.criteria[index].weight = command.weight
+        var ledger = document.comparisons
+        ledger.upsert(comparison)
+        document.comparisons = ledger
+    }
+
+    /// A number is only reachable through here, and only with a unit.
+    ///
+    /// The two checks live in the store rather than in the type because a caller can
+    /// build a `Criterion` by hand with any `Measure` it likes, including one with an
+    /// empty unit: "3" with nothing saying what the 3 is is the exact shape of an
+    /// invented rating.
+    private static func setCriterionMeasure(
+        _ command: SetCriterionMeasure,
+        in document: inout KollioDocument
+    ) throws {
+        var comparison = try requireComparison(command.comparisonID, in: document)
+        guard let index = comparison.criteria.firstIndex(where: { $0.id == command.criterionID }) else {
+            throw DocumentError.unknownCriterion(command.criterionID)
+        }
+        if let measure = command.measure {
+            guard measure.unit.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
+                throw DocumentError.emptyMeasureUnit(command.criterionID)
+            }
+        }
+        comparison.criteria[index].measure = command.measure
+        var ledger = document.comparisons
+        ledger.upsert(comparison)
+        document.comparisons = ledger
+    }
+
+    private static func keepDirection(_ keep: KeepDirection, in document: inout KollioDocument) throws {
+        var comparison = try requireComparison(keep.comparisonID, in: document)
+        guard comparison.directionIDs.contains(keep.directionID) else {
+            throw DocumentError.notAComparisonDirection(keep.comparisonID, keep.directionID)
+        }
+        // Explicit, cumulative, reversible, and it removes nothing. The sibling
+        // directions and their cells are still there afterwards, which is AC03.
+        if comparison.keptDirectionIDs.contains(keep.directionID) == false {
+            comparison.keptDirectionIDs.append(keep.directionID)
+        }
+        var ledger = document.comparisons
+        ledger.upsert(comparison)
+        document.comparisons = ledger
+    }
+
+    private static func requireComparison(_ id: ComparisonID, in document: KollioDocument) throws -> Comparison {
+        guard let comparison = document.comparisons.comparison(id) else {
+            throw DocumentError.unknownComparison(id)
+        }
+        return comparison
+    }
+
+    private static func unique(_ criteria: [Criterion]) -> [Criterion] {
+        var seen: Set<CriterionID> = []
+        return criteria.filter { seen.insert($0.id).inserted }
+    }
+}
+

@@ -501,6 +501,7 @@ public final class KollioModel {
         case citation
         case readingSource
         case frameName
+        case comparison
         case impactReview
         case preview
         case selection
@@ -515,6 +516,7 @@ public final class KollioModel {
             if model.openCitationClaim != nil { return .citation }
             if model.readingSourceID != nil { return .readingSource }
             if model.renamingFrameID != nil { return .frameName }
+            if model.openComparison != nil { return .comparison }
             // The impact review sits above the selection, and below the citations it
             // is read from: it is a card about a claim, so it closes before the
             // claim's own evidence list does.
@@ -547,6 +549,11 @@ public final class KollioModel {
         case .readingSource:
             readingSourceID = nil
             return .readingSource
+        case .comparison:
+            // Closing the comparison writes nothing: it is a reading of the document
+            // and the cells already recorded stay exactly where they are.
+            openComparison = nil
+            return .comparison
         case .frameName:
             // Closing the field keeps what was typed nowhere and changes nothing: a
             // rename that was never submitted was never asked for.
@@ -583,6 +590,7 @@ public final class KollioModel {
         impactReviewAnchor = nil
         renamingFrameID = nil
         renamingFrameDraft = ""
+        openComparison = nil
     }
 
     /// The actions offered for a selected object: at most three shown, the rest
@@ -599,7 +607,8 @@ public final class KollioModel {
             canAttachSource: object != nil,
             canAssertClaim: object != nil,
             canReviewImpact: document.needsImpactReview(id),
-            canGroupInFrame: selection.isEmpty == false
+            canGroupInFrame: selection.isEmpty == false,
+            canCompareDirections: selection.count >= 2
         )
     }
 
@@ -690,6 +699,233 @@ public final class KollioModel {
         impactReviewAnchor = nil
     }
 
+
+    // MARK: Comparison
+
+    /// The comparison being read, if one is open. Transient like every other card:
+    /// it appears beside the work and goes away when the person moves on.
+    public var openComparison: ComparisonID?
+
+    public func comparison(_ id: ComparisonID) -> Comparison? {
+        document.comparisons.comparison(id)
+    }
+
+    public var openComparisonModel: Comparison? {
+        openComparison.flatMap { comparison($0) }
+    }
+
+    /// Opens a comparison over the current selection, as a draft.
+    ///
+    /// Draft because the criteria are a question the person has not agreed to yet,
+    /// and a draft accepts no cell at all: a criterion nobody confirmed can never
+    /// hold a value, so nothing is recorded against a question that was never asked.
+    @discardableResult
+    public func startComparison(over selected: Set<ObjectID>? = nil) -> ComparisonID? {
+        let directions = (selected ?? selection).sorted { $0.rawValue < $1.rawValue }
+        guard directions.count >= 2 else {
+            // Comparing one thing with nothing is a note, and offering a comparison
+            // for it would be an empty card pretending to be an analysis.
+            status = L10n.comparisonNeedsTwo
+            return nil
+        }
+        for direction in directions where object(direction) == nil {
+            status = L10n.errorGeneric
+            return nil
+        }
+        let comparison = Comparison(
+            id: ComparisonID("comparison:" + UUID().uuidString),
+            title: L10n.comparisonDefaultTitle,
+            directionIDs: directions,
+            criteria: proposedCriteria(for: directions),
+            isDraft: true
+        )
+        guard perform([.startComparison(.init(
+            comparison: comparison, provenance: .human("local-user")
+        ))], label: L10n.undoStartComparison) else { return nil }
+        openComparison = comparison.id
+        return comparison.id
+    }
+
+    /// The criteria a draft starts from: the resolution criteria people have already
+    /// written on the claims in this selection.
+    ///
+    /// Local, deterministic and already the person's own words, which is why it is
+    /// used instead of asking a model. A model's criteria would be an interpretation
+    /// of the document's reasoning, and this is a place where an invented question
+    /// is the whole failure. It is a draft either way, and it says where it came from.
+    private func proposedCriteria(for directions: [ObjectID]) -> [Criterion] {
+        var seen: Set<String> = []
+        var proposed: [Criterion] = []
+        for direction in directions {
+            for claim in document.claims.allClaims() where claim.objectID == direction {
+                guard let text = claim.criterion,
+                      text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false,
+                      seen.insert(text).inserted
+                else { continue }
+                proposed.append(Criterion(
+                    id: CriterionID("criterion:" + UUID().uuidString),
+                    title: text
+                ))
+            }
+        }
+        return Array(proposed.prefix(4))
+    }
+
+    /// Confirms the criteria, which is what lets a cell be recorded.
+    @discardableResult
+    public func confirmComparisonCriteria(_ id: ComparisonID) -> Bool {
+        guard let comparison = comparison(id) else {
+            status = L10n.errorGeneric
+            return false
+        }
+        guard comparison.isDraft else { return true }
+        return perform([.confirmComparisonCriteria(.init(
+            comparisonID: id, provenance: .human("local-user")
+        ))], label: L10n.undoConfirmComparison)
+    }
+
+    /// Adds a criterion the person typed, or removes one.
+    @discardableResult
+    public func addCriterion(_ title: String, to id: ComparisonID) -> Bool {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else {
+            status = L10n.comparisonCriterionEmpty
+            return false
+        }
+        guard var comparison = comparison(id) else { return false }
+        comparison.criteria.append(Criterion(
+            id: CriterionID("criterion:" + UUID().uuidString), title: trimmed
+        ))
+        // Setting criteria is not confirming them. A draft stays a draft until the
+        // person presses the button that says so.
+        return perform([.setComparisonCriteria(.init(
+            comparisonID: id, criteria: comparison.criteria, provenance: .human("local-user")
+        ))], label: L10n.undoSetComparisonCriteria)
+    }
+
+    @discardableResult
+    public func removeCriterion(_ criterionID: CriterionID, from id: ComparisonID) -> Bool {
+        guard let comparison = comparison(id) else { return false }
+        let remaining = comparison.criteria.filter { $0.id != criterionID }
+        return perform([.setComparisonCriteria(.init(
+            comparisonID: id, criteria: remaining, provenance: .human("local-user")
+        ))], label: L10n.undoSetComparisonCriteria)
+    }
+
+    /// Records one cell, with the references it rests on read off the document.
+    ///
+    /// A number is only accepted for a criterion that has a measure, and the
+    /// interface never offers a number field for one that does not, so the refusal
+    /// in the command layer is the backstop rather than the friction.
+    @discardableResult
+    public func recordCell(
+        _ value: Cell.Value,
+        criterion: CriterionID,
+        direction: ObjectID,
+        in id: ComparisonID
+    ) -> Bool {
+        guard let comparison = comparison(id) else {
+            status = L10n.errorGeneric
+            return false
+        }
+        guard comparison.isDraft == false else {
+            status = L10n.comparisonIsDraft
+            return false
+        }
+        let references = references(for: direction)
+        var cell = Cell(
+            criterionID: criterion,
+            directionID: direction,
+            value: value,
+            references: references,
+            recordedBy: ActorID("local-user"),
+            recordedAt: Date()
+        )
+        // The revision each cited source was read against, so a cell whose source has
+        // moved on can be found later without re-reading anything.
+        for citation in document.sources.citations(supporting: direction) {
+            cell.referenceRevisions[citation.sourceID.rawValue] = citation.revisionID
+        }
+        // And the text each referenced object had, for the same reason.
+        for reference in references where reference.kind == .object {
+            cell.referenceFingerprints[reference.id] =
+                document.semanticFingerprint(for: [ObjectID(reference.id)])
+        }
+        return perform([.recordComparisonCell(.init(
+            comparisonID: id, cell: cell, provenance: .human("local-user")
+        ))], label: L10n.undoRecordCell)
+    }
+
+    /// What a cell can point at, read off the document rather than asked for.
+    private func references(for direction: ObjectID) -> [ComparisonReference] {
+        var found: [ComparisonReference] = []
+        for citation in document.sources.citations(supporting: direction) {
+            found.append(.init(kind: .citation, id: citation.id.rawValue))
+            found.append(.init(kind: .source, id: citation.sourceID.rawValue))
+        }
+        if let claim = claim(on: direction) {
+            found.append(.init(kind: .claim, id: claim.id.rawValue))
+        }
+        found.append(.init(kind: .object, id: direction.rawValue))
+        return found
+    }
+
+    /// States what a criterion is measured in, and which way is better. Nil means
+    /// "judged in words", which is a state the person chooses rather than a value
+    /// that is missing.
+    @discardableResult
+    public func setMeasure(
+        _ unit: String?,
+        higherIsBetter: Bool,
+        criterion: CriterionID,
+        in id: ComparisonID
+    ) -> Bool {
+        let trimmed = unit?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let measure: Measure? = trimmed.isEmpty ? nil : Measure(unit: trimmed, higherIsBetter: higherIsBetter)
+        return perform([.setCriterionMeasure(.init(
+            comparisonID: id, criterionID: criterion, measure: measure,
+            provenance: .human("local-user")
+        ))], label: L10n.undoSetMeasure)
+    }
+
+    @discardableResult
+    public func setWeight(_ weight: Double?, criterion: CriterionID, in id: ComparisonID) -> Bool {
+        perform([.setCriterionWeight(.init(
+            comparisonID: id, criterionID: criterion, weight: weight,
+            provenance: .human("local-user")
+        ))], label: L10n.undoSetWeight)
+    }
+
+    /// Keeps a direction. Nothing else is removed, and the reason is kept with it.
+    @discardableResult
+    public func keepDirection(_ direction: ObjectID, in id: ComparisonID) -> Bool {
+        perform([.keepDirection(.init(
+            comparisonID: id, directionID: direction, rationale: nil,
+            provenance: .human("local-user")
+        ))], label: L10n.undoKeepDirection)
+    }
+
+    /// Why the comparison needs looking at again, or nil.
+    public func comparisonNeedsReview(_ id: ComparisonID) -> ComparisonReviewReason? {
+        comparison(id)?.needsReview(in: document)
+    }
+
+    /// One line per direction for the card: its text, how many cells it has, and
+    /// whether it is kept.
+    public func comparisonRows(_ id: ComparisonID) -> [ComparisonDirectionRow] {
+        guard let comparison = comparison(id) else { return [] }
+        return comparison.directionIDs.compactMap { direction in
+            guard let object = object(direction) else { return nil }
+            return ComparisonDirectionRow(
+                id: direction,
+                title: object.text.text,
+                kind: object.kind,
+                cellCount: comparison.cells(for: direction).filter(\.value.isRecorded).count,
+                total: comparison.total(for: direction),
+                isKept: comparison.isKept(direction)
+            )
+        }
+    }
 
     // MARK: Frames
 
@@ -2650,4 +2886,35 @@ public enum FrameLayout {
     public static let headerHeight: Double = 26
     public static let collapsedWidth: Double = 190
     public static let collapsedHeight: Double = 34
+}
+
+
+/// One direction of a comparison, as the card reads it.
+///
+/// `total` is nil whenever the comparison does not define one, and the card shows
+/// nothing in that column rather than a zero: a zero would read as "this direction
+/// scored nothing", which is a claim the document cannot make.
+public struct ComparisonDirectionRow: Identifiable, Hashable, Sendable {
+    public var id: ObjectID
+    public var title: String
+    public var kind: ContentObject.Kind
+    public var cellCount: Int
+    public var total: Double?
+    public var isKept: Bool
+
+    public init(
+        id: ObjectID,
+        title: String,
+        kind: ContentObject.Kind,
+        cellCount: Int,
+        total: Double?,
+        isKept: Bool
+    ) {
+        self.id = id
+        self.title = title
+        self.kind = kind
+        self.cellCount = cellCount
+        self.total = total
+        self.isKept = isKept
+    }
 }

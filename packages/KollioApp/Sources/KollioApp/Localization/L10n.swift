@@ -228,6 +228,56 @@ public enum L10n {
     public static var undoFoldFrame: String { callAsFunction("undo.foldFrame") }
     public static var undoRemoveFrame: String { callAsFunction("undo.removeFrame") }
 
+    // Comparison: directions weighed against criteria, without invented scores
+    public static var comparisonAction: String { callAsFunction("comparison.action") }
+    public static var comparisonTitle: String { callAsFunction("comparison.title") }
+    public static var comparisonDefaultTitle: String { callAsFunction("comparison.defaultTitle") }
+    public static var comparisonNeedsTwo: String { callAsFunction("comparison.needsTwo") }
+    public static var comparisonCriterionEmpty: String { callAsFunction("comparison.criterionEmpty") }
+    public static var comparisonIsDraft: String { callAsFunction("comparison.isDraft") }
+    public static var comparisonDraftHint: String { callAsFunction("comparison.draftHint") }
+    public static var comparisonConfirm: String { callAsFunction("comparison.confirm") }
+    public static var comparisonCriteria: String { callAsFunction("comparison.criteria") }
+    public static var comparisonCriterionPlaceholder: String { callAsFunction("comparison.criterionPlaceholder") }
+    public static var comparisonAddCriterion: String { callAsFunction("comparison.addCriterion") }
+    public static var comparisonNoCriterion: String { callAsFunction("comparison.noCriterion") }
+    public static var comparisonNotRecorded: String { callAsFunction("comparison.notRecorded") }
+    public static var comparisonRecord: String { callAsFunction("comparison.record") }
+    public static var comparisonRecordValue: String { callAsFunction("comparison.recordValue") }
+    public static var comparisonValuePlaceholder: String { callAsFunction("comparison.valuePlaceholder") }
+    public static var comparisonNoMeasure: String { callAsFunction("comparison.noMeasure") }
+    public static var comparisonMeasure: String { callAsFunction("comparison.measure") }
+    public static var comparisonWeight: String { callAsFunction("comparison.weight") }
+    public static var comparisonUnitPlaceholder: String { callAsFunction("comparison.unitPlaceholder") }
+    public static var comparisonWeightPlaceholder: String { callAsFunction("comparison.weightPlaceholder") }
+    public static var comparisonDirectionHint: String { callAsFunction("comparison.directionHint") }
+    public static var comparisonWeightInvalid: String { callAsFunction("comparison.weightInvalid") }
+    public static var comparisonSave: String { callAsFunction("comparison.save") }
+    public static var comparisonNoTotal: String { callAsFunction("comparison.noTotal") }
+    public static var comparisonKeep: String { callAsFunction("comparison.keep") }
+    public static var comparisonKept: String { callAsFunction("comparison.kept") }
+    public static var comparisonKeepHint: String { callAsFunction("comparison.keepHint") }
+    /// %lld is how many things a cell rests on.
+    public static func comparisonReferences(_ count: Int) -> String {
+        String(format: callAsFunction("comparison.references"), count)
+    }
+    public static var comparisonNeedsReview: String { callAsFunction("comparison.needsReview") }
+    public static var comparisonReviewGone: String { callAsFunction("comparison.reviewGone") }
+    public static var comparisonReviewObjectChanged: String { callAsFunction("comparison.reviewObjectChanged") }
+    public static var comparisonReviewEvidenceMoved: String { callAsFunction("comparison.reviewEvidenceMoved") }
+    /// %lld is how many cells of a direction hold something.
+    public static func comparisonCellCount(_ count: Int) -> String {
+        String(format: callAsFunction("comparison.cellCount"), count)
+    }
+    public static var comparisonClose: String { callAsFunction("comparison.close") }
+    public static var undoStartComparison: String { callAsFunction("undo.startComparison") }
+    public static var undoSetComparisonCriteria: String { callAsFunction("undo.setComparisonCriteria") }
+    public static var undoConfirmComparison: String { callAsFunction("undo.confirmComparison") }
+    public static var undoRecordCell: String { callAsFunction("undo.recordCell") }
+    public static var undoSetWeight: String { callAsFunction("undo.setWeight") }
+    public static var undoSetMeasure: String { callAsFunction("undo.setMeasure") }
+    public static var undoKeepDirection: String { callAsFunction("undo.keepDirection") }
+
     // Undo labels
     public static var undoMove: String { callAsFunction("undo.move") }
     public static var actionDuplicateOccurrence: String { callAsFunction("action.duplicateOccurrence") }

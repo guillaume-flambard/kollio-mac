@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		DB40AD4145CD1370B6781EE7 /* KollioApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CE6A9133B8E50289B0A87E /* KollioApp.swift */; };
+		10F8CB2D7D30D2211FD8E9AE /* ComparisonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9779982FB7609BD2B6F578E6 /* ComparisonView.swift */; };
 		A686C74D9BF4017208657CCB /* ContextualActionSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00B9378EF955013031F86DA /* ContextualActionSet.swift */; };
 		AE330C2613E8DA0A95394DCA /* ContextualViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327F089F1E9542437CF4D0BA /* ContextualViews.swift */; };
 		2D599205436A6EE6EDCCE95E /* ProposalViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1562A6F0E1A1E1FB3F4E6C20 /* ProposalViews.swift */; };
@@ -38,6 +39,7 @@
 
 /* Begin PBXFileReference section */
 		D0CE6A9133B8E50289B0A87E /* KollioApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = KollioApp.swift; path = ../../packages/KollioApp/Sources/KollioApp/App/KollioApp.swift; sourceTree = SOURCE_ROOT; };
+		9779982FB7609BD2B6F578E6 /* ComparisonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ComparisonView.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Components/ComparisonView.swift; sourceTree = SOURCE_ROOT; };
 		E00B9378EF955013031F86DA /* ContextualActionSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContextualActionSet.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Components/ContextualActionSet.swift; sourceTree = SOURCE_ROOT; };
 		327F089F1E9542437CF4D0BA /* ContextualViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContextualViews.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Components/ContextualViews.swift; sourceTree = SOURCE_ROOT; };
 		1562A6F0E1A1E1FB3F4E6C20 /* ProposalViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProposalViews.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Components/ProposalViews.swift; sourceTree = SOURCE_ROOT; };
@@ -124,6 +126,7 @@
 		F3B06D14FE62ECBB42E2B074 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				9779982FB7609BD2B6F578E6 /* ComparisonView.swift */,
 				E00B9378EF955013031F86DA /* ContextualActionSet.swift */,
 				327F089F1E9542437CF4D0BA /* ContextualViews.swift */,
 				1562A6F0E1A1E1FB3F4E6C20 /* ProposalViews.swift */,
@@ -297,6 +300,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DB40AD4145CD1370B6781EE7 /* KollioApp.swift in Sources */,
+				10F8CB2D7D30D2211FD8E9AE /* ComparisonView.swift in Sources */,
 				A686C74D9BF4017208657CCB /* ContextualActionSet.swift in Sources */,
 				AE330C2613E8DA0A95394DCA /* ContextualViews.swift in Sources */,
 				2D599205436A6EE6EDCCE95E /* ProposalViews.swift in Sources */,

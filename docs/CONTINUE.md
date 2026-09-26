@@ -573,6 +573,71 @@ directly to put a frame on screen, because selecting two objects and choosing th
 action needs clicks this environment refuses. **Dark appearance is not captured.**
 Both are owed to a person.
 
+## Latest batch: AI-05, compare directions without inventing scores
+
+A comparison is a record of what a person weighed against what, and every part of
+it exists to stop a number from being smarter than the person who wrote it. A
+criterion without a `Measure` **cannot** hold a number, refused in the command
+layer as `criterionHasNoMeasure` while words are accepted on the same criterion.
+`total(for:)` returns nil the moment one criterion is unmeasured, unweighted or
+unrecorded, and a weight nobody typed is an absent weight, never one. A signed sum
+over explicitly defined terms, and nothing else: no default weight, no average
+over whatever happens to be present, no global score to compare across
+comparisons.
+
+**"Not recorded" is a value.** It is a first-class state, so a column of unknowns
+can never be read as a column of bad results, and the card says "Non renseigné"
+rather than showing a zero or a blank.
+
+**Keeping one direction deletes nothing.** `keptDirectionIDs` is a list, and
+every sibling cell and the document itself come back byte-identical afterwards. A
+comparison records; it does not decide.
+
+**A change is derived, not flagged.** Each cell stores the fingerprint of every
+object it was recorded against and the revision of every source it read. A
+comparison whose object has since been edited, or whose source has a newer
+revision, says so by walking those references, so it cannot quietly present a
+check that was made against different text. A flag could only be set by something
+remembering to set it.
+
+### Two defects the review found in my own work
+
+**Setting the criteria silently confirmed the comparison.** The first version had
+one command doing both, so typing a single criterion into a draft confirmed the
+whole set behind the person's back, which is the exact shortcut a draft exists to
+prevent. `SetComparisonCriteria` and `ConfirmComparisonCriteria` are now two
+commands, and a test asserts the draft is still a draft after the first press.
+
+**The card displayed measures and weights but could not set them.** A criterion
+nobody can measure is a criterion nobody can sum, so the whole of the "total only
+when the terms are defined" rule was unreachable from the interface. Each criterion
+row now opens one editor for its unit, its direction and its weight, and a blank
+unit or a blank weight is stored as an absent one.
+
+The draft's criteria are proposed from the claims already in the selection, in the
+person's own words, and say so. Not from a model: a model's criteria would be an
+interpretation of the document's reasoning, and this is the place where an invented
+question is the whole failure.
+
+Nineteen tests in `ComparisonTests`, sixteen in `ComparisonInterfaceTests`.
+`verify.sh`: 162 KollioCore, 290 KollioApp, 29 server, exit 0, **zero warnings**.
+29 `automatedVerified`, 1 `humanVerified`, 41 `specified`. `schemaVersion` is now
+5, the JSON schema declares the measure, the minimum of two directions and the
+value shape, and a cell's value is written as a discriminated kind rather than the
+synthesised `{"number":{"_0":3}}` a person cannot read.
+
+### What was captured, and what was not
+
+A document carrying a saved comparison was loaded into the running app and the
+canvas is unchanged: no error banner, the frame and its folded chip as before, and
+the comparison itself stored and intact. `build/kollio-comparison.png`, captured
+by window id and inspected. The file was restored afterwards and its checksum
+verified against the backup.
+
+**The comparison card has not been seen on a screen.** Opening it needs two
+selected objects and an action behind a menu, and no click can be injected here.
+**Dark appearance is not captured.** Both are owed to a person.
+
 ## The next things worth doing, in this order
 
 1. The human pass, which is owed and which no test substitutes for. Three things
@@ -588,9 +653,10 @@ Both are owed to a person.
    camera's visible rectangle to cull. Connector routing samples its curve, so this is where the
    cost will show.
 6. Keyboard traversal between objects, so the canvas is usable without a pointer.
-7. **AI-05, AI-06, AI-11, AI-12**, the rest of L3, then CAN-09 and CAN-10. They
-   are the remaining lots with verified prerequisites: the context chapter is
-   finished and the canvas has one chapter left.
+7. **AI-06, synthesise and prepare a deliverable**, then AI-11, AI-12, CAN-09 and
+   CAN-10. Those are the remaining L3 lots, and each one now has the layer it
+   needs: a comparison is a reading, a synthesis is a derivative that must never
+   replace its sources.
 8. Only then, and only with explicit permission: a small live Groq test, or a PCC eligibility check.
    Everything the transport needs is in place and mocked; what is missing is evidence about a live
    model, not plumbing.

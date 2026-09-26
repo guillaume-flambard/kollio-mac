@@ -152,6 +152,15 @@ public struct ProposalValidator: Sendable {
                 // A model that could create or fold a frame would be reorganising a
                 // person's thinking to make its own output easier to present.
                 throw DocumentError.forbiddenOperation("arranging the canvas is the user's to do")
+            case .startComparison, .setComparisonCriteria, .confirmComparisonCriteria,
+                 .recordComparisonCell,
+                 .setCriterionWeight, .setCriterionMeasure, .keepDirection:
+                // A comparison is a record of what a person weighed against what.
+                // Intelligence may interpret a document; it may not write down that
+                // one direction scored higher, and it may certainly not keep a
+                // direction on the person's behalf, because keeping is a decision
+                // with a rationale.
+                throw DocumentError.forbiddenOperation("a comparison is the user's to record")
             case .applyImpact:
                 // CTX-05: "intelligence may propose interpretations, never apply
                 // them". An assessment is already a bounded interpretation, and

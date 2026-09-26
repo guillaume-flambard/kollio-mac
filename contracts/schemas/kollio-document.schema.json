@@ -19,8 +19,8 @@
     "schemaVersion": {
       "type": "integer",
       "minimum": 1,
-      "maximum": 4,
-      "description": "2 added `sources`, 3 added `claims`, 4 added `clarifications`. A file written before any of them is a document without them, not a broken one."
+      "maximum": 5,
+      "description": "2 added `sources`, 3 added `claims`, 4 added `clarifications`, 5 added `comparisons`. A file written before any of them is a document without them, not a broken one."
     },
     "documentId": {
       "type": "string"
@@ -120,6 +120,27 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/clarification"
+          }
+        }
+      }
+    },
+    "comparisons": {
+      "type": "object",
+      "description": "Comparisons of directions, criterion by criterion. Absent before version 5. A comparison keeps the references each cell rests on, and a cell with no measure may hold no number: the schema states both, so a file that carried a rating without a measure would not validate.",
+      "additionalProperties": false,
+      "properties": {
+        "comparisons": {
+          "type": "array",
+          "description": "Keyed by comparison id in the alternating `[id, value]` form the codec uses for a keyed container of single-value keys, exactly like `sources`, `claims` and `clarifications`.",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/comparison"
+              }
+            ]
           }
         }
       }
@@ -1139,6 +1160,217 @@
           }
         }
       ]
+    },
+    "measure": {
+      "type": "object",
+      "description": "What a number would have to be measured against. Required before a criterion may hold a number.",
+      "required": [
+        "unit",
+        "higherIsBetter"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "unit": {
+          "type": "string",
+          "description": "The unit the person wrote. No conversion is implied."
+        },
+        "higherIsBetter": {
+          "type": "boolean",
+          "description": "Which way a bigger number is better. Stated, never guessed."
+        }
+      }
+    },
+    "criterion": {
+      "type": "object",
+      "required": [
+        "id",
+        "title"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "description": "The question this criterion asks."
+        },
+        "measure": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/measure"
+            }
+          ],
+          "description": "Null means judged in words, which is a real state."
+        },
+        "weight": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Null means unweighted. There is no default weight, and a total is undefined without one."
+        }
+      }
+    },
+    "comparisonReference": {
+      "type": "object",
+      "required": [
+        "kind",
+        "id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "citation",
+            "claim",
+            "source",
+            "object",
+            "note"
+          ]
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "comparisonCell": {
+      "type": "object",
+      "required": [
+        "criterionID",
+        "directionID",
+        "value"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "criterionID": {
+          "type": "string"
+        },
+        "directionID": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/comparisonValue"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/comparisonReference"
+          },
+          "description": "What the cell rests on. Part of the cell, so a comparison cannot be read without being checkable."
+        },
+        "referenceRevisions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The source revision each source reference was read against, by source id."
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recordedBy": {
+          "type": "string"
+        },
+        "recordedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "referenceFingerprints": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The semantic fingerprint of each referenced object when the cell was recorded. A cell whose object has since been edited is a cell about a different sentence."
+        }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "directionIDs",
+        "criteria",
+        "cells",
+        "keptDirectionIDs",
+        "isDraft"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "directionIDs": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string"
+          },
+          "description": "Two or more. A comparison of one direction is refused, not offered."
+        },
+        "criteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          }
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/comparisonCell"
+          }
+        },
+        "keptDirectionIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Explicit and cumulative. Keeping one direction never removes another."
+        },
+        "isDraft": {
+          "type": "boolean",
+          "description": "True until the criteria are confirmed. A draft accepts no cell at all."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "comparisonValue": {
+      "type": "object",
+      "description": "A discriminated value rather than the synthesised associated-value form, so a person reading the file can see what kind of value it is. `notRecorded` is a first-class state, so a missing value is never a zero; a number is only reachable when the criterion carries a measure, which the command layer enforces.",
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "notRecorded",
+            "number",
+            "text"
+          ]
+        },
+        "value": {
+          "type": [
+            "number",
+            "string"
+          ]
+        }
+      }
     }
   }
 }

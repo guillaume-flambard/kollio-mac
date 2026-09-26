@@ -142,6 +142,16 @@ Recorded 2026-09-25, on an arm64 Mac, macOS 27.0 (26A428), Xcode 27.0, SDK 27.0.
   is the correct behaviour and is easy to trip over when writing a fixture by hand.
   Found while seeding a document to put a frame on screen.
 
+- **AI-05's card has never been seen on a screen.** Everything it does is covered by
+  `ComparisonInterfaceTests` and `ComparisonTests`, and a saved comparison loads
+  into the running app without disturbing the canvas, but the card needs two
+  selected objects and an action behind the secondary menu, and no click can be
+  injected in this environment. Its layout, its grid and its two editors are
+  unverified by a person.
+- A criterion can be given **one number** as its weight. A criterion that should be
+  compared as a range, or whose weight depends on the direction being weighed, is
+  not expressible, and a total is therefore defined over single numbers only.
+
 ## Simulated or approximated
 
 - **The offline "intelligence"** is a rule engine with authored demo content, not a language model. It

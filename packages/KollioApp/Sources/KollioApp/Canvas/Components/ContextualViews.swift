@@ -109,6 +109,8 @@ struct ContextualActions: View {
             model.requestRemoveFromDocument(target)
         case .reviewImpact:
             _ = model.reviewImpact(of: target)
+        case .compareDirections:
+            _ = model.startComparison()
         case .groupInFrame:
             // The frame is created around the selection and named immediately: a
             // frame is named by the person who makes it, not by the app.

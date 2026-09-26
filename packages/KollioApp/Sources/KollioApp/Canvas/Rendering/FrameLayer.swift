@@ -176,14 +176,20 @@ struct FrameLayer: View {
     // colour appears in this file, in either appearance.
 }
 
-/// One small control in a frame's header or chip.
+/// One small control in a frame's header or in a comparison's criterion row.
+///
+/// Shared by the two, deliberately: both are places where a person needs a named
+/// control that is not a row of buttons pretending to be evidence, and two icons
+/// that mean the same thing in two files would drift apart within a week.
 ///
 /// A plain button with a label, so it is reachable by keyboard and named by VoiceOver
 /// rather than being an icon with a tooltip and nothing else.
-private struct FrameIconButton: View {
+struct FrameIconButton: View {
     let systemImage: String
     let label: String
-    let hint: String
+    /// Optional: a frame's own controls have something to say beyond their name, and
+    /// a small icon in a criterion row does not.
+    var hint: String = ""
     let action: () -> Void
 
     @Environment(\.kollioTheme) private var theme

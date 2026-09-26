@@ -47,6 +47,8 @@ public struct ContextualActionSet: Hashable, Sendable {
         case reviewImpact
         /// Put the selection in a named frame, and name it.
         case groupInFrame
+        /// Weigh the selected directions against criteria, without inventing scores.
+        case compareDirections
 
         /// The French and English label lives in `L10n`, not here, so the String
         /// Catalog stays the only place an interface string is written.
@@ -67,6 +69,7 @@ public struct ContextualActionSet: Hashable, Sendable {
             case .removeObject: return "action.removeObject"
             case .reviewImpact: return "impact.reviewAction"
             case .groupInFrame: return "frame.group"
+            case .compareDirections: return "comparison.action"
             }
         }
     }
@@ -106,7 +109,8 @@ public struct ContextualActionSet: Hashable, Sendable {
         case .duplicateVariant, .removeObject:
             return .meaning
         case .explore, .add, .setAside, .reopen, .edit, .addSource,
-             .assertClaim, .link, .comment, .reviewImpact, .groupInFrame:
+             .assertClaim, .link, .comment, .reviewImpact, .groupInFrame,
+             .compareDirections:
             return .meaning
         }
     }
@@ -140,7 +144,8 @@ public struct ContextualActionSet: Hashable, Sendable {
         canAttachSource: Bool,
         canAssertClaim: Bool,
         canReviewImpact: Bool = false,
-        canGroupInFrame: Bool = false
+        canGroupInFrame: Bool = false,
+        canCompareDirections: Bool = false
     ) -> ContextualActionSet {
         if canReopen {
             return ContextualActionSet(primary: [.reopen], secondary: [], isDefault: .reopen)
@@ -158,6 +163,9 @@ public struct ContextualActionSet: Hashable, Sendable {
         // Offered only with something selected, because the frame's members are the
         // current selection. A frame around nothing is not a mistake to allow.
         if canGroupInFrame { secondary.append(.groupInFrame) }
+        // Only with two directions selected. A comparison of one thing is a note,
+        // and the action is not offered rather than offered and refused.
+        if canCompareDirections { secondary.append(.compareDirections) }
         // Not implemented yet, so not offered. A disabled button is worse than an
         // absent one, and the specification forbids a decorative action.
         //

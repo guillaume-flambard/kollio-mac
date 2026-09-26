@@ -207,6 +207,10 @@ struct CanvasView: View {
             // Above the citations it was opened from, and below nothing else: it is
             // the most specific thing on screen, because it is about one claim and
             // the objects that explicitly depend on it.
+            if let id = model.openComparison {
+                ComparisonView(model: model, id: id)
+                    .position(comparisonPosition(viewport: viewport))
+            }
             if let id = model.renamingFrameID {
                 FrameNameView(model: model, id: id)
                     .position(frameNamePosition(id, viewport: viewport))
@@ -298,6 +302,14 @@ struct CanvasView: View {
 
     /// Where the name field opens: at the top-left corner of the frame it names, so
     /// the name is typed where the name is drawn.
+    /// Where the comparison opens: on the left of the window, because it is a table
+    /// rather than a card about one object, and a table centred over the canvas would
+    /// sit on top of the very nodes it is describing.
+    private func comparisonPosition(viewport: CGSize) -> CGPoint {
+        CGPoint(x: min(max(260, viewport.width / 2 - 520), viewport.width - 260),
+                y: min(max(320, viewport.height / 2), viewport.height - 320))
+    }
+
     private func frameNamePosition(_ id: FrameID, viewport: CGSize) -> CGPoint {
         guard let frame = model.frame(id) else {
             return CGPoint(x: viewport.width / 2, y: viewport.height / 2)

@@ -3189,6 +3189,744 @@
           }
         }
       }
+    },
+    "comparison.action": {
+      "comment": "Compare the selected directions criterion by criterion.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparer"
+          }
+        }
+      }
+    },
+    "comparison.title": {
+      "comment": "The card AI-05 asks for: what was weighed against what.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparison"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparaison"
+          }
+        }
+      }
+    },
+    "comparison.defaultTitle": {
+      "comment": "The name a comparison gets before the person renames it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Directions"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pistes"
+          }
+        }
+      }
+    },
+    "comparison.needsTwo": {
+      "comment": "Said when a comparison is asked for with fewer than two directions.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select at least two directions to compare"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sélectionnez au moins deux pistes à comparer"
+          }
+        }
+      }
+    },
+    "comparison.criterionEmpty": {
+      "comment": "A criterion with no words is not a question.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write what to weigh them on"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écrivez le critère"
+          }
+        }
+      }
+    },
+    "comparison.isDraft": {
+      "comment": "Said when a cell is recorded against unconfirmed criteria.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the criteria first"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmez d’abord les critères"
+          }
+        }
+      }
+    },
+    "comparison.draftHint": {
+      "comment": "Explains that the draft's criteria come from the document, and that nothing is recorded until they are confirmed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These come from the criteria already written on the claims. Nothing is recorded until you confirm them."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elles viennent des critères déjà écrits sur les affirmations. Rien n’est enregistré tant que vous ne les confirmez pas."
+          }
+        }
+      }
+    },
+    "comparison.confirm": {
+      "comment": "Confirms the criteria so cells can be recorded. Explicit: a criterion nobody agreed to holds nothing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm these criteria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmer ces critères"
+          }
+        }
+      }
+    },
+    "comparison.criteria": {
+      "comment": "Heading of the criteria list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weighed on"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Critères"
+          }
+        }
+      }
+    },
+    "comparison.criterionPlaceholder": {
+      "comment": "Placeholder of the criterion field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What matters here"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce qui compte ici"
+          }
+        }
+      }
+    },
+    "comparison.addCriterion": {
+      "comment": "Adds a criterion the person typed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter"
+          }
+        }
+      }
+    },
+    "comparison.noCriterion": {
+      "comment": "Said when a comparison has no criteria yet. A comparison with no question has no cells.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No criteria yet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun critère"
+          }
+        }
+      }
+    },
+    "comparison.notRecorded": {
+      "comment": "The state of a cell nobody filled in. A real answer, not a zero.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not recorded"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non renseigné"
+          }
+        }
+      }
+    },
+    "comparison.recordValue": {
+      "comment": "Opens the input for one cell. The input is the action: there is no button that scores a direction.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renseigner"
+          }
+        }
+      }
+    },
+    "comparison.valuePlaceholder": {
+      "comment": "Placeholder of the cell input.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you observed"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce que vous avez observé"
+          }
+        }
+      }
+    },
+    "comparison.noMeasure": {
+      "comment": "Said on a criterion that cannot hold a number, which is why no number field is offered.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Judged in words"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jugé en mots"
+          }
+        }
+      }
+    },
+    "comparison.measure": {
+      "comment": "The unit a number would be counted in, and which way is better. Required before a cell can hold a number.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measured in"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesuré en"
+          }
+        }
+      }
+    },
+    "comparison.weight": {
+      "comment": "How much a criterion counts, when the person says so. There is no default weight.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poids"
+          }
+        }
+      }
+    },
+    "comparison.noTotal": {
+      "comment": "Shown instead of a total when the terms are not all defined. Never a zero.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No total yet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas encore de total"
+          }
+        }
+      }
+    },
+    "comparison.keep": {
+      "comment": "Keeps one direction. The others stay in the comparison with their cells.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garder"
+          }
+        }
+      }
+    },
+    "comparison.kept": {
+      "comment": "The state of a direction that has been kept.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kept"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gardée"
+          }
+        }
+      }
+    },
+    "comparison.keepHint": {
+      "comment": "Says what keeping does not do, which is the surprising half.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The other directions stay here, with everything recorded."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les autres pistes restent ici, avec tout ce qui a été renseigné."
+          }
+        }
+      }
+    },
+    "comparison.references": {
+      "comment": "What a cell rests on. %lld is the count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld reference(s)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld référence(s)"
+          }
+        }
+      }
+    },
+    "comparison.needsReview": {
+      "comment": "Said when something a cell rests on has changed since it was recorded.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs review"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À revoir"
+          }
+        }
+      }
+    },
+    "comparison.reviewGone": {
+      "comment": "A reference a cell pointed at is not in the document any more.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something it pointed at is gone"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce qu’il pointait a disparu"
+          }
+        }
+      }
+    },
+    "comparison.reviewObjectChanged": {
+      "comment": "The object a cell was recorded against has been edited since.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text it was recorded against has changed"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le texte utilisé a changé"
+          }
+        }
+      }
+    },
+    "comparison.reviewEvidenceMoved": {
+      "comment": "A source behind a cell has a newer revision, or its citation is no longer verified.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Its source has moved on"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sa source a changé"
+          }
+        }
+      }
+    },
+    "comparison.cellCount": {
+      "comment": "How many cells of a direction are recorded. %lld is the count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld recorded"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld renseignée(s)"
+          }
+        }
+      }
+    },
+    "comparison.close": {
+      "comment": "Closes the comparison card without changing anything.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
+          }
+        }
+      }
+    },
+    "undo.startComparison": {
+      "comment": "Undo label: removes the comparison and its cells.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the comparison"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler la comparaison"
+          }
+        }
+      }
+    },
+    "undo.confirmComparison": {
+      "comment": "Undo label: the criteria return to being a draft. Distinct from undo.setComparisonCriteria, because an undo menu offering the same words twice tells a person nothing about which press they want.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo confirming the criteria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler la confirmation des critères"
+          }
+        }
+      }
+    },
+    "undo.recordCell": {
+      "comment": "Undo label: one step puts the cell's previous value back.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the cell"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler la case"
+          }
+        }
+      }
+    },
+    "undo.setWeight": {
+      "comment": "Undo label: the criterion's previous weight.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the weight"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler le poids"
+          }
+        }
+      }
+    },
+    "undo.keepDirection": {
+      "comment": "Undo label: the direction is no longer marked as kept.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo keeping it"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler le fait de la garder"
+          }
+        }
+      }
+    },
+    "undo.setMeasure": {
+      "comment": "Undo label: the criterion's measure returns to what it was.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the measure"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler la mesure"
+          }
+        }
+      }
+    },
+    "undo.setComparisonCriteria": {
+      "comment": "Undo label: the criteria return to what they were. Setting criteria does not confirm them.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the criteria"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler les critères"
+          }
+        }
+      }
+    },
+    "comparison.unitPlaceholder": {
+      "comment": "Placeholder of the unit a criterion is measured in. Blank means judged in words.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "days"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "jours"
+          }
+        }
+      }
+    },
+    "comparison.weightPlaceholder": {
+      "comment": "Placeholder of the weight field. Blank means unweighted, and no default is invented.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1"
+          }
+        }
+      }
+    },
+    "comparison.directionHint": {
+      "comment": "Says what the + and − mean, because guessing which way is better is how a comparison recommends the expensive option.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+ means a bigger number is better, − means smaller"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+ : un plus grand nombre est meilleur, − : un plus petit"
+          }
+        }
+      }
+    },
+    "comparison.weightInvalid": {
+      "comment": "Said when a weight that is not a number is typed. It is not rounded into one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That is not a weight"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce n’est pas un poids"
+          }
+        }
+      }
+    },
+    "comparison.save": {
+      "comment": "Saves the measure and the weight of one criterion.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -37,6 +37,13 @@ public enum Command: Codable, Hashable, Sendable {
     case moveFrame(MoveFrame)
     case setFrameFolded(SetFrameFolded)
     case removeFrame(RemoveFrame)
+    case startComparison(StartComparison)
+    case setComparisonCriteria(SetComparisonCriteria)
+    case confirmComparisonCriteria(ConfirmComparisonCriteria)
+    case recordComparisonCell(RecordComparisonCell)
+    case setCriterionWeight(SetCriterionWeight)
+    case setCriterionMeasure(SetCriterionMeasure)
+    case keepDirection(KeepDirection)
 
     /// Presentation-only commands never change the meaning of the document.
     public var isSemantic: Bool {
@@ -60,7 +67,13 @@ public enum Command: Codable, Hashable, Sendable {
              .removeSource, .assertClaim, .assessHypothesis, .resolveConstraint,
              .duplicateObject, .removeObject,
              .askClarification, .answerClarification, .markClarificationUnknown,
-             .editRelationship, .applyImpact:
+             .editRelationship, .applyImpact,
+             .startComparison, .setComparisonCriteria, .confirmComparisonCriteria,
+             .recordComparisonCell,
+             .setCriterionWeight, .setCriterionMeasure, .keepDirection:
+            // A comparison is a record of what a person weighed against what, so it
+            // is meaning rather than layout. Setting it aside is what presentation
+            // only buys you.
             return true
         }
     }
@@ -102,6 +115,13 @@ public enum Command: Codable, Hashable, Sendable {
         case .moveFrame: return "undo.moveFrame"
         case .setFrameFolded: return "undo.foldFrame"
         case .removeFrame: return "undo.removeFrame"
+        case .startComparison: return "undo.startComparison"
+        case .setComparisonCriteria: return "undo.setComparisonCriteria"
+        case .confirmComparisonCriteria: return "undo.confirmComparison"
+        case .recordComparisonCell: return "undo.recordComparisonCell"
+        case .setCriterionWeight: return "undo.setCriterionWeight"
+        case .setCriterionMeasure: return "undo.setCriterionMeasure"
+        case .keepDirection: return "undo.keepDirection"
         }
     }
 }
@@ -665,5 +685,129 @@ public struct RemoveFrame: Codable, Hashable, Sendable {
 
     public init(id: FrameID) {
         self.id = id
+    }
+}
+
+
+// MARK: - Comparison
+//
+// A comparison records what a person weighed against what. Nothing here computes
+// an opinion: the commands store what was said, and `Comparison.total(for:)`
+// refuses to produce a number the person did not define the terms for.
+
+/// Opens a comparison over two or more existing objects.
+public struct StartComparison: Codable, Hashable, Sendable {
+    public var comparison: Comparison
+    public var provenance: Provenance
+
+    public init(comparison: Comparison, provenance: Provenance) {
+        self.comparison = comparison
+        self.provenance = provenance
+    }
+}
+
+/// Replaces the criteria of a comparison, **without** confirming it.
+///
+/// Separate from `ConfirmComparisonCriteria` because the two are different acts and
+/// the first version merged them: adding a criterion to a draft silently confirmed
+/// the whole comparison, which is exactly the shortcut the draft exists to prevent.
+/// A person who types a criterion has agreed to *that criterion*; agreeing to the
+/// set, and therefore to recording values against it, is a separate press.
+public struct SetComparisonCriteria: Codable, Hashable, Sendable {
+    public var comparisonID: ComparisonID
+    public var criteria: [Criterion]
+    public var provenance: Provenance
+
+    public init(comparisonID: ComparisonID, criteria: [Criterion], provenance: Provenance) {
+        self.comparisonID = comparisonID
+        self.criteria = criteria
+        self.provenance = provenance
+    }
+}
+
+/// Confirms the criteria that are there, so cells can be recorded against them.
+///
+/// Explicit, and it carries no criteria of its own: confirming is agreeing to the
+/// set as it stands, and a command that could bring its own list would be a way to
+/// confirm something other than what is on screen.
+public struct ConfirmComparisonCriteria: Codable, Hashable, Sendable {
+    public var comparisonID: ComparisonID
+    public var provenance: Provenance
+
+    public init(comparisonID: ComparisonID, provenance: Provenance) {
+        self.comparisonID = comparisonID
+        self.provenance = provenance
+    }
+}
+
+/// Records or corrects one cell.
+///
+/// The comparison is named on the command rather than on the cell. The cell is
+/// stored inside its comparison, so naming it there would be a second place for one
+/// fact to live; the first version left it off the cell entirely and had the store
+/// *search* every comparison for the owner of the criterion, which would have put a
+/// cell into the wrong comparison the day two comparisons reused a criterion.
+public struct RecordComparisonCell: Codable, Hashable, Sendable {
+    public var comparisonID: ComparisonID
+    public var cell: Cell
+    public var provenance: Provenance
+
+    public init(comparisonID: ComparisonID, cell: Cell, provenance: Provenance) {
+        self.comparisonID = comparisonID
+        self.cell = cell
+        self.provenance = provenance
+    }
+}
+
+/// Sets or removes a criterion's weight. `nil` removes it, and a removed weight is
+/// not a weight of one.
+public struct SetCriterionWeight: Codable, Hashable, Sendable {
+    public var comparisonID: ComparisonID
+    public var criterionID: CriterionID
+    public var weight: Double?
+    public var provenance: Provenance
+
+    public init(comparisonID: ComparisonID, criterionID: CriterionID, weight: Double?, provenance: Provenance) {
+        self.comparisonID = comparisonID
+        self.criterionID = criterionID
+        self.weight = weight
+        self.provenance = provenance
+    }
+}
+
+/// States, or removes, what a criterion is measured in and which way is better.
+///
+/// Its own command rather than a field on `SetCriterionWeight` because the two
+/// facts are decided at different moments and for different reasons: a person
+/// usually knows what a criterion is *about* long before they know how much it
+/// counts, and a criterion that is judged in words has no measure at all.
+public struct SetCriterionMeasure: Codable, Hashable, Sendable {
+    public var comparisonID: ComparisonID
+    public var criterionID: CriterionID
+    /// Nil means "judged in words", which is a real state and not a missing value.
+    public var measure: Measure?
+    public var provenance: Provenance
+
+    public init(comparisonID: ComparisonID, criterionID: CriterionID, measure: Measure?, provenance: Provenance) {
+        self.comparisonID = comparisonID
+        self.criterionID = criterionID
+        self.measure = measure
+        self.provenance = provenance
+    }
+}
+
+/// Keeps a direction. Names one and removes nothing, which is AC03 in the shape of
+/// a command: there is no version of it that deletes a sibling.
+public struct KeepDirection: Codable, Hashable, Sendable {
+    public var comparisonID: ComparisonID
+    public var directionID: ObjectID
+    public var rationale: String?
+    public var provenance: Provenance
+
+    public init(comparisonID: ComparisonID, directionID: ObjectID, rationale: String? = nil, provenance: Provenance) {
+        self.comparisonID = comparisonID
+        self.directionID = directionID
+        self.rationale = rationale
+        self.provenance = provenance
     }
 }
