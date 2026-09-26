@@ -31,7 +31,12 @@ TODO = ROOT / "openspec" / "todo.md"
 # A feature heading: **DOC-02 — Enter a context and begin.** *SOLO. DOC-01.*
 FEATURE = re.compile(
     r"^\*\*(?P<id>[A-Z]+-\d{2}) — (?P<title>.+?)\.\*\*\s*"
-    r"\*(?P<sets>[^*]+)\.\s*(?P<prereq>[^*]*)\*\s*$"
+    # The delivery-set group is non-greedy on purpose. With a greedy `[^*]+` it
+    # swallowed the prerequisites as well, so all 71 features were generated with
+    # an empty dependency list, and anything scheduling from those views would
+    # treat every feature as ready. The prerequisites are the whole point of the
+    # generated order, so they are worth one character.
+    r"\*(?P<sets>[^*]+?)\.\s*(?P<prereq>[^*]*)\*\s*$"
 )
 ACCEPTANCE = re.compile(r"AC(?P<n>\d{2})\b")
 SECTION = re.compile(r"^## (?P<name>[A-Z].*)$")
@@ -192,7 +197,7 @@ def parse() -> list[dict]:
             if match:
                 lot = match.group(1)
                 features_seen = match.group(3)
-                for fid in re.findall(r"[A-Z]{3,4}-\d{2}", features_seen):
+                for fid in re.findall(r"[A-Z]{2,4}-\d{2}", features_seen):
                     for feature in features:
                         if feature["id"] == fid:
                             feature.setdefault("lots", []).append(lot)
@@ -208,7 +213,7 @@ def parse() -> list[dict]:
                 "capability": CAPABILITY_OF_PREFIX.get(prefix, "other"),
                 "deliverySets": [s.strip() for s in heading.group("sets").split(",")],
                 "prerequisites": [
-                    p.strip() for p in re.findall(r"[A-Z]{3,4}-\d{2}", heading.group("prereq"))
+                    p.strip() for p in re.findall(r"[A-Z]{2,4}-\d{2}", heading.group("prereq"))
                 ],
                 "acceptanceCriteria": [],
                 "section": section,

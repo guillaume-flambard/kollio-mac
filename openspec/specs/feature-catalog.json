@@ -26,15 +26,20 @@
       "title": "Availability and choice of intelligence",
       "capability": "intelligence",
       "deliverySets": [
-        "SOLO. DOC-08"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "DOC-08"
+      ],
       "acceptanceCriteria": [
         "AI-01-AC01",
         "AI-01-AC02",
         "AI-01-AC03"
       ],
       "section": "Intelligence",
+      "lots": [
+        "L2"
+      ],
       "lot": "L2",
       "status": "automatedVerified",
       "evidence": "AppleAdapterTests: every availability state is a refusal, never a fallback."
@@ -44,11 +49,13 @@
       "title": "First exploration of your own context",
       "capability": "intelligence",
       "deliverySets": [
-        "SOLO. DOC-02",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "DOC-02",
         "AI-01",
         "CTX-06"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "AI-02-AC01",
         "AI-02-AC02",
@@ -64,10 +71,12 @@
       "title": "Explore a branch",
       "capability": "intelligence",
       "deliverySets": [
-        "SOLO. AI-02",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "AI-02",
         "CAN-08"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "AI-03-AC01",
         "AI-03-AC02",
@@ -82,10 +91,12 @@
       "title": "Answer a clarification",
       "capability": "intelligence",
       "deliverySets": [
-        "SOLO. AI-03",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "AI-03",
         "CTX-01"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "AI-04-AC01",
         "AI-04-AC02",
@@ -100,16 +111,21 @@
       "title": "Compare directions without inventing scores",
       "capability": "intelligence",
       "deliverySets": [
-        "SOLO. AI-03",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "AI-03",
         "CAN-02"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "AI-05-AC01",
         "AI-05-AC02",
         "AI-05-AC03"
       ],
       "section": "Intelligence",
+      "lots": [
+        "L3"
+      ],
       "lot": "L3",
       "status": "specified"
     },
@@ -118,10 +134,12 @@
       "title": "Synthesise and prepare a deliverable",
       "capability": "intelligence",
       "deliverySets": [
-        "SOLO. AI-03",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "AI-03",
         "DEC-01"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "AI-06-AC01",
         "AI-06-AC02",
@@ -136,9 +154,11 @@
       "title": "Examine and correct a proposal",
       "capability": "intelligence",
       "deliverySets": [
-        "SOLO. AI-02"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "AI-02"
+      ],
       "acceptanceCriteria": [
         "AI-07-AC01",
         "AI-07-AC02",
@@ -154,10 +174,12 @@
       "title": "Keep, set aside, or dismiss",
       "capability": "intelligence",
       "deliverySets": [
-        "SOLO. AI-07",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "AI-07",
         "DEC-03"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "AI-08-AC01",
         "AI-08-AC02",
@@ -173,9 +195,11 @@
       "title": "Cancel, retry, understand errors",
       "capability": "intelligence",
       "deliverySets": [
-        "SOLO. AI-03"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "AI-03"
+      ],
       "acceptanceCriteria": [
         "AI-09-AC01",
         "AI-09-AC02",
@@ -190,16 +214,21 @@
       "title": "Choose a cloud destination explicitly",
       "capability": "intelligence",
       "deliverySets": [
-        "SOLO. AI-01",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "AI-01",
         "CTX-06"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "AI-10-AC01",
         "AI-10-AC02",
         "AI-10-AC03"
       ],
       "section": "Intelligence",
+      "lots": [
+        "L8"
+      ],
       "lot": "L8",
       "status": "specified"
     },
@@ -208,10 +237,12 @@
       "title": "See a proposal's reasons and destination",
       "capability": "intelligence",
       "deliverySets": [
-        "SOLO. AI-07",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "AI-07",
         "CTX-06"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "AI-11-AC01",
         "AI-11-AC02",
@@ -226,10 +257,12 @@
       "title": "Manage a large context",
       "capability": "intelligence",
       "deliverySets": [
-        "SOLO. AI-01",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "AI-01",
         "CTX-06"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "AI-12-AC01",
         "AI-12-AC02",
@@ -244,9 +277,11 @@
       "title": "Navigate with trackpad and mouse",
       "capability": "canvas",
       "deliverySets": [
-        "SOLO. DOC-02"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "DOC-02"
+      ],
       "acceptanceCriteria": [
         "CAN-01-AC01",
         "CAN-01-AC02",
@@ -265,9 +300,11 @@
       "title": "Select and reach the actions",
       "capability": "canvas",
       "deliverySets": [
-        "SOLO. CAN-01"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "CAN-01"
+      ],
       "acceptanceCriteria": [
         "CAN-02-AC01",
         "CAN-02-AC02",
@@ -283,9 +320,11 @@
       "title": "Move one or several instances",
       "capability": "canvas",
       "deliverySets": [
-        "SOLO. CAN-02"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "CAN-02"
+      ],
       "acceptanceCriteria": [
         "CAN-03-AC01",
         "CAN-03-AC02",
@@ -301,10 +340,12 @@
       "title": "Edit content in place",
       "capability": "canvas",
       "deliverySets": [
-        "SOLO. CAN-02",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "CAN-02",
         "DOC-04"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "CAN-04-AC01",
         "CAN-04-AC02",
@@ -320,9 +361,11 @@
       "title": "Create, duplicate, remove",
       "capability": "canvas",
       "deliverySets": [
-        "SOLO. CAN-02"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "CAN-02"
+      ],
       "acceptanceCriteria": [
         "CAN-05-AC01",
         "CAN-05-AC02",
@@ -338,9 +381,11 @@
       "title": "Link, select and edit a relation",
       "capability": "canvas",
       "deliverySets": [
-        "SOLO. CAN-02"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "CAN-02"
+      ],
       "acceptanceCriteria": [
         "CAN-06-AC01",
         "CAN-06-AC02",
@@ -358,9 +403,11 @@
       "title": "Group and fold visually",
       "capability": "canvas",
       "deliverySets": [
-        "SOLO. CAN-03"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "CAN-03"
+      ],
       "acceptanceCriteria": [
         "CAN-07-AC01",
         "CAN-07-AC02",
@@ -375,9 +422,11 @@
       "title": "Place proposals and organise locally",
       "capability": "canvas",
       "deliverySets": [
-        "SOLO. CAN-03"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "CAN-03"
+      ],
       "acceptanceCriteria": [
         "CAN-08-AC01",
         "CAN-08-AC02",
@@ -395,9 +444,11 @@
       "title": "Search and navigate",
       "capability": "canvas",
       "deliverySets": [
-        "SOLO. CAN-02"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "CAN-02"
+      ],
       "acceptanceCriteria": [
         "CAN-09-AC01",
         "CAN-09-AC02",
@@ -412,9 +463,11 @@
       "title": "Presentation and accessible reading",
       "capability": "canvas",
       "deliverySets": [
-        "SOLO. CAN-09"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "CAN-09"
+      ],
       "acceptanceCriteria": [
         "CAN-10-AC01",
         "CAN-10-AC02",
@@ -429,10 +482,12 @@
       "title": "Buy access to a product",
       "capability": "commerce",
       "deliverySets": [
-        "ECOSYSTEM. STU-08",
+        "ECOSYSTEM"
+      ],
+      "prerequisites": [
+        "STU-08",
         "STU-09"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "COM-01-AC01",
         "COM-01-AC02",
@@ -450,10 +505,12 @@
       "title": "Compute and consult revenue",
       "capability": "commerce",
       "deliverySets": [
-        "ECOSYSTEM. COM-01",
+        "ECOSYSTEM"
+      ],
+      "prerequisites": [
+        "COM-01",
         "STU-07"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "COM-02-AC01",
         "COM-02-AC02",
@@ -468,9 +525,11 @@
       "title": "Support, reporting, refunds",
       "capability": "commerce",
       "deliverySets": [
-        "ECOSYSTEM. COM-01"
+        "ECOSYSTEM"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "COM-01"
+      ],
       "acceptanceCriteria": [
         "COM-03-AC01",
         "COM-03-AC02",
@@ -485,9 +544,11 @@
       "title": "Add information at a precise place",
       "capability": "context",
       "deliverySets": [
-        "SOLO. CAN-04"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "CAN-04"
+      ],
       "acceptanceCriteria": [
         "CTX-01-AC01",
         "CTX-01-AC02",
@@ -506,10 +567,12 @@
       "title": "Drop resources and read them",
       "capability": "context",
       "deliverySets": [
-        "SOLO. CTX-01",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "CTX-01",
         "DOC-04"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "CTX-02-AC01",
         "CTX-02-AC02",
@@ -528,9 +591,11 @@
       "title": "Cite and verify provenance",
       "capability": "context",
       "deliverySets": [
-        "SOLO. CTX-02"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "CTX-02"
+      ],
       "acceptanceCriteria": [
         "CTX-03-AC01",
         "CTX-03-AC02",
@@ -546,10 +611,12 @@
       "title": "Define a hypothesis or a constraint",
       "capability": "context",
       "deliverySets": [
-        "SOLO. CTX-01",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "CTX-01",
         "CAN-06"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "CTX-04-AC01",
         "CTX-04-AC02",
@@ -565,10 +632,12 @@
       "title": "Understand the impact of new information",
       "capability": "context",
       "deliverySets": [
-        "SOLO. CTX-03",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "CTX-03",
         "CTX-04"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "CTX-05-AC01",
         "CTX-05-AC02",
@@ -583,9 +652,11 @@
       "title": "See and limit what intelligence will use",
       "capability": "context",
       "deliverySets": [
-        "SOLO. CTX-01"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "CTX-01"
+      ],
       "acceptanceCriteria": [
         "CTX-06-AC01",
         "CTX-06-AC02",
@@ -601,9 +672,11 @@
       "title": "Update a resource without erasing history",
       "capability": "context",
       "deliverySets": [
-        "SOLO. CTX-03"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "CTX-03"
+      ],
       "acceptanceCriteria": [
         "CTX-07-AC01",
         "CTX-07-AC02",
@@ -619,9 +692,11 @@
       "title": "Take an explicit decision",
       "capability": "decisions",
       "deliverySets": [
-        "SOLO. CTX-04"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "CTX-04"
+      ],
       "acceptanceCriteria": [
         "DEC-01-AC01",
         "DEC-01-AC02",
@@ -640,9 +715,11 @@
       "title": "Set aside and reopen a path",
       "capability": "decisions",
       "deliverySets": [
-        "SOLO. DEC-01"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "DEC-01"
+      ],
       "acceptanceCriteria": [
         "DEC-02-AC01",
         "DEC-02-AC02",
@@ -658,9 +735,11 @@
       "title": "Undo and redo without harming anyone",
       "capability": "decisions",
       "deliverySets": [
-        "SOLO. DOC-04"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "DOC-04"
+      ],
       "acceptanceCriteria": [
         "DEC-03-AC01",
         "DEC-03-AC02",
@@ -676,9 +755,11 @@
       "title": "Build a validation experiment",
       "capability": "decisions",
       "deliverySets": [
-        "SOLO. DEC-01"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "DEC-01"
+      ],
       "acceptanceCriteria": [
         "DEC-04-AC01",
         "DEC-04-AC02",
@@ -696,10 +777,12 @@
       "title": "Record a result and learn",
       "capability": "decisions",
       "deliverySets": [
-        "SOLO. DEC-04",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "DEC-04",
         "CTX-03"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "DEC-05-AC01",
         "DEC-05-AC02",
@@ -714,10 +797,12 @@
       "title": "Understand how you got here",
       "capability": "decisions",
       "deliverySets": [
-        "SOLO. DEC-01",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "DEC-01",
         "DEC-02"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "DEC-06-AC01",
         "DEC-06-AC02",
@@ -732,7 +817,7 @@
       "title": "First launch and restoration",
       "capability": "documents",
       "deliverySets": [
-        "SOLO. No prerequisite"
+        "SOLO"
       ],
       "prerequisites": [],
       "acceptanceCriteria": [
@@ -753,9 +838,11 @@
       "title": "Enter a context and begin",
       "capability": "documents",
       "deliverySets": [
-        "SOLO. DOC-01"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "DOC-01"
+      ],
       "acceptanceCriteria": [
         "DOC-02-AC01",
         "DOC-02-AC02",
@@ -771,9 +858,11 @@
       "title": "New, open, multiple",
       "capability": "documents",
       "deliverySets": [
-        "SOLO. DOC-01"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "DOC-01"
+      ],
       "acceptanceCriteria": [
         "DOC-03-AC01",
         "DOC-03-AC02",
@@ -789,9 +878,11 @@
       "title": "Save, recovery, close",
       "capability": "documents",
       "deliverySets": [
-        "SOLO. DOC-02"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "DOC-02"
+      ],
       "acceptanceCriteria": [
         "DOC-04-AC01",
         "DOC-04-AC02",
@@ -807,10 +898,12 @@
       "title": "Rename, duplicate, export",
       "capability": "documents",
       "deliverySets": [
-        "SOLO. DOC-03",
+        "SOLO"
+      ],
+      "prerequisites": [
+        "DOC-03",
         "DOC-04"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "DOC-05-AC01",
         "DOC-05-AC02",
@@ -828,9 +921,11 @@
       "title": "Find your documents",
       "capability": "documents",
       "deliverySets": [
-        "SOLO. DOC-03"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "DOC-03"
+      ],
       "acceptanceCriteria": [
         "DOC-06-AC01",
         "DOC-06-AC02",
@@ -845,9 +940,11 @@
       "title": "Archive, trash, delete",
       "capability": "documents",
       "deliverySets": [
-        "SOLO. DOC-04"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "DOC-04"
+      ],
       "acceptanceCriteria": [
         "DOC-07-AC01",
         "DOC-07-AC02",
@@ -862,9 +959,11 @@
       "title": "Preferences and diagnostics",
       "capability": "documents",
       "deliverySets": [
-        "SOLO. DOC-01"
+        "SOLO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "DOC-01"
+      ],
       "acceptanceCriteria": [
         "DOC-08-AC01",
         "DOC-08-AC02",
@@ -879,10 +978,12 @@
       "title": "Export a living document and read it on the web",
       "capability": "ecosystem",
       "deliverySets": [
-        "ECOSYSTEM. DOC-05",
+        "ECOSYSTEM"
+      ],
+      "prerequisites": [
+        "DOC-05",
         "CAN-10"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "EXT-01-AC01",
         "EXT-01-AC02",
@@ -900,10 +1001,12 @@
       "title": "Receive a proposal from another assistant",
       "capability": "ecosystem",
       "deliverySets": [
-        "ECOSYSTEM. AI-07",
+        "ECOSYSTEM"
+      ],
+      "prerequisites": [
+        "AI-07",
         "EXT-01"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "EXT-02-AC01",
         "EXT-02-AC02",
@@ -918,10 +1021,12 @@
       "title": "Native commands and system sharing",
       "capability": "ecosystem",
       "deliverySets": [
-        "ECOSYSTEM. DOC-03",
+        "ECOSYSTEM"
+      ],
+      "prerequisites": [
+        "DOC-03",
         "DOC-05"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "EXT-03-AC01",
         "EXT-03-AC02",
@@ -936,10 +1041,12 @@
       "title": "Turn know-how into a reusable method",
       "capability": "studio",
       "deliverySets": [
-        "STUDIO. CTX-01",
+        "STUDIO"
+      ],
+      "prerequisites": [
+        "CTX-01",
         "DEC-06"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "STU-01-AC01",
         "STU-01-AC02",
@@ -957,9 +1064,11 @@
       "title": "Record a technical capability",
       "capability": "studio",
       "deliverySets": [
-        "STUDIO. STU-01"
+        "STUDIO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "STU-01"
+      ],
       "acceptanceCriteria": [
         "STU-02-AC01",
         "STU-02-AC02",
@@ -974,11 +1083,13 @@
       "title": "Find relevant contributions",
       "capability": "studio",
       "deliverySets": [
-        "STUDIO. STU-01",
+        "STUDIO"
+      ],
+      "prerequisites": [
+        "STU-01",
         "STU-02",
         "AI-03"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "STU-03-AC01",
         "STU-03-AC02",
@@ -993,10 +1104,12 @@
       "title": "Assemble a small product",
       "capability": "studio",
       "deliverySets": [
-        "STUDIO. STU-03",
+        "STUDIO"
+      ],
+      "prerequisites": [
+        "STU-03",
         "CAN-06"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "STU-04-AC01",
         "STU-04-AC02",
@@ -1011,9 +1124,11 @@
       "title": "Test a tool with demonstration data",
       "capability": "studio",
       "deliverySets": [
-        "STUDIO. STU-04"
+        "STUDIO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "STU-04"
+      ],
       "acceptanceCriteria": [
         "STU-05-AC01",
         "STU-05-AC02",
@@ -1028,9 +1143,11 @@
       "title": "Reuse and update a contribution",
       "capability": "studio",
       "deliverySets": [
-        "STUDIO. STU-04"
+        "STUDIO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "STU-04"
+      ],
       "acceptanceCriteria": [
         "STU-06-AC01",
         "STU-06-AC02",
@@ -1045,9 +1162,11 @@
       "title": "See authors and negotiate shares",
       "capability": "studio",
       "deliverySets": [
-        "STUDIO. STU-04"
+        "STUDIO"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "STU-04"
+      ],
       "acceptanceCriteria": [
         "STU-07-AC01",
         "STU-07-AC02",
@@ -1062,10 +1181,12 @@
       "title": "Prepare a private or public release",
       "capability": "studio",
       "deliverySets": [
-        "STUDIO. STU-05",
+        "STUDIO"
+      ],
+      "prerequisites": [
+        "STU-05",
         "STU-07"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "STU-08-AC01",
         "STU-08-AC02",
@@ -1080,10 +1201,12 @@
       "title": "Consult a product as an end user",
       "capability": "studio",
       "deliverySets": [
-        "STUDIO. STU-05",
+        "STUDIO"
+      ],
+      "prerequisites": [
+        "STU-05",
         "STU-08"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "STU-09-AC01",
         "STU-09-AC02",
@@ -1098,9 +1221,11 @@
       "title": "Sign in and create a workspace",
       "capability": "collaboration",
       "deliverySets": [
-        "TEAM. DOC-08"
+        "TEAM"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "DOC-08"
+      ],
       "acceptanceCriteria": [
         "TEAM-01-AC01",
         "TEAM-01-AC02",
@@ -1118,10 +1243,12 @@
       "title": "Share a private document",
       "capability": "collaboration",
       "deliverySets": [
-        "TEAM. TEAM-01",
+        "TEAM"
+      ],
+      "prerequisites": [
+        "TEAM-01",
         "DOC-04"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "TEAM-02-AC01",
         "TEAM-02-AC02",
@@ -1136,9 +1263,11 @@
       "title": "Invite and join",
       "capability": "collaboration",
       "deliverySets": [
-        "TEAM. TEAM-02"
+        "TEAM"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "TEAM-02"
+      ],
       "acceptanceCriteria": [
         "TEAM-03-AC01",
         "TEAM-03-AC02",
@@ -1153,9 +1282,11 @@
       "title": "Apply rights and manage members",
       "capability": "collaboration",
       "deliverySets": [
-        "TEAM. TEAM-03"
+        "TEAM"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "TEAM-03"
+      ],
       "acceptanceCriteria": [
         "TEAM-04-AC01",
         "TEAM-04-AC02",
@@ -1170,9 +1301,11 @@
       "title": "Real presence and voluntary follow",
       "capability": "collaboration",
       "deliverySets": [
-        "TEAM. TEAM-04"
+        "TEAM"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "TEAM-04"
+      ],
       "acceptanceCriteria": [
         "TEAM-05-AC01",
         "TEAM-05-AC02",
@@ -1190,10 +1323,12 @@
       "title": "Discuss and mention in the right place",
       "capability": "collaboration",
       "deliverySets": [
-        "TEAM. TEAM-04",
+        "TEAM"
+      ],
+      "prerequisites": [
+        "TEAM-04",
         "CAN-02"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "TEAM-06-AC01",
         "TEAM-06-AC02",
@@ -1208,10 +1343,12 @@
       "title": "Contribute without overwriting the common document",
       "capability": "collaboration",
       "deliverySets": [
-        "TEAM. TEAM-04",
+        "TEAM"
+      ],
+      "prerequisites": [
+        "TEAM-04",
         "AI-07"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "TEAM-07-AC01",
         "TEAM-07-AC02",
@@ -1226,10 +1363,12 @@
       "title": "Review, request changes, accept",
       "capability": "collaboration",
       "deliverySets": [
-        "TEAM. TEAM-07",
+        "TEAM"
+      ],
+      "prerequisites": [
+        "TEAM-07",
         "DEC-03"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "TEAM-08-AC01",
         "TEAM-08-AC02",
@@ -1244,10 +1383,12 @@
       "title": "Edit in parallel and resolve a conflict",
       "capability": "collaboration",
       "deliverySets": [
-        "TEAM. TEAM-04",
+        "TEAM"
+      ],
+      "prerequisites": [
+        "TEAM-04",
         "DOC-04"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "TEAM-09-AC01",
         "TEAM-09-AC02",
@@ -1262,9 +1403,11 @@
       "title": "Work offline then synchronise",
       "capability": "collaboration",
       "deliverySets": [
-        "TEAM. TEAM-09"
+        "TEAM"
       ],
-      "prerequisites": [],
+      "prerequisites": [
+        "TEAM-09"
+      ],
       "acceptanceCriteria": [
         "TEAM-10-AC01",
         "TEAM-10-AC02",
@@ -1279,10 +1422,12 @@
       "title": "Resume a session and see what changed",
       "capability": "collaboration",
       "deliverySets": [
-        "TEAM. TEAM-06",
+        "TEAM"
+      ],
+      "prerequisites": [
+        "TEAM-06",
         "TEAM-09"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "TEAM-11-AC01",
         "TEAM-11-AC02",
@@ -1297,10 +1442,12 @@
       "title": "Leave, revoke, keep an authorised copy",
       "capability": "collaboration",
       "deliverySets": [
-        "TEAM. TEAM-04",
+        "TEAM"
+      ],
+      "prerequisites": [
+        "TEAM-04",
         "DOC-05"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "TEAM-12-AC01",
         "TEAM-12-AC02",
@@ -1315,10 +1462,12 @@
       "title": "Present together without piloting others",
       "capability": "collaboration",
       "deliverySets": [
-        "TEAM. TEAM-05",
+        "TEAM"
+      ],
+      "prerequisites": [
+        "TEAM-05",
         "CAN-10"
       ],
-      "prerequisites": [],
       "acceptanceCriteria": [
         "TEAM-13-AC01",
         "TEAM-13-AC02",
