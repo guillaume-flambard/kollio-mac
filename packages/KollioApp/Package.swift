@@ -14,6 +14,10 @@ let package = Package(
         .package(url: "https://github.com/vapor/vapor.git", from: "4.106.0")
     ],
     targets: [
+        .target(
+            name: "KollioEvaluationKit",
+            dependencies: [.product(name: "KollioCore", package: "KollioCore")]
+        ),
         .executableTarget(
             name: "KollioApp",
             dependencies: [.product(name: "KollioCore", package: "KollioCore")],
@@ -26,7 +30,8 @@ let package = Package(
                 .product(name: "KollioCore", package: "KollioCore"),
                 .product(name: "KollioServerKit", package: "KollioServer"),
                 .product(name: "Vapor", package: "vapor"),
-                .product(name: "XCTVapor", package: "vapor")
+                .product(name: "XCTVapor", package: "vapor"),
+                "KollioEvaluationKit"
             ]
         )
     ]
