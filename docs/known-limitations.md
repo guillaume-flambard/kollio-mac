@@ -11,10 +11,12 @@ Recorded 2026-09-25, on an arm64 Mac, macOS 27.0 (26A428), Xcode 27.0, SDK 27.0.
   rather than inferred from the SDK being installed.
 - **Real generation works, in French and English, on two distinct non-Sarah contexts.** Through the
   adapter, not a standalone script: a French context and an English context each produced a small
-  proposal, and both passed the same `ProposalValidator` as any other proposal. Cold latency observed
-  between roughly 9 and 15 seconds, which is far too slow to feel interactive and is the clearest
-  finding of this round. Reproduce with
-  `KOLLIO_REAL_MODEL=1 swift test --package-path packages/KollioApp --filter RealOnDeviceModelTests`.
+  proposal, and both passed the same `ProposalValidator` as any other proposal. **The latency figure
+  was wrong in the first version of this file and has been corrected**: see *On-device generation is
+  slow enough to need streaming* below for the measurement that reproduces (3.6 s cold in a fresh
+  process, 2.2 to 2.7 s warm, 2.50 / 2.68 / 2.29 s for three calls in one process, measured serially
+  with `--no-parallel`). Reproduce with
+  `KOLLIO_REAL_MODEL=1 swift test --package-path packages/KollioApp --filter RealOnDeviceModelTests --no-parallel`.
 - **The running app holds no network socket.** Checked with `lsof` against the app's own pid. This is
   evidence about the on-device path specifically, not a claim that no Mac feature the user turns on
   will ever reach the network.
@@ -213,8 +215,6 @@ Recorded 2026-09-25, on an arm64 Mac, macOS 27.0 (26A428), Xcode 27.0, SDK 27.0.
 
 Everything in the non-goals, and also, honestly:
 
-- **Relationship selection.** A connector has a label and a hit area in the design, but selecting a
-  relationship is not implemented.
 - **Keyboard traversal of the canvas.** Nodes are focusable and actions are reachable, but there is no
   arrow-key navigation between objects.
 - **Reduced motion and increased contrast** are honoured in the motion and border tokens, and have not
