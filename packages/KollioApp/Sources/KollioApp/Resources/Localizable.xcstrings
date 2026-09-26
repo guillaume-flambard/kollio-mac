@@ -654,24 +654,54 @@
       "comment": "Undo label: write down a sentence next to an object.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Undo add" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Annuler l'ajout" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo add"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler l'ajout"
+          }
+        }
       }
     },
     "action.revealConsequences": {
       "comment": "Ask what this note would change. The note stays either way.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "See the consequences" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Voir les cons\u00e9quences" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See the consequences"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir les conséquences"
+          }
+        }
       }
     },
     "confirm.kind": {
       "comment": "Intelligence chose a type that argues something rather than stating it. Ask before applying.",
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "This type argues something. Apply it?" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Ce type affirme quelque chose. L'appliquer ?" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This type argues something. Apply it?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce type affirme quelque chose. L'appliquer ?"
+          }
+        }
       }
     },
     "undo.create": {
@@ -687,7 +717,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Annuler la cr\u00e9ation"
+            "value": "Annuler la création"
           }
         }
       }
@@ -777,7 +807,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dupliquer sur le canevas (m\u00eame id\u00e9e)"
+            "value": "Dupliquer sur le canevas (même idée)"
           }
         }
       }
@@ -795,7 +825,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nouvelle variante (id\u00e9e li\u00e9e)"
+            "value": "Nouvelle variante (idée liée)"
           }
         }
       }
@@ -849,7 +879,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conserve l'id\u00e9e"
+            "value": "Conserve l'idée"
           }
         }
       }
@@ -867,7 +897,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Supprime aussi l'id\u00e9e"
+            "value": "Supprime aussi l'idée"
           }
         }
       }
@@ -2053,6 +2083,42 @@
           "stringUnit": {
             "state": "translated",
             "value": "Porte sur %lld"
+          }
+        }
+      }
+    },
+    "action.seeProposal": {
+      "comment": "Centres the view on a proposal that is off screen. Only offered when the branch cannot be seen.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show me"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Montre-moi"
+          }
+        }
+      }
+    },
+    "action.seeProposalHint": {
+      "comment": "Why this is a button and not something that happens by itself.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move the view here. Nothing moves the view on its own"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplace la vue ici. Rien ne déplace la vue tout seul"
           }
         }
       }

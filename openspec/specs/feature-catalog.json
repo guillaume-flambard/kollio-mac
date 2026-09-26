@@ -5,9 +5,9 @@
     "features": 71,
     "acceptanceCriteria": 213,
     "byStatus": {
-      "automatedVerified": 22,
+      "automatedVerified": 23,
       "humanVerified": 1,
-      "specified": 48
+      "specified": 47
     },
     "byLot": {
       "L1": 10,
@@ -438,7 +438,8 @@
         "L2"
       ],
       "lot": "L2",
-      "status": "specified"
+      "status": "automatedVerified",
+      "evidence": "AC01 keeping does not shift the ghosts; AC02 earlier objects stay still; AC03 undo restores the view exactly. ProposalPlacementTests, against the real model. A branch placed off screen offers a way to see it, and nothing ever moves the view on its own. Still missing: the local organisation gesture, and a density measure for when to widen the search rather than place."
     },
     {
       "id": "CAN-09",

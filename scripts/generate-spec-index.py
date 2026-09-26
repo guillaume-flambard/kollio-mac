@@ -147,6 +147,12 @@ STATUS_NOTES = {
               "AppleAdapterTests: minted ids, dropped kinds, bounded branch, noChange."),
     "AI-08": ("automatedVerified",
               "VerticalSliceTests: one Keep undoes as one action."),
+    "CAN-08": ("automatedVerified",
+               "AC01 keeping does not shift the ghosts; AC02 earlier objects stay still; AC03 undo "
+               "restores the view exactly. ProposalPlacementTests, against the real model. A "
+               "branch placed off screen offers a way to see it, and nothing ever moves the view on "
+               "its own. Still missing: the local organisation gesture, and a density measure for "
+               "when to widen the search rather than place."),
     "CTX-02": ("automatedVerified",
                "AC01 a CSV with quotes, commas and newlines parses correctly; AC02 a PDF with no "
                "text layer is marked as having no text; AC03 a pasted link is never fetched. "

@@ -13,7 +13,7 @@ A view, not a source of truth. Status meanings:
 | `blockedExternal` | Blocked on a capability or authorisation. |
 | `notInCurrentRelease` | Deliberately out of this product. |
 
-Counts: 22 automatedVerified, 1 humanVerified, 48 specified. 71 features, 213 acceptance criteria.
+Counts: 23 automatedVerified, 1 humanVerified, 47 specified. 71 features, 213 acceptance criteria.
 
 ## L1 — 10 features
 
@@ -52,7 +52,8 @@ Counts: 22 automatedVerified, 1 humanVerified, 48 specified. 71 features, 213 ac
 - [x] **AI-08** Keep, set aside, or dismiss · `automatedVerified` · 3 AC
       VerticalSliceTests: one Keep undoes as one action.
 - [ ] **AI-09** Cancel, retry, understand errors · `specified` · 3 AC
-- [ ] **CAN-08** Place proposals and organise locally · `specified` · 3 AC
+- [x] **CAN-08** Place proposals and organise locally · `automatedVerified` · 3 AC
+      AC01 keeping does not shift the ghosts; AC02 earlier objects stay still; AC03 undo restores the view exactly. ProposalPlacementTests, against the real model. A branch placed off screen offers a way to see it, and nothing ever moves the view on its own. Still missing: the local organisation gesture, and a density measure for when to widen the search rather than place.
 - [x] **DEC-01** Take an explicit decision · `automatedVerified` · 3 AC
       CommandTests: a decision survives save and reload.
 - [x] **DEC-02** Set aside and reopen a path · `automatedVerified` · 3 AC

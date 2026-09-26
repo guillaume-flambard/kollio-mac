@@ -74,6 +74,15 @@ struct ProposalDecisionView: View {
                         .frame(maxWidth: 280, alignment: .leading)
                 }
 
+                // Offered only when the branch cannot be seen. A marker that is
+                // always there is a marker the person learns to ignore.
+                if model.previewIsOffScreen() {
+                    ActionButton(title: L10n.seeProposal, isDefault: false) {
+                        model.revealPreview()
+                    }
+                    .help(L10n.seeProposalHint)
+                }
+
                 HStack(spacing: Space.s) {
                     ActionButton(title: L10n.keep, isDefault: true) { model.keepPreview() }
                     ActionButton(title: L10n.setAside) { model.discardPreview() }

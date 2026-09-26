@@ -29,6 +29,10 @@ public enum L10n {
     public static var setAside: String { callAsFunction("canvas.setAside") }
     public static var moreActions: String { callAsFunction("canvas.moreActions") }
     public static var keep: String { callAsFunction("canvas.keep") }
+    /// The action that centres the view on a proposal that is off screen. It is
+    /// never automatic: a camera that moves by itself takes the view away.
+    public static var seeProposal: String { callAsFunction("action.seeProposal") }
+    public static var seeProposalHint: String { callAsFunction("action.seeProposalHint") }
     public static var reopen: String { callAsFunction("canvas.reopen") }
     public static var clarify: String { callAsFunction("canvas.clarify") }
     public static var proposal: String { callAsFunction("canvas.proposal") }

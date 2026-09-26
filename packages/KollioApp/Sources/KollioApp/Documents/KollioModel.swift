@@ -1468,6 +1468,56 @@ public final class KollioModel {
         supersededProposal = nil
     }
 
+    /// Whether a preview is entirely outside what the person can currently see.
+    ///
+    /// A proposal placed on a crowded canvas can land off screen, and the decision
+    /// card then floats over an empty area with nothing to point at. This says so,
+    /// so the card can offer a way to go and look.
+    public func previewIsOffScreen() -> Bool {
+        guard let preview, preview.placements.isEmpty == false else { return false }
+        let visible = camera.visibleWorldRect(viewport: viewport)
+        // One visible object is enough: the card is useful as soon as part of the
+        // branch can be seen, and centring on a partly visible branch is exactly the
+        // disorienting jump this avoids.
+        return preview.placements.values.allSatisfy { position in
+            let rect = Rect(
+                origin: position,
+                size: estimatedGhostSize(of: preview, at: position)
+            )
+            return visible.intersects(rect) == false
+        }
+    }
+
+    /// Centres the view on a proposal, because the person asked to see it.
+    ///
+    /// Deliberate, never automatic. A camera that jumps on its own when an answer
+    /// arrives takes the person's view away from whatever they were reading, and
+    /// there is no way to get it back by accident.
+    public func revealPreview() {
+        guard let preview, preview.placements.isEmpty == false else { return }
+        let positions = Array(preview.placements.values)
+        let left = positions.map(\.x).min() ?? 0
+        let top = positions.map(\.y).min() ?? 0
+        let right = positions.map(\.x).max() ?? 0
+        let bottom = positions.map(\.y).max() ?? 0
+        let centre = Position(x: (left + right) / 2, y: (top + bottom) / 2)
+        let size = estimatedGhostSize(of: preview, at: centre)
+        let bounds = Rect(
+            origin: Position(x: left - size.width / 2, y: top - size.height / 2),
+            size: Size(width: (right - left) + size.width, height: (bottom - top) + size.height)
+        )
+        camera = Camera.fitting(content: bounds, viewport: viewport, padding: 120)
+    }
+
+    /// The size a previewed object is laid out at, measured the same way the
+    /// placement was computed so a reveal frames what is really there.
+    private func estimatedGhostSize(of preview: ProposalPreview, at position: Position) -> Size {
+        guard let id = preview.placements.first(where: { $0.value == position })?.key else {
+            return Size(width: NodeLayout.minimumWidth, height: NodeLayout.thoughtHeight)
+        }
+        return estimatedSize(of: id, in: preview.proposal)
+    }
+
     /// Turns a proposal into a preview: where each proposed object would sit.
     ///
     /// Placement is intent, never pixels chosen by the generator, and it never
