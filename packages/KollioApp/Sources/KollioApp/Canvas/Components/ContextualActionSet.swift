@@ -49,6 +49,7 @@ public struct ContextualActionSet: Hashable, Sendable {
         case groupInFrame
         /// Weigh the selected directions against criteria, without inventing scores.
         case compareDirections
+        case composeSynthesis
 
         /// The French and English label lives in `L10n`, not here, so the String
         /// Catalog stays the only place an interface string is written.
@@ -70,6 +71,7 @@ public struct ContextualActionSet: Hashable, Sendable {
             case .reviewImpact: return "impact.reviewAction"
             case .groupInFrame: return "frame.group"
             case .compareDirections: return "comparison.action"
+            case .composeSynthesis: return "summary.action"
             }
         }
     }
@@ -110,7 +112,7 @@ public struct ContextualActionSet: Hashable, Sendable {
             return .meaning
         case .explore, .add, .setAside, .reopen, .edit, .addSource,
              .assertClaim, .link, .comment, .reviewImpact, .groupInFrame,
-             .compareDirections:
+             .compareDirections, .composeSynthesis:
             return .meaning
         }
     }
@@ -145,7 +147,8 @@ public struct ContextualActionSet: Hashable, Sendable {
         canAssertClaim: Bool,
         canReviewImpact: Bool = false,
         canGroupInFrame: Bool = false,
-        canCompareDirections: Bool = false
+        canCompareDirections: Bool = false,
+        canComposeSynthesis: Bool = false
     ) -> ContextualActionSet {
         if canReopen {
             return ContextualActionSet(primary: [.reopen], secondary: [], isDefault: .reopen)
@@ -166,6 +169,11 @@ public struct ContextualActionSet: Hashable, Sendable {
         // Only with two directions selected. A comparison of one thing is a note,
         // and the action is not offered rather than offered and refused.
         if canCompareDirections { secondary.append(.compareDirections) }
+        // Offered whenever there is something at all to read. A synthesis composes
+        // from the selection or from the whole document, so the only condition for
+        // it to be a dead button is an empty document, and a document with nothing
+        // in it has no card to open either.
+        if canComposeSynthesis { secondary.append(.composeSynthesis) }
         // Not implemented yet, so not offered. A disabled button is worse than an
         // absent one, and the specification forbids a decorative action.
         //

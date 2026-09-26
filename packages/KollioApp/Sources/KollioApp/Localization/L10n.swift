@@ -231,6 +231,61 @@ public enum L10n {
     // Comparison: directions weighed against criteria, without invented scores
     public static var comparisonAction: String { callAsFunction("comparison.action") }
     public static var comparisonTitle: String { callAsFunction("comparison.title") }
+    // MARK: Syntheses
+    //
+    // Every one of these is a catalog key rather than a `switch`, because the whole
+    // point of the String Catalog is that a translator sees the string and its
+    // context, and a French literal inside a Swift file is neither.
+
+    public static var summaryDefaultTitle: String { callAsFunction("summary.defaultTitle") }
+    public static var summaryDefaultObjective: String { callAsFunction("summary.defaultObjective") }
+    public static var summaryNothingRecorded: String { callAsFunction("summary.nothingRecorded") }
+    public static var summaryNotWritten: String { callAsFunction("summary.notWritten") }
+    public static var summaryUncertainties: String { callAsFunction("summary.uncertainties") }
+    public static var summaryNothingUncertain: String { callAsFunction("summary.nothingUncertain") }
+    public static var summaryOutdated: String { callAsFunction("summary.outdated") }
+    public static var summaryDraft: String { callAsFunction("summary.draft") }
+    public static var summaryConfirm: String { callAsFunction("summary.confirm") }
+    public static var summaryExport: String { callAsFunction("summary.export") }
+    public static var summaryExpand: String { callAsFunction("summary.expand") }
+    public static var summaryCollapse: String { callAsFunction("summary.collapse") }
+    public static var summaryCorrected: String { callAsFunction("summary.corrected") }
+    public static var summaryExported: String { callAsFunction("summary.exported") }
+    public static var summaryExportedOutdated: String { callAsFunction("summary.exportedOutdated") }
+    public static var undoStartSummary: String { callAsFunction("undo.startSummary") }
+    public static var undoConfirmSummary: String { callAsFunction("undo.confirmSummary") }
+
+    /// Named after the count, so two syntheses can be told apart in a list before
+    /// either is opened.
+    public static func summaryTitle(forSelection count: Int) -> String {
+        String(
+            format: callAsFunction(count > 1 ? "summary.titlePlural" : "summary.titleSingular"),
+            count
+        )
+    }
+
+    public static func summaryCannotConfirm(section: String) -> String {
+        String(format: callAsFunction("summary.cannotConfirm"), section)
+    }
+
+    public static func summaryUncertaintyCount(_ count: Int) -> String {
+        String(
+            format: callAsFunction(count > 1 ? "summary.uncertaintyCountPlural" : "summary.uncertaintyCount"),
+            count
+        )
+    }
+
+    public static func summaryRevision(_ revision: Int) -> String {
+        String(format: callAsFunction("summary.revision"), revision)
+    }
+
+    public static func summarySourceCount(_ count: Int) -> String {
+        String(
+            format: callAsFunction(count > 1 ? "summary.sourceCountPlural" : "summary.sourceCount"),
+            count
+        )
+    }
+
     public static var comparisonDefaultTitle: String { callAsFunction("comparison.defaultTitle") }
     public static var comparisonNeedsTwo: String { callAsFunction("comparison.needsTwo") }
     public static var comparisonCriterionEmpty: String { callAsFunction("comparison.criterionEmpty") }

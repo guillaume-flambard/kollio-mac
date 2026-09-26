@@ -99,6 +99,9 @@ public final class KollioModel {
     public var hoveredObjectID: ObjectID?
     public var frames: [ObjectID: Rect] = [:]
     public var preview: ProposalPreview?
+    /// The synthesis the card is showing, if one is open. Transient like every
+    /// other card: it is where a person is looking, not a fact about the document.
+    public var openSummaryID: SummaryID?
     public var isThinking = false
     /// How far a streaming answer has got. It is display only: a progress carries
     /// no identifier and cannot be kept, so it is never a preview and never
@@ -608,7 +611,12 @@ public final class KollioModel {
             canAssertClaim: object != nil,
             canReviewImpact: document.needsImpactReview(id),
             canGroupInFrame: selection.isEmpty == false,
-            canCompareDirections: selection.count >= 2
+            canCompareDirections: selection.count >= 2,
+            // A synthesis reads the document rather than a selection, so it is
+            // offered whenever the document has anything in it. With nothing in it
+            // the composer would produce four empty sections and a card saying
+            // nothing, which is a worse answer than no action.
+            canComposeSynthesis: document.content.isEmpty == false
         )
     }
 
@@ -710,6 +718,11 @@ public final class KollioModel {
         document.comparisons.comparison(id)
     }
 
+    public var openSummaryBlock: SummaryExport.CompactBlock? {
+        guard let summary = openSummary else { return nil }
+        return SummaryExport.compact(summary, against: document, languageCode: languageCode)
+    }
+
     public var openComparisonModel: Comparison? {
         openComparison.flatMap { comparison($0) }
     }
@@ -744,6 +757,101 @@ public final class KollioModel {
         ))], label: L10n.undoStartComparison) else { return nil }
         openComparison = comparison.id
         return comparison.id
+    }
+
+    // MARK: Syntheses
+
+    public func summary(_ id: SummaryID) -> SummaryArtifact? {
+        document.summaries.summary(id)
+    }
+
+    public var openSummary: SummaryArtifact? {
+        openSummaryID.flatMap { summary($0) }
+    }
+
+    /// Composes a synthesis over the selection and writes it down as a draft.
+    ///
+    /// Deterministic, and that is the point rather than a limitation of the first
+    /// version: the composer writes only what it can point at, so every line in it
+    /// carries a reference and none of it can be caught by the rule that refuses an
+    /// engine assertion with nothing behind it. A synthesis is a deliverable, and a
+    /// deliverable nobody agreed to is the one failure this document is built to
+    /// prevent, so it opens as a draft and stays one until it is confirmed.
+    @discardableResult
+    public func startSummary(over selected: Set<ObjectID>? = nil) -> SummaryID? {
+        let scope = selected ?? selection
+        let target = scope.isEmpty ? Set(document.content.keys) : scope
+        // The composer reads the document, so a person who has selected nothing
+        // gets a synthesis of everything rather than a refusal.
+        let title = scope.isEmpty
+            ? L10n.summaryDefaultTitle
+            : L10n.summaryTitle(forSelection: scope.count)
+        let outcome = SummaryComposer.compose(
+            id: SummaryID("summary:" + UUID().uuidString),
+            title: title,
+            objective: SummaryArtifact.SummaryLine(
+                id: SummaryLineID("objective"),
+                text: LocalizedText(L10n.summaryDefaultObjective, variants: [:]),
+                provenance: .human("local-user")
+            ),
+            in: document,
+            languageCode: languageCode
+        )
+        guard perform([.startSummary(.init(
+            summary: outcome.summary, provenance: .human("local-user")
+        ))], label: L10n.undoStartSummary) else { return nil }
+        openSummaryID = outcome.summary.id
+        _ = target
+        return outcome.summary.id
+    }
+
+    /// Confirms a synthesis, which is what makes it a deliverable.
+    ///
+    /// Refused while any section is silently blank, which is the rule that stops a
+    /// template from being handed over as though the blanks were answers. The card
+    /// says which section is empty rather than letting the press fail silently.
+    @discardableResult
+    public func confirmSummary(_ id: SummaryID) -> Bool {
+        guard let summary = summary(id) else {
+            status = L10n.errorGeneric
+            return false
+        }
+        let missing = SummaryArtifact.Section.allCases.first { section in
+            let value = summary.sections(section)
+            return value.isEmpty || value.allSatisfy { $0.lines.isEmpty && !$0.isNothingRecorded }
+        }
+        if let missing {
+            status = L10n.summaryCannotConfirm(section: missing.title)
+            return false
+        }
+        return perform([.confirmSummary(.init(summaryID: id, provenance: .human("local-user")))],
+                       label: L10n.undoConfirmSummary)
+    }
+
+    /// Writes the deliverable out, and returns where it went.
+    ///
+    /// The export names the revision it read, so a person handing this over can say
+    /// which version of the document they are handing over an account of. The file
+    /// is written where the app already keeps documents, and a failure says so
+    /// rather than reporting a success nobody can find.
+    @discardableResult
+    public func exportSummary(_ id: SummaryID) -> URL? {
+        guard let summary = summary(id) else {
+            status = L10n.errorGeneric
+            return nil
+        }
+        let export = SummaryExport.markdown(summary, against: document, languageCode: languageCode)
+        let directory = fileStore.directory.appendingPathComponent("syntheses", isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let url = directory.appendingPathComponent(export.filename)
+            try export.text.write(to: url, atomically: true, encoding: .utf8)
+            status = export.isOutdated ? L10n.summaryExportedOutdated : L10n.summaryExported
+            return url
+        } catch {
+            status = L10n.errorGeneric
+            return nil
+        }
     }
 
     /// The criteria a draft starts from: the resolution criteria people have already

@@ -111,6 +111,10 @@ struct ContextualActions: View {
             _ = model.reviewImpact(of: target)
         case .compareDirections:
             _ = model.startComparison()
+        case .composeSynthesis:
+            // A synthesis is a deliverable, so it opens as a draft the person has
+            // to confirm. Composing is not handing over.
+            _ = model.startSummary()
         case .groupInFrame:
             // The frame is created around the selection and named immediately: a
             // frame is named by the person who makes it, not by the app.

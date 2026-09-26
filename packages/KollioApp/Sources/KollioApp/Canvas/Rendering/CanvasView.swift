@@ -211,6 +211,13 @@ struct CanvasView: View {
                 ComparisonView(model: model, id: id)
                     .position(comparisonPosition(viewport: viewport))
             }
+            // Beside the comparison rather than on top of it: both are readings of
+            // the same document, and a person comparing directions is often the
+            // person about to summarise them. One covers the other otherwise.
+            if let id = model.openSummaryID {
+                SummaryCardView(model: model, id: id)
+                    .position(summaryPosition(viewport: viewport))
+            }
             if let id = model.renamingFrameID {
                 FrameNameView(model: model, id: id)
                     .position(frameNamePosition(id, viewport: viewport))
@@ -308,6 +315,13 @@ struct CanvasView: View {
     private func comparisonPosition(viewport: CGSize) -> CGPoint {
         CGPoint(x: min(max(260, viewport.width / 2 - 520), viewport.width - 260),
                 y: min(max(320, viewport.height / 2), viewport.height - 320))
+    }
+
+    /// Offset from the comparison so the two cards never overlap, and clamped so
+    /// the synthesis stays reachable when the comparison is open in a narrow window.
+    private func summaryPosition(viewport: CGSize) -> CGPoint {
+        CGPoint(x: min(max(260, viewport.width / 2 - 520) + 440, viewport.width - 240),
+                y: min(max(320, viewport.height / 2) + 40, viewport.height - 320))
     }
 
     private func frameNamePosition(_ id: FrameID, viewport: CGSize) -> CGPoint {
