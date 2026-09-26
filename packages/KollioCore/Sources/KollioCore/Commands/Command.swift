@@ -932,3 +932,96 @@ public struct RemoveSummary: Codable, Hashable, Sendable {
         self.provenance = provenance
     }
 }
+
+extension Command {
+    /// The objects a command touches.
+    ///
+    /// It takes the document, and the first version did not. A relationship
+    /// command carries only a `RelationshipID`, so its two ends cannot be known
+    /// without looking the relationship up, and a version that guessed an id
+    /// format would have put relationship edits in the history of nothing.
+    ///
+    /// This exists so "what happened to this object?" is answerable from the
+    /// commands. A command that resolves to no object returns an empty set rather
+    /// than guessing: `applyProposal` is not about every object it happened to
+    /// contain, and claiming otherwise would put a whole accepted proposal into
+    /// the history of each of its members.
+    public func touchedObjectIDs(in document: KollioDocument) -> Set<ObjectID> {
+        switch self {
+        case .createObject(let create):
+            return [create.id]
+        case .updateObjectText(let update):
+            return [update.id]
+        case .addRelationship(let add):
+            return Set([add.from, add.to])
+        case .removeRelationship(let remove):
+            guard let relationship = document.relationships[remove.id] else { return [] }
+            return Set([relationship.from, relationship.to])
+        case .moveNodeInstances(let move):
+            // An instance is not an object: the same object may be drawn several
+            // times, and the mapping lives in the presentation. Resolving through
+            // it is the only honest answer to "what did this touch".
+            return Set(move.moves.compactMap { document.presentation.instance(id: $0.instanceID)?.objectID })
+        case .createScenario(let scenario):
+            // The context and every child are objects this command brings into
+            // being, so they are what it touched.
+            return Set([scenario.context.id] + scenario.children.map(\.id))
+        case .duplicateObject(let duplicate):
+            return Set([duplicate.sourceID, duplicate.id])
+        case .duplicateNodeInstance(let duplicate):
+            // The new drawing is not on the canvas yet, so what the command
+            // touched is the object it duplicates.
+            guard let source = document.presentation.instance(id: duplicate.instanceID) else { return [] }
+            return [source.objectID]
+        case .removeObject(let remove):
+            return [remove.id]
+        case .removeNodeInstance(let remove):
+            return Set([document.presentation.instance(id: remove.instanceID)?.objectID].compactMap { $0 })
+        case .recordDecision(let decision):
+            return [decision.targetObjectID]
+        case .revokeDecision(let revoke):
+            guard let decision = document.decisions[revoke.id] else { return [] }
+            return [decision.targetObjectID]
+        case .addContributionToProduct(let add):
+            return [add.productID]
+        case .assertClaim(let claim):
+            return [claim.claim.objectID]
+        case .assessHypothesis(let assess):
+            // A claim id is not an object id. Resolving it needs the ledger, and
+            // the first version built an `ObjectID` out of the raw string, which
+            // would have invented an object that does not exist.
+            guard let claim = document.claims.claim(assess.claimID) else { return [] }
+            return [claim.objectID]
+        case .addCitation(let citation):
+            return Set([citation.claimID, citation.citation.claimID])
+        case .recordVerification(let verification):
+            guard let citation = document.sources.citation(verification.citationID) else { return [] }
+            return [citation.claimID]
+        case .attachSource(let attach):
+            return Set([attach.attachedTo].compactMap { $0 })
+        case .askClarification(let ask):
+            return [ask.clarification.objectID]
+        case .answerClarification(let answer):
+            guard let entry = document.clarifications.clarification(answer.clarificationID) else { return [] }
+            return [entry.objectID]
+        case .editRelationship(let edit):
+            guard let relationship = document.relationships[edit.id] else { return [] }
+            return Set([relationship.from, relationship.to])
+        case .applyImpact(let impact):
+            return Set(impact.assessment.proposedChanges.map(\.objectID))
+        case .keepDirection(let keep):
+            return [keep.directionID]
+        case .startSummary(let start):
+            return Set(start.summary.readSet.objectIDs)
+        case .setSummaryLine(let line):
+            return Set(line.line.references.compactMap {
+                $0.kind == .object ? ObjectID($0.id) : nil
+            })
+        default:
+            // A command about the document as a whole, about a comparison, a
+            // frame, a source revision, or a synthesis, is not about any one
+            // object in it.
+            return []
+        }
+    }
+}

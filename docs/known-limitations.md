@@ -43,6 +43,20 @@ SDK 27.0.
   than saying no such source exists. Nothing unsafe reached the document, and
   structurally a fabricated source is unreachable: the candidate type has no
   citation capability. The behaviour is still wrong.
+- **The document keeps an audit ledger, and it is not an event log.** `history`
+  records what a person did, in order, and never edits it: an undo is appended as a
+  reversal that names the entry it cancels, because "that was undone" and "that
+  never happened" are different statements and only the second erases the work. It
+  answers one question the document cannot — what happened to this object — and
+  that question is the reason it exists. Three limits are stated rather than
+  hidden: **it is not authoritative**, so restoring a document from it is not
+  implemented and no claim is made that it would work; **it cannot be replayed**,
+  so it is not event sourcing and should not be called that; and **a redo records
+  nothing**, so after undo-then-redo the ledger still says the action was taken
+  back. It also grows without bound, which a real document would have to address.
+  Two existing tests asserted that an undo restored a byte-identical document;
+  they now assert the content is restored and the ledger has only grown, because
+  those are two claims and only one of them was ever true.
 - **A second confirm is recorded as a command that changes nothing.** Confirming a
   synthesis, or a comparison's criteria, twice leaves the artefact byte-identical
   but still moves the document's revision, so undoing the second press undoes

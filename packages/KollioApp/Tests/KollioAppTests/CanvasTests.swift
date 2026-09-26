@@ -392,7 +392,21 @@ struct KollioModelTests {
         #expect(model.document != before)
         #expect(model.preview == nil)
         model.undo()
-        #expect(model.document == before)
+        // The work is undone and the record of it is not.
+        //
+        // `model.document == before` was one assertion covering two claims, and it
+        // stopped being true when the document grew an append-only ledger. Undoing
+        // a person's action is not supposed to delete the fact that they did it, so
+        // the content is compared and the ledger is checked to have only grown.
+        #expect(model.document.content == before.content)
+        #expect(model.document.relationships == before.relationships)
+        #expect(model.document.decisions == before.decisions)
+        #expect(model.document.semanticRevision == before.semanticRevision)
+        #expect(model.document.history.count > before.history.count)
+        #expect(model.document.history.entries.contains { entry in
+            if case .applied = entry.kind { return entry.label == "Keep proposal" }
+            return false
+        })
     }
 
     @Test("Set aside collapses the branch and keeps the reason")

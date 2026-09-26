@@ -220,11 +220,24 @@ struct UndoTests {
         }
         let grewByEveryCreatedObject = session.document.content.count - before.content.count == createdCount
         let undone = session.undo()
-        let restored = session.document == before
+        // The content is restored, and the history is not rolled back with it.
+        //
+        // These were one assertion, `session.document == before`, and it stopped
+        // being true the moment the document grew an append-only ledger. The
+        // content claim and the record claim are different claims: a person undoing
+        // an action expects their work undone, not their record of having done it
+        // deleted. So they are now two assertions, and the second says the ledger
+        // only ever grows.
+        let restored = session.document.content == before.content
+            && session.document.relationships == before.relationships
+            && session.document.decisions == before.decisions
+            && session.document.semanticRevision == before.semanticRevision
+        let historyGrew = session.document.history.count > before.history.count
         #expect(kept)
         #expect(grewByEveryCreatedObject)
         #expect(undone)
         #expect(restored)
+        #expect(historyGrew)
     }
 
     @Test("Redo replays the same transaction")
@@ -238,14 +251,26 @@ struct UndoTests {
         ))], label: "edit")
         let after = session.document
         let undone = session.undo()
-        let backToStart = session.document == before
+        // Content only, for the same reason as above: the ledger survives an undo
+        // and a redo, because the record of the work is not the work.
+        let backToStart = session.document.content == before.content
+            && session.document.semanticRevision == before.semanticRevision
+        let historyAfterUndo = session.document.history.count
         let redone = session.redo()
-        let forwardAgain = session.document == after
+        let forwardAgain = session.document.content == after.content
+            && session.document.semanticRevision == after.semanticRevision
+        // A redo changes the content back and records nothing new. The reversal
+        // stays on the ledger, so after a redo the record understates the work: it
+        // says the action was taken back when it was not. That is recorded as a
+        // known limitation rather than papered over with an entry that claims
+        // something untrue.
+        let historyUnchanged = session.document.history.count == historyAfterUndo
         #expect(applied)
         #expect(undone)
         #expect(backToStart)
         #expect(redone)
         #expect(forwardAgain)
+        #expect(historyUnchanged)
     }
 
     @Test("A new action after an undo drops the redo tail")

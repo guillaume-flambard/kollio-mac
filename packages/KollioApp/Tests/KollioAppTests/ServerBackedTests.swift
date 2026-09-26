@@ -118,7 +118,12 @@ struct ServerBackedTests {
         #expect(session.document.content.count > document.content.count)
         let undone = session.undo()
         #expect(undone)
-        #expect(session.document == document)
+        // Content restored, record kept: the same split the core tests make, for
+        // the same reason. A kept proposal leaves the ledger behind on purpose.
+        #expect(session.document.content == document.content)
+        #expect(session.document.relationships == document.relationships)
+        #expect(session.document.semanticRevision == document.semanticRevision)
+        #expect(session.document.history.count > document.history.count)
     }
 
     @Test("The same request in French and in English is answered by the server")

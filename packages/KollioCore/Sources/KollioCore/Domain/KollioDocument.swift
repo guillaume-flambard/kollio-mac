@@ -40,6 +40,11 @@ public struct KollioDocument: Codable, Hashable, Sendable {
     /// share, and because the read set it carries is the only record of what was
     /// consulted when the conclusions were drawn.
     public var summaries: SummaryLedger
+    /// What a person did, in order. Append-only, and never authoritative: the
+    /// document above is the truth and a file may arrive without one. It is here
+    /// because the document cannot answer "what happened to this object?", and
+    /// because a record that can be edited is not a record.
+    public var history: HistoryLedger
 
     public init(
         schemaVersion: Int = KollioDocument.currentSchemaVersion,
@@ -58,7 +63,8 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         claims: ClaimLedger = ClaimLedger(),
         clarifications: ClarificationLedger = ClarificationLedger(),
         comparisons: ComparisonLedger = ComparisonLedger(),
-        summaries: SummaryLedger = SummaryLedger()
+        summaries: SummaryLedger = SummaryLedger(),
+        history: HistoryLedger = HistoryLedger()
     ) {
         self.schemaVersion = schemaVersion
         self.documentId = documentId
@@ -77,12 +83,14 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         self.clarifications = clarifications
         self.comparisons = comparisons
         self.summaries = summaries
+        self.history = history
     }
 
-    /// 6 added the `summaries` ledger. 5 added the `comparisons` ledger. A file written before it decodes to a
+    /// 7 added the `history` ledger. 6 added `summaries`. 5 added the `comparisons` ledger. A file written before it decodes to a
     /// document with no comparisons, which is the truth about it.
     /// 6 adds `summaries`.
-    public static let currentSchemaVersion = 6
+    /// 7 adds `history`.
+    public static let currentSchemaVersion = 7
 
     /// 2 added the `sources` ledger. A file written at version 1 has no `sources`
     /// key and decodes as a document with no sources, which is the truth about it.
@@ -97,6 +105,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         case schemaVersion, documentId, revision, semanticRevision, createdAt, updatedAt
         case content, relationships, decisions, contributions, products
         case presentation, sources, claims, clarifications, comparisons, summaries
+        case history
     }
 
     private struct IdKey: CodingKey {
@@ -130,6 +139,11 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         // A file written before syntheses existed decodes to a document with none,
         // which is the truth about it rather than a file to repair.
         summaries = try container.decodeIfPresent(SummaryLedger.self, forKey: .summaries) ?? SummaryLedger()
+        // A file written before the ledger existed decodes to a document with no
+        // history, which is the truth about it. It is not an error and it is not
+        // back-filled: inventing a past nobody recorded would be worse than
+        // admitting there is none.
+        history = try container.decodeIfPresent(HistoryLedger.self, forKey: .history) ?? HistoryLedger()
     }
 
     private static func decodeMap<Key: KollioIdentifier, Value: Decodable>(
@@ -166,6 +180,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         try container.encode(clarifications, forKey: .clarifications)
         try container.encode(comparisons, forKey: .comparisons)
         try container.encode(summaries, forKey: .summaries)
+        try container.encode(history, forKey: .history)
     }
 
     private static func encodeMap<Key: KollioIdentifier, Value: Encodable>(

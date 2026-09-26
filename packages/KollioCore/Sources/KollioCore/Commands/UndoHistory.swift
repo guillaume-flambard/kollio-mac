@@ -23,6 +23,13 @@ public struct UndoHistory: Sendable {
     public var canUndo: Bool { cursor > 0 }
     public var canRedo: Bool { cursor < entries.count }
 
+    /// The entry a following `undo` would revert.
+    ///
+    /// Read *before* calling `undo`, because `undo` moves the cursor and does not
+    /// report what it did. The audit ledger needs to say which action was taken
+    /// back, and a reversal that cannot name its target is only half a record.
+    public var nextUndoIndex: Int? { canUndo ? cursor - 1 : nil }
+
     public var undoLabel: String? { canUndo ? entries[cursor - 1].label : nil }
     public var redoLabel: String? { canRedo ? entries[cursor].label : nil }
 
@@ -74,12 +81,50 @@ public struct KollioSession: Sendable {
     public var document: KollioDocument { store.document }
     public var semanticRevision: Int { store.semanticRevision }
 
+    /// The history ids of the applied actions, aligned with `history.entries`.
+    ///
+    /// Kept beside the undo stack rather than inside it because the two answer
+    /// different questions: one is "what can I take back in this session", the
+    /// other is "what happened to this document". They are trimmed together, and
+    /// `recordReversal` indexes this with the stack's own cursor.
+    private var appliedHistoryIDs: [HistoryEntryID] = []
+
     @discardableResult
     public mutating func apply(_ commands: [Command], label: String, at date: Date = Date()) -> Bool {
         let before = store.document
+        var updated = before
         do {
             try store.apply(commands, at: date)
-            history.record(label: label, before: before, after: store.document)
+            updated = store.document
+            // Only what actually changed is recorded, because the undo stack drops
+            // a no-op too. A ledger counting an action nobody can take back would
+            // be counting something that did not happen.
+            if before != updated {
+                let id = HistoryEntryID(UUID().uuidString)
+                var ledger = updated.history
+                ledger.append(HistoryEntry(
+                    id: id,
+                    kind: .applied,
+                    at: date,
+                    label: label,
+                    commands: commands,
+                    revisionBefore: before.revision,
+                    revisionAfter: updated.revision,
+                    semanticRevisionBefore: before.semanticRevision,
+                    semanticRevisionAfter: updated.semanticRevision
+                ))
+                updated.history = ledger
+                appliedHistoryIDs.append(id)
+                if appliedHistoryIDs.count > history.limit {
+                    appliedHistoryIDs.removeFirst(appliedHistoryIDs.count - history.limit)
+                }
+            }
+            // Recorded *after* the ledger append, deliberately. The undo snapshot
+            // has to be a document that contains the history, or undoing would
+            // restore a state that has forgotten the action it is undoing, and the
+            // ledger would lose its own entry every time a person pressed Cmd+Z.
+            history.record(label: label, before: before, after: updated)
+            store.replace(with: updated)
             lastError = nil
             return true
         } catch let error as DocumentError {
@@ -92,15 +137,58 @@ public struct KollioSession: Sendable {
     }
 
     @discardableResult
-    public mutating func undo() -> Bool {
-        guard let document = history.undo(current: store.document) else { return false }
+    public mutating func undo(at date: Date = Date()) -> Bool {
+        let index = history.nextUndoIndex
+        // The ledger is carried across the restore. The undo snapshot predates the
+        // entry it is undoing, so restoring it wholesale would erase the record of
+        // the action and leave the ledger claiming a reversal of something it has
+        // never heard of. An action is not undone by forgetting it happened; it is
+        // undone by being recorded as undone.
+        let ledger = store.document.history
+        guard var document = history.undo(current: store.document) else { return false }
+        document.history = ledger
         store.replace(with: document)
+        // A reversal is only recorded when the target is still addressable. When
+        // the stack has been trimmed past the ledger, the reversal is not written
+        // rather than written against the wrong entry, because a reversal pointing
+        // at the wrong action is worse than a missing one.
+        if let index, index < appliedHistoryIDs.count {
+            recordReversal(of: appliedHistoryIDs[index], at: date)
+        }
         return true
+    }
+
+    /// Records that an action was taken back.
+    ///
+    /// Appended, never substituted. "That was undone" and "that never happened"
+    /// are different statements, and only the second one erases work somebody did.
+    private mutating func recordReversal(of target: HistoryEntryID, at date: Date) {
+        let before = store.document
+        var ledger = before.history
+        ledger.append(HistoryEntry(
+            id: HistoryEntryID(UUID().uuidString),
+            kind: .reversed(target: target),
+            at: date,
+            label: history.undoLabel ?? "undo",
+            commands: [],
+            revisionBefore: before.revision,
+            revisionAfter: before.revision,
+            semanticRevisionBefore: before.semanticRevision,
+            semanticRevisionAfter: before.semanticRevision
+        ))
+        var updated = before
+        updated.history = ledger
+        store.replace(with: updated)
     }
 
     @discardableResult
     public mutating func redo() -> Bool {
-        guard let document = history.redo(current: store.document) else { return false }
+        // Same reasoning as `undo`, and for the same reason: the snapshot's ledger
+        // is older than the one this document has, so keeping the current one is
+        // the only way the record stays append-only.
+        let ledger = store.document.history
+        guard var document = history.redo(current: store.document) else { return false }
+        document.history = ledger
         store.replace(with: document)
         return true
     }

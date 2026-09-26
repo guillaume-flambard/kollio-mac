@@ -19,8 +19,8 @@
     "schemaVersion": {
       "type": "integer",
       "minimum": 1,
-      "maximum": 6,
-      "description": "2 added `sources`, 3 added `claims`, 4 added `clarifications`, 5 added `comparisons`, 6 added `summaries`. A file written before any of them is a document without them, not a broken one."
+      "maximum": 7,
+      "description": "2 added `sources`, 3 added `claims`, 4 added `clarifications`, 5 added `comparisons`, 6 added `summaries`, 7 added `history`. A file written before any of them is a document without them, not a broken one."
     },
     "documentId": {
       "type": "string"
@@ -162,6 +162,20 @@
                 "$ref": "#/$defs/comparison"
               }
             ]
+          }
+        }
+      }
+    },
+    "history": {
+      "type": "object",
+      "description": "What a person did, in order. Absent before version 7, and a document may legitimately have none: the ledger is an audit trail, not the truth, and it cannot be replayed.",
+      "additionalProperties": false,
+      "properties": {
+        "entries": {
+          "type": "array",
+          "description": "Append-only, oldest first.",
+          "items": {
+            "$ref": "#/$defs/historyEntry"
           }
         }
       }
@@ -1656,6 +1670,79 @@
           "type": "string",
           "minLength": 1,
           "description": "Why the wide selection was refused, in words a person can act on."
+        }
+      }
+    },
+    "historyEntry": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "at",
+        "label",
+        "commands",
+        "revisionBefore",
+        "revisionAfter",
+        "semanticRevisionBefore",
+        "semanticRevisionAfter"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "oneOf": [
+            {
+              "type": "string",
+              "const": "applied"
+            },
+            {
+              "type": "object",
+              "required": [
+                "reversed"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "reversed": {
+                  "type": "string",
+                  "description": "The id of the entry this one takes back. The target is never removed, which is the point: 'that was undone' and 'that never happened' are different statements and only the second erases the work."
+                }
+              }
+            }
+          ]
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The menu label the person acted under. The only description of why that exists."
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/command"
+          },
+          "description": "Kept verbatim. Empty for a reversal, which names its target instead of carrying the commands again."
+        },
+        "revisionBefore": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "revisionAfter": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "semanticRevisionBefore": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "semanticRevisionAfter": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     }
