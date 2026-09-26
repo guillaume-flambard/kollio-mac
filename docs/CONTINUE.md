@@ -280,8 +280,8 @@ The one implemented item is measurement of the intelligence that already existed
    camera's visible rectangle to cull. Connector routing samples its curve, so this is where the
    cost will show.
 6. Keyboard traversal between objects, so the canvas is usable without a pointer.
-7. **AI-06, synthesise and prepare a deliverable**, then AI-11, AI-12, CAN-09 and
-   CAN-10. Those are the remaining L3 lots, and each one now has the layer it
+7. **AI-12, manage a large context**, then CAN-09 and CAN-10. Those are the
+   remaining L3 lots, and each one now has the layer it
    needs: a comparison is a reading, a synthesis is a derivative that must never
     replace its sources. **AI-06 is verified.** The model, the commands,
     the refusals, the file format, the export, the composer and the card are in:

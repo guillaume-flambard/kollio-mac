@@ -63,6 +63,13 @@ SDK 27.0.
   nothing. It is shared with comparisons, and it is recorded here rather than
   fixed for syntheses alone, which would leave the two behaviours divergent for
   the sake of tidiness.
+- **No person has seen a proposal's attribution panel either.** The destination,
+  the prompt revision, the limitations and what was read are all implemented and
+  all covered by 18 tests, and the label on a demo proposal survives into the
+  stored record rather than living in a menu. None of that is a screenshot. The
+  panel has never been looked at, and the two destinations that would need real
+  consent — Private Cloud and a remote service — have no implementation, so what is
+  labelled is what a proposal *could* declare rather than what the product can do.
 - **No person has seen a synthesis.** The model, the commands, the refusals, the
   file format, the Markdown export, the deterministic composer and the card are all
   in, covered by 85 tests, and AI-06 is `automatedVerified` because its three

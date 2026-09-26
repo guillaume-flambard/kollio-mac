@@ -237,6 +237,25 @@ public enum L10n {
     // point of the String Catalog is that a translator sees the string and its
     // context, and a French literal inside a Swift file is neither.
 
+    // MARK: Proposal attribution (AI-11)
+
+    public static var proposalLeftThisMachine: String { callAsFunction("proposal.leftThisMachine") }
+    public static var proposalPromptVersionUnknown: String { callAsFunction("proposal.promptVersionUnknown") }
+    public static var proposalWhy: String { callAsFunction("proposal.why") }
+    public static var proposalLimitations: String { callAsFunction("proposal.limitations") }
+    public static var proposalReferenceMissing: String { callAsFunction("proposal.referenceMissing") }
+    public static var proposalDestinationOnDevice: String { callAsFunction("proposal.destination.onDevice") }
+    public static var proposalDestinationPrivateCloud: String { callAsFunction("proposal.destination.privateCloud") }
+    public static var proposalDestinationRemote: String { callAsFunction("proposal.destination.remote") }
+    public static var proposalDestinationDemo: String { callAsFunction("proposal.destination.demo") }
+
+    public static func proposalRead(_ count: Int) -> String {
+        String(
+            format: callAsFunction(count > 1 ? "proposal.readPlural" : "proposal.read"),
+            count
+        )
+    }
+
     public static var summaryDefaultTitle: String { callAsFunction("summary.defaultTitle") }
     public static var summaryDefaultObjective: String { callAsFunction("summary.defaultObjective") }
     public static var summaryNothingRecorded: String { callAsFunction("summary.nothingRecorded") }

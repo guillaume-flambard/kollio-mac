@@ -4366,6 +4366,188 @@
           }
         }
       }
+    },
+    "proposal.leftThisMachine": {
+      "comment": "Shown only when the destination is not this Mac. A person repeating anything from a proposal to somebody else needs this before they do.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "left this machine"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a quitté cette machine"
+          }
+        }
+      }
+    },
+    "proposal.promptVersionUnknown": {
+      "comment": "A proposal stored before the prompt revision was recorded. Said rather than hidden, because a gap that looks like missing work is worse than a gap that is named.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "prompt version unknown"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "version d’invite inconnue"
+          }
+        }
+      }
+    },
+    "proposal.limitations": {
+      "comment": "What the generator said it could not do. Read before the answer, because a limitation nobody sees is one nobody accounts for.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limitations"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limites"
+          }
+        }
+      }
+    },
+    "proposal.referenceMissing": {
+      "comment": "A reference the proposal was based on, which the document no longer holds. Kept and marked, never dropped: dropping it would change what the proposal appears to rest on.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no longer in the document"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "introuvable"
+          }
+        }
+      }
+    },
+    "proposal.destination.onDevice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On this Mac"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sur ce Mac"
+          }
+        }
+      }
+    },
+    "proposal.destination.privateCloud": {
+      "comment": "Labelled, and reported as unavailable in this build. Not reachable yet, and a menu listing a destination the product cannot reach is a lie with a button on it.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Private Cloud"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Private Cloud"
+          }
+        }
+      }
+    },
+    "proposal.destination.remote": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remote service"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Service distant"
+          }
+        }
+      }
+    },
+    "proposal.destination.demo": {
+      "comment": "Not an answer from the product. The label has to survive into the proposal rather than staying in a menu.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demonstration"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Démonstration"
+          }
+        }
+      }
+    },
+    "proposal.read": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d item read"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d élément lu"
+          }
+        }
+      }
+    },
+    "proposal.readPlural": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d items read"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d éléments lus"
+          }
+        }
+      }
+    },
+    "proposal.why": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Why?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pourquoi ?"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

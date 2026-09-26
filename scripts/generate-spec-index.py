@@ -228,6 +228,28 @@ STATUS_NOTES = {
                "card before the selection, and the mark is drawn on the object. Owed: the card has "
                "never been seen on a screen, and an assessment records only the first moved "
                "citation of a claim when two sources have both moved."),
+    "AI-11": ("automatedVerified",
+               "GeneratorAttributionTests (9) and ProposalAttributionTests (9). AC01 the "
+               "four destinations are distinct and only two are reachable in this "
+               "build: Private Cloud is a real Apple API and is reported unavailable "
+               "rather than listed, because a menu offering a destination the product "
+               "cannot reach is a lie with a button on it, and a demo answer is "
+               "labelled as a demonstration in the stored record rather than only in "
+               "a menu. AC02 no chain of thought and no key: the attribution type has "
+               "no field that could carry a prompt, a thought or a credential, and a "
+               "test reads the rendered text and asserts it contains none of sk-, a "
+               "bearer prefix, api_key, apiKey or token=. The rationale a person sees "
+               "is the one sentence the model addressed to them, not a derivation. "
+               "AC03 references are checked: what was read is resolved against the "
+               "document rather than asserted, a reference that no longer resolves is "
+               "kept and marked instead of dropped, and a reference carries a "
+               "truncated label rather than the content it points at. A proposal "
+               "from before the prompt revision was recorded still reads and says the "
+               "version is unknown rather than hiding the gap. The attribution is "
+               "carried beside the existing generator rather than replacing it, so a "
+               "stored proposal cannot be contradicted by a separately declared "
+               "destination. Owed: nobody has read the panel, and the two destinations "
+               "that would need real consent have no implementation to test against."),
     "AI-06": ("automatedVerified",
                "74 core tests and 11 interface tests. The domain, the commands, the "
                "export, the composer and the card. AC01 the initial text stays "

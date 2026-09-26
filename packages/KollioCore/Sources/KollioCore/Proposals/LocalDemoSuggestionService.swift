@@ -154,7 +154,16 @@ public struct LocalDemoSuggestionService: SuggestionService {
             rationale: expansion.rationale,
             operations: operations,
             placementHints: hints,
-            generator: .init(name: "LocalDemoSuggestionService", deterministic: true)
+            generator: .init(name: "LocalDemoSuggestionService", deterministic: true),
+            // Labelled as a demonstration, in the record and not only in the menu.
+            // A person who kept a direction a demo proposed has to be able to find
+            // out afterwards that a demo proposed it.
+            attribution: GeneratorAttribution(
+                name: "LocalDemoSuggestionService",
+                promptVersion: "local-demo-v1",
+                destination: .demonstration,
+                isDeterministic: true
+            )
         )
         try validator.validate(proposal, against: document, scope: request.scope)
         return ProposalResponse(status: .proposed, proposal: proposal)
@@ -290,7 +299,16 @@ public struct LocalDemoSuggestionService: SuggestionService {
                 ))
             ],
             placementHints: [.init(objectID: questionID, relativeTo: targetID)],
-            generator: .init(name: "LocalDemoSuggestionService", deterministic: true)
+            generator: .init(name: "LocalDemoSuggestionService", deterministic: true),
+            // Labelled as a demonstration, in the record and not only in the menu.
+            // A person who kept a direction a demo proposed has to be able to find
+            // out afterwards that a demo proposed it.
+            attribution: GeneratorAttribution(
+                name: "LocalDemoSuggestionService",
+                promptVersion: "local-demo-v1",
+                destination: .demonstration,
+                isDeterministic: true
+            )
         )
         return ProposalResponse(status: .proposed, proposal: proposal)
     }
@@ -321,7 +339,16 @@ public struct LocalDemoSuggestionService: SuggestionService {
                     provenance: provenance
                 ))
             ],
-            generator: .init(name: "LocalDemoSuggestionService", deterministic: true)
+            generator: .init(name: "LocalDemoSuggestionService", deterministic: true),
+            // Labelled as a demonstration, in the record and not only in the menu.
+            // A person who kept a direction a demo proposed has to be able to find
+            // out afterwards that a demo proposed it.
+            attribution: GeneratorAttribution(
+                name: "LocalDemoSuggestionService",
+                promptVersion: "local-demo-v1",
+                destination: .demonstration,
+                isDeterministic: true
+            )
         )
         return ProposalResponse(status: .proposed, proposal: proposal)
     }

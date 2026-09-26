@@ -330,6 +330,14 @@ public enum AppleModelError: Error, LocalizedError, Equatable {
 /// so explicitly. Instructions live here, in the adapter, and are not editable
 /// privileges embedded in a `.kollio` file.
 enum ApplePromptBuilder {
+    /// The revision of the instruction set below.
+    ///
+    /// Bumped by hand when the wording changes, and carried on every proposal, so
+    /// a person looking at an old answer can see which question produced it. It is
+    /// a string rather than a counter because the useful thing to know is "which
+    /// text", not "how many times it changed".
+    static let version = "apple-local-explore-v1"
+
     static let instructions = """
     You are the proposal engine of Kollio, a living visual document.
 

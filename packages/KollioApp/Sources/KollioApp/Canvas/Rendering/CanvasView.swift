@@ -182,6 +182,12 @@ struct CanvasView: View {
             if let preview = model.preview {
                 ProposalDecisionView(model: model)
                     .position(proposalDecisionPosition(preview, viewport: viewport))
+                // Above the decision, so the reasons read before the choice rather
+                // than after it, and offset so the two never overlap.
+                if model.showsProposalAttribution {
+                    ProposalAttributionView(proposal: preview.proposal, readRefs: preview.readRefs)
+                        .position(attributionPosition(preview, viewport: viewport))
+                }
             }
             if let composer = model.composer {
                 ComposerView(model: model, anchor: composer.anchorID)
@@ -319,6 +325,13 @@ struct CanvasView: View {
 
     /// Offset from the comparison so the two cards never overlap, and clamped so
     /// the synthesis stays reachable when the comparison is open in a narrow window.
+    /// Just above the decision card, and clamped so the panel stays reachable when
+    /// the proposal is near the top of the window.
+    private func attributionPosition(_ preview: ProposalPreview, viewport: CGSize) -> CGPoint {
+        let base = proposalDecisionPosition(preview, viewport: viewport)
+        return CGPoint(x: base.x, y: max(150, base.y - 200))
+    }
+
     private func summaryPosition(viewport: CGSize) -> CGPoint {
         CGPoint(x: min(max(260, viewport.width / 2 - 520) + 440, viewport.width - 240),
                 y: min(max(320, viewport.height / 2) + 40, viewport.height - 320))

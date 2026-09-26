@@ -70,6 +70,13 @@ public struct ProposalPreview: Identifiable, Equatable {
     /// The short, user-facing sentence shown next to the proposal.
     public var rationale: String
     public var summary: String
+    /// What the generator was shown, resolved against the document.
+    ///
+    /// Carried on the preview rather than recomputed on demand, so the panel and
+    /// the ghost branch always describe the same request. A reference that no longer
+    /// resolves is kept and marked: dropping it would change what the proposal
+    /// appears to have been based on.
+    public var readRefs: [ProposalInputRef] = []
 
     public static func == (lhs: ProposalPreview, rhs: ProposalPreview) -> Bool {
         lhs.id == rhs.id && lhs.placements == rhs.placements
@@ -102,6 +109,13 @@ public final class KollioModel {
     /// The synthesis the card is showing, if one is open. Transient like every
     /// other card: it is where a person is looking, not a fact about the document.
     public var openSummaryID: SummaryID?
+    /// Whether the proposal's attribution panel is open. Transient, and closed by
+    /// default: the destination and what was read are things a person asks for, not
+    /// something the interface puts in front of them every time.
+    public var showsProposalAttribution = false
+    /// The request behind the proposal currently on screen, kept so the attribution
+    /// panel and the ghost branch always describe the same one.
+    public var lastRequest: ProposalRequest?
     public var isThinking = false
     /// How far a streaming answer has got. It is display only: a progress carries
     /// no identifier and cannot be kept, so it is never a preview and never
@@ -758,6 +772,8 @@ public final class KollioModel {
         openComparison = comparison.id
         return comparison.id
     }
+
+    // MARK: What a proposal was based on
 
     // MARK: Syntheses
 
@@ -2283,6 +2299,7 @@ public final class KollioModel {
                 return false
             }
             progress = nil
+            lastRequest = request
             handle(response, anchor: id, requestId: request.requestId)
             return true
         } catch is CancellationError {
@@ -2447,6 +2464,26 @@ public final class KollioModel {
     /// lands on top of what is already on the canvas: a proposed object that
     /// would overlap an existing one is pushed down until the document stays
     /// readable.
+    /// What was read, taken from the request rather than rebuilt from the document.
+    private var readRefs: [ProposalInputRef] {
+        guard let request = lastRequest else { return [] }
+        return ProposalInputRef.resolveAll(
+            request.context.map { item in
+                (
+                    id: item.objectID.rawValue,
+                    kind: ProposalInputRef.Kind.object,
+                    // A label, never the content: a proposal that copied the text of
+                    // a source into its own record would be a copy of somebody's
+                    // document living where it was not asked to be.
+                    label: item.text.count > 90
+                        ? String(item.text.prefix(90)) + "…"
+                        : item.text
+                )
+            },
+            in: document
+        )
+    }
+
     func makePreview(proposal: Proposal, anchor: ObjectID) -> ProposalPreview {
         var objectIDs: [ObjectID] = []
         var relationshipIDs: [RelationshipID] = []
@@ -2505,7 +2542,8 @@ public final class KollioModel {
             relationshipIDs: relationshipIDs,
             anchorID: anchor,
             rationale: reason,
-            summary: proposal.summary.resolve(languageCode: languageCode)
+            summary: proposal.summary.resolve(languageCode: languageCode),
+            readRefs: readRefs
         )
     }
 

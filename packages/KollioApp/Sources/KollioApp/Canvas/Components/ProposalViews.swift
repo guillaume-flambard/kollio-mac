@@ -86,6 +86,13 @@ struct ProposalDecisionView: View {
                 HStack(spacing: Space.s) {
                     ActionButton(title: L10n.keep, isDefault: true) { model.keepPreview() }
                     ActionButton(title: L10n.setAside) { model.discardPreview() }
+                    Spacer(minLength: 0)
+                    // Asked for rather than shown. Where an answer came from and
+                    // what it was based on are things a person wants before they
+                    // keep it, not a paragraph in front of them every time.
+                    ActionButton(title: L10n.proposalWhy, isDefault: false) {
+                        model.showsProposalAttribution.toggle()
+                    }
                 }
             }
             .padding(Space.l)

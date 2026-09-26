@@ -11,6 +11,7 @@
 		10F8CB2D7D30D2211FD8E9AE /* ComparisonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9779982FB7609BD2B6F578E6 /* ComparisonView.swift */; };
 		A686C74D9BF4017208657CCB /* ContextualActionSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00B9378EF955013031F86DA /* ContextualActionSet.swift */; };
 		AE330C2613E8DA0A95394DCA /* ContextualViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327F089F1E9542437CF4D0BA /* ContextualViews.swift */; };
+		5440DC9067D9837FE352F185 /* ProposalAttributionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F892151C15E8A4C4A77292 /* ProposalAttributionView.swift */; };
 		2D599205436A6EE6EDCCE95E /* ProposalViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1562A6F0E1A1E1FB3F4E6C20 /* ProposalViews.swift */; };
 		614FC4854E9F0C5FC688B5D5 /* SummaryCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD27DD04E1C9B3F1BC98D586 /* SummaryCardView.swift */; };
 		B27AF4A4D83015FA1DB0E13F /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57F0D306F6B02200C92CF2C4 /* Camera.swift */; };
@@ -43,6 +44,7 @@
 		9779982FB7609BD2B6F578E6 /* ComparisonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ComparisonView.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Components/ComparisonView.swift; sourceTree = SOURCE_ROOT; };
 		E00B9378EF955013031F86DA /* ContextualActionSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContextualActionSet.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Components/ContextualActionSet.swift; sourceTree = SOURCE_ROOT; };
 		327F089F1E9542437CF4D0BA /* ContextualViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContextualViews.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Components/ContextualViews.swift; sourceTree = SOURCE_ROOT; };
+		90F892151C15E8A4C4A77292 /* ProposalAttributionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProposalAttributionView.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Components/ProposalAttributionView.swift; sourceTree = SOURCE_ROOT; };
 		1562A6F0E1A1E1FB3F4E6C20 /* ProposalViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProposalViews.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Components/ProposalViews.swift; sourceTree = SOURCE_ROOT; };
 		AD27DD04E1C9B3F1BC98D586 /* SummaryCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SummaryCardView.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Components/SummaryCardView.swift; sourceTree = SOURCE_ROOT; };
 		57F0D306F6B02200C92CF2C4 /* Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Camera.swift; path = ../../packages/KollioApp/Sources/KollioApp/Canvas/Geometry/Camera.swift; sourceTree = SOURCE_ROOT; };
@@ -131,6 +133,7 @@
 				9779982FB7609BD2B6F578E6 /* ComparisonView.swift */,
 				E00B9378EF955013031F86DA /* ContextualActionSet.swift */,
 				327F089F1E9542437CF4D0BA /* ContextualViews.swift */,
+				90F892151C15E8A4C4A77292 /* ProposalAttributionView.swift */,
 				1562A6F0E1A1E1FB3F4E6C20 /* ProposalViews.swift */,
 				AD27DD04E1C9B3F1BC98D586 /* SummaryCardView.swift */,
 			);
@@ -306,6 +309,7 @@
 				10F8CB2D7D30D2211FD8E9AE /* ComparisonView.swift in Sources */,
 				A686C74D9BF4017208657CCB /* ContextualActionSet.swift in Sources */,
 				AE330C2613E8DA0A95394DCA /* ContextualViews.swift in Sources */,
+				5440DC9067D9837FE352F185 /* ProposalAttributionView.swift in Sources */,
 				2D599205436A6EE6EDCCE95E /* ProposalViews.swift in Sources */,
 				614FC4854E9F0C5FC688B5D5 /* SummaryCardView.swift in Sources */,
 				B27AF4A4D83015FA1DB0E13F /* Camera.swift in Sources */,

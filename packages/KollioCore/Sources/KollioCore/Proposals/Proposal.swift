@@ -13,6 +13,13 @@ public struct Proposal: Codable, Hashable, Sendable, Identifiable {
     public var placementHints: [PlacementHint]
     public var limitations: [LocalizedText]
     public var generator: Generator
+    /// Where this came from, in words, with the prompt revision and what was read.
+    ///
+    /// Kept beside `generator` rather than replacing it, because `generator` is
+    /// already inside stored proposals and inside every provider. This is the part
+    /// a person is entitled to see, and it is derived from the generator rather
+    /// than declared independently, so the two cannot disagree.
+    public var attribution: GeneratorAttribution?
 
     public struct Generator: Codable, Hashable, Sendable {
         public var name: String
@@ -52,7 +59,8 @@ public struct Proposal: Codable, Hashable, Sendable, Identifiable {
         operations: [Command] = [],
         placementHints: [PlacementHint] = [],
         limitations: [LocalizedText] = [],
-        generator: Generator
+        generator: Generator,
+        attribution: GeneratorAttribution? = nil
     ) {
         self.proposalId = proposalId
         self.requestId = requestId
@@ -64,6 +72,7 @@ public struct Proposal: Codable, Hashable, Sendable, Identifiable {
         self.placementHints = placementHints
         self.limitations = limitations
         self.generator = generator
+        self.attribution = attribution
     }
 
     /// Object ids the proposal depends on. A document that changed any of them
