@@ -2421,7 +2421,6 @@ public final class KollioModel {
     /// Pushes a candidate down, then sideways, until it is clear of everything
     /// already on the canvas. Deterministic, and it never moves existing work.
     private func separate(_ position: Position, size: Size, from others: [Rect]) -> Position {
-        let step = 34.0
         let gap = Space.m
         var candidate = position
         for _ in 0..<24 {

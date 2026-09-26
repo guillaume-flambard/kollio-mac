@@ -139,7 +139,10 @@ public struct AppleLocalSuggestionService: StreamingSuggestionService {
         // Targets and the root context are required: they are what the person
         // asked about. Everything else is material that helps but is not the ask.
         let required: Set<ObjectID> = Set(request.targetIds)
-        let costs = (request.context ?? []).map { item in
+        // `context` is a plain array and defaults to empty, so there is nothing to
+        // coalesce here: a `?? []` would have been a second, unreachable answer to a
+        // question the type has already answered.
+        let costs = request.context.map { item in
             ContextProjector.ItemCost(
                 item: .object(item.objectID),
                 characters: item.text.count + item.objectID.rawValue.count + 16,
