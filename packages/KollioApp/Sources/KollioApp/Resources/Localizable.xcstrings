@@ -3927,6 +3927,24 @@
           }
         }
       }
+    },
+    "comparison.record": {
+      "comment": "The button that records one cell. The label is the whole action: it says what happens, not that something is possible.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renseigner"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
