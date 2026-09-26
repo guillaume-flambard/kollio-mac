@@ -53,3 +53,66 @@ streams and the sentence appears as it is written. What is still missing is stre
 the ghost objects still appear all at once, because a half-decoded direction has no identifier, no kind
 the canvas can trust and no way to be validated. Showing it early would mean showing something that
 cannot be kept and might not survive the next token, which is worse than showing a sentence growing.
+
+## AI-03, explore a branch
+
+Three things were declared and inert. `ProposalRequest.Preconditions.readSetFingerprint`
+existed and was **set nowhere and read nowhere**; the request carried no `context` at all;
+and `noChange` set `preview = nil`, so an answer that proposed nothing destroyed the branch
+that was already on the canvas.
+
+- [x] **AC01: the exact instruction is transmitted.** It was being *discarded*: the
+      `Explore` branch of `submitComposer` cleared the composer and called `explore` with
+      no instruction, so a person who typed a steer and pressed the key had it silently
+      ignored. A refused send now also keeps the words in the composer.
+- [x] `readSet(for:)`: the target, what it links to, one step beyond, and every
+      direction already rejected. A constraint three branches away is not applicable and
+      would only spend the context budget.
+- [x] **AC02: rejected directions are consulted, with their reasons.** `ContextItem`
+      gained a `reason`, because "no budget" and "tried it in March" are different
+      instructions and a bare list of dead ends reads as a ban rather than as reasoning.
+      No reason invented when none was given.
+- [x] A reopened direction is transmitted as `active`, not as still rejected, so the
+      engine cannot refuse a door the person just opened.
+- [x] The engine honours only the rejections **it was given** in the read set, not the
+      ones it could find in the document. Reading the whole document would make it look
+      as though it were consulting the reasoning when it was only pattern-matching state,
+      and would quietly forgive a client that forgot to transmit.
+- [x] **The rejection signature is stable.** Computed by sorting before hashing, because
+      a fingerprint is only worth anything if the same read set always gives the same
+      string; iterating dictionaries and hashing in order would have made every
+      precondition look stale. The reason is folded in, so identical text rejected for
+      two different reasons is two different contexts.
+- [x] **AC03: a new exploration does not erase the previous proposal.** A new proposal
+      supersedes the old one, which is *offered* through `supersededProposal` and kept
+      readable in `keptProposals`, and `noChange` takes nothing away at all: nothing
+      arrived, so nothing is lost.
+- [x] A rejected branch is not reopened by the engine: a set-aside target yields
+      `noChange`, and the decision is untouched.
+- [x] A repetitive loop yields `noChange` rather than duplicating itself, and the test
+      asserts no two objects in the document say the same thing.
+- [x] Exploring does not change the parent's status: the parent is byte-identical, the
+      decision count is unchanged, and nothing is written.
+
+### A defect found by a test, and located by measuring
+
+The read set kept the *first* mention of each object. A rejected direction that happened
+to be a neighbour too arrived with `reason: nil` and the rejection loop then skipped it,
+so the same document produced different read sets depending on iteration order, and the
+reason that made a rejection useful was the thing most likely to be lost. Found by two
+failing tests, then located by printing the decisions, the objects and the read set rather
+than by reading the code again. The fix upgrades an existing entry instead of skipping it,
+and emits the set sorted.
+
+### Owed
+
+- [ ] **The offer to keep or hide is not on screen.** `supersededProposal`,
+      `keptProposals`, `keepPreviousProposal` and `hidePreviousProposal` exist and are
+      tested; nothing yet asks the question. The specification requires it to be
+      *offered*, which is interface work.
+- [ ] **Second-degree reach is a guess.** One step beyond the direct neighbours is a
+      placeholder for "applicable", and a real notion of applicability is owed. It is
+      documented in the code as such rather than presented as a rule.
+- [ ] **The read set grows with the neighbourhood.** Bounded by reach, but not by a
+      budget: a dense document could produce a large `context`. The server rebuilds it
+      from the snapshot, so this is a transport concern, not yet a correctness one.

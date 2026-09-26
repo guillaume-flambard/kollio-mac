@@ -396,6 +396,52 @@ catch. A check that passes on its own failure mode is worse than none, so the sc
 plainly that the file is a picture of the whole screen. **The visual evidence for CAN-04,
 CAN-05 and CTX-01 rests on the test suites, not on that picture.**
 
+## Latest batch: AI-03, explore a branch
+
+Three things were declared and inert. `Preconditions.readSetFingerprint` existed and was
+set nowhere and read nowhere. The request carried no `context` at all. And `noChange` set
+`preview = nil`, so an answer that proposed nothing **destroyed the branch already on the
+canvas**.
+
+**AC01** was the sharpest: the exact instruction was being *discarded*. The `Explore`
+branch of `submitComposer` cleared the composer and called `explore` with no instruction,
+so a person who typed a steer and pressed the key had it silently ignored. Now the exact
+sentence travels, and a refused send keeps the words in the composer.
+
+**AC02**: `readSet(for:)` carries the target, what it links to, one step beyond, and every
+rejected direction **with its reason**. "No budget" and "tried it in March" are different
+instructions; a bare list of dead ends reads as a ban rather than as reasoning. A reopened
+direction is transmitted as `active`, so the engine cannot refuse a door the person just
+opened. And the engine honours only the rejections it was *given*, not the ones it could
+find in the document, which would make it look as though it were consulting reasoning when
+it was only pattern-matching state.
+
+**The signature is stable** because it sorts before hashing. A fingerprint is only worth
+anything if the same read set always gives the same string, and iterating dictionaries then
+hashing in order would have made every precondition look stale.
+
+**AC03**: a new proposal supersedes the old one, which is *offered* and kept readable, and
+`noChange` takes nothing away at all. Destroying a pending branch because a later question
+produced no answer is exactly the bug the criterion names.
+
+### Un défaut trouvé par un test, localisé en mesurant
+
+The read set kept the first mention of each object. A rejected direction that was also a
+neighbour arrived with `reason: nil` and the rejection loop skipped it, so the same
+document produced different read sets depending on iteration order, and the reason that
+made a rejection useful was the thing most likely to be lost. Two failing tests found it;
+printing the decisions, the objects and the read set located it, rather than reading the
+code a third time.
+
+Seventeen tests in `ExploringABranchTests`. `verify.sh`: 87 KollioCore, 216 KollioApp,
+29 server, exit 0.
+
+### Ce qui reste dû
+
+The offer to keep or hide is not on screen: the state and the four functions exist and are
+tested, nothing asks. Second-degree reach is a documented guess, not a rule of
+applicability. And the read set is bounded by reach but not by a budget.
+
 ## The next things worth doing, in this order
 
 1. A human pass. Three things only a human can settle: **type a sentence into the entry point and

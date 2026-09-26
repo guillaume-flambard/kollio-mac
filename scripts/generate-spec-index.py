@@ -127,6 +127,16 @@ STATUS_NOTES = {
                "double submission is deduplicated per target. A kind proposed by intelligence asks "
                "first when it changes the reasoning. Owed: nothing on screen asks that question "
                "yet, and a note is not read as a consequence of anything."),
+    "AI-03": ("automatedVerified",
+               "ExploringABranchTests: the exact instruction is transmitted, which it was not, since "
+               "the Explore intent used to discard it and clear the composer. The read set carries "
+               "the target, its neighbours and every rejected direction with its reason, and the "
+               "signature is stable because it sorts before hashing. The engine honours only the "
+               "rejections it was given. AC03 a new proposal is offered rather than erasing the "
+               "previous, and noChange takes nothing away. A rejected branch is not reopened, a "
+               "repetitive loop converges instead of duplicating, and exploring leaves the parent "
+               "byte-identical. Owed: the offer to keep or hide is not on screen, and second-degree "
+               "reach is a documented guess rather than a rule of applicability."),
     "AI-01": ("automatedVerified",
               "AppleAdapterTests: every availability state is a refusal, never a fallback."),
     "AI-02": ("humanVerified",

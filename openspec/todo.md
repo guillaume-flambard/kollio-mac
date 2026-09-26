@@ -13,7 +13,7 @@ A view, not a source of truth. Status meanings:
 | `blockedExternal` | Blocked on a capability or authorisation. |
 | `notInCurrentRelease` | Deliberately out of this product. |
 
-Counts: 21 automatedVerified, 1 humanVerified, 49 specified. 71 features, 213 acceptance criteria.
+Counts: 22 automatedVerified, 1 humanVerified, 48 specified. 71 features, 213 acceptance criteria.
 
 ## L1 — 10 features
 
@@ -44,7 +44,8 @@ Counts: 21 automatedVerified, 1 humanVerified, 49 specified. 71 features, 213 ac
       AppleAdapterTests: every availability state is a refusal, never a fallback.
 - [x] **AI-02** First exploration of your own context · `humanVerified` · 3 AC
       Real on-device generation on two non-Sarah contexts, FR and EN, through the adapter. Steady state is about 2.3 s, first call in a fresh process about 3.6 s: still too slow to feel interactive, and nothing is streamed.
-- [ ] **AI-03** Explore a branch · `specified` · 3 AC
+- [x] **AI-03** Explore a branch · `automatedVerified` · 3 AC
+      ExploringABranchTests: the exact instruction is transmitted, which it was not, since the Explore intent used to discard it and clear the composer. The read set carries the target, its neighbours and every rejected direction with its reason, and the signature is stable because it sorts before hashing. The engine honours only the rejections it was given. AC03 a new proposal is offered rather than erasing the previous, and noChange takes nothing away. A rejected branch is not reopened, a repetitive loop converges instead of duplicating, and exploring leaves the parent byte-identical. Owed: the offer to keep or hide is not on screen, and second-degree reach is a documented guess rather than a rule of applicability.
 - [ ] **AI-04** Answer a clarification · `specified` · 3 AC
 - [x] **AI-07** Examine and correct a proposal · `automatedVerified` · 3 AC
       AppleAdapterTests: minted ids, dropped kinds, bounded branch, noChange.

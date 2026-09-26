@@ -1243,6 +1243,104 @@ public final class KollioModel {
 
     // MARK: Intelligence
 
+    /// What a request about this target actually reads.
+    ///
+    /// AI-03: "Use the useful global context, the target, applicable constraints and
+    /// directions already rejected." Those four are not the same list, and the last
+    /// one is the one that is easy to leave out and the most expensive to leave out:
+    /// without it, intelligence re-proposes what the person already turned down, and
+    /// the rejection looks like it never happened.
+    ///
+    /// A rejected direction travels with the reason it was rejected for. "No budget
+    /// for it" and "we tried this in March and it did not hold" are different
+    /// instructions, and a bare list of dead ends reads to a generator as a ban
+    /// rather than as reasoning.
+    ///
+    /// Reachable objects only: a constraint three branches away is not applicable to
+    /// this target, and sending it would spend the context budget on noise.
+    public func readSet(for target: ObjectID) -> [ProposalRequest.ContextItem] {
+        // Keyed by id and emitted in a stable order, because an object can be reached
+        // by more than one route: a constraint that is both a neighbour and a rejected
+        // direction must arrive *once*, carrying the reason it was rejected for.
+        // Collecting "first writer wins" lost that reason whenever the object happened
+        // to be mentioned before the rejections were walked, which made the same
+        // document produce two different read sets depending on iteration order.
+        var items: [ObjectID: ProposalRequest.ContextItem] = [:]
+
+        func mention(_ object: ContentObject) {
+            guard items[object.id] == nil else { return }
+            items[object.id] = ProposalRequest.ContextItem(
+                objectID: object.id,
+                kind: object.kind,
+                text: object.text.text,
+                lifecycle: object.lifecycle,
+                reason: nil
+            )
+        }
+
+        if let target = object(target) { mention(target) }
+
+        // Everything within reach: what it links to directly, and one step beyond.
+        // A constraint three branches away is not applicable to this target, and
+        // sending it would spend the context budget on noise.
+        let neighbours = directNeighbours(of: target)
+        for id in neighbours { if let object = object(id) { mention(object) } }
+        for id in neighbours.flatMap({ secondDegreeNeighbours(of: $0) }) where !neighbours.contains(id) {
+            if let object = object(id) { mention(object) }
+        }
+
+        // The rejected directions, and the reason each was rejected for. This runs
+        // last on purpose: it *upgrades* what is already there rather than skipping
+        // it, because "this was refused, and here is why" is strictly more than
+        // "this is nearby".
+        for decision in activeSetAsideDecisions() {
+            let reason = decision.rationale?.text
+            for id in decision.branchObjectIDs + [decision.targetObjectID] {
+                guard let object = object(id), object.isSetAside else { continue }
+                items[id] = ProposalRequest.ContextItem(
+                    objectID: object.id,
+                    kind: object.kind,
+                    text: object.text.text,
+                    lifecycle: object.lifecycle,
+                    reason: reason
+                )
+            }
+        }
+
+        // Sorted so the fingerprint, and anything else reading the set, does not
+        // depend on how a dictionary happened to iterate.
+        return items.keys.sorted { $0.rawValue < $1.rawValue }.compactMap { items[$0] }
+    }
+
+    private func directNeighbours(of id: ObjectID) -> [ObjectID] {
+        var found: Set<ObjectID> = []
+        for relationship in document.relationships.values {
+            if relationship.from == id { found.insert(relationship.to) }
+            if relationship.to == id { found.insert(relationship.from) }
+        }
+        return found.filter { $0 != id }
+    }
+
+    private func secondDegreeNeighbours(of id: ObjectID) -> [ObjectID] {
+        directNeighbours(of: id).filter { $0 != id }
+    }
+
+    /// The set-aside decisions that still stand.
+    ///
+    /// A reopened direction is not a rejected one any more, and consulting it as
+    /// though it were would be the model quietly undoing a decision the person made.
+    private func activeSetAsideDecisions() -> [Decision] {
+        document.decisions.values
+            .filter { $0.kind == .setAside && $0.status == .active }
+            .sorted { $0.id.rawValue < $1.id.rawValue }
+    }
+
+    /// The stable signature of what a request read, sent as its precondition.
+    public func readSetFingerprint(for target: ObjectID) -> String {
+        ProposalRequest.fingerprint(of: readSet(for: target))
+    }
+
+
     /// Asks the current source for a proposal and previews it as a ghost branch.
     ///
     /// `instruction` carries what the person actually typed. It is optional
@@ -1261,6 +1359,10 @@ public final class KollioModel {
         status = nil
 
         let trimmed = instruction?.trimmingCharacters(in: .whitespacesAndNewlines)
+        // The exact sentence travels, not a paraphrase of it. AI-03 AC01 is about
+        // transmission, and the words a person chose are the part that cannot be
+        // reconstructed from the target alone.
+        let context = readSet(for: id)
         let request = ProposalRequest(
             requestId: UUID().uuidString,
             documentId: document.documentId,
@@ -1268,7 +1370,15 @@ public final class KollioModel {
             intent: intent == .explore ? .explore : .add,
             targetIds: [id],
             instruction: (trimmed?.isEmpty == false) ? trimmed : nil,
-            contentLocale: languageCode
+            contentLocale: languageCode,
+            context: context,
+            // The signature of what was just read, so a source can tell whether it is
+            // answering against the same document it was given rather than a stale
+            // understanding of it.
+            preconditions: ProposalRequest.Preconditions(
+                semanticRevision: session.semanticRevision,
+                readSetFingerprint: ProposalRequest.fingerprint(of: context)
+            )
         )
         do {
             let response: ProposalResponse
@@ -1308,7 +1418,11 @@ public final class KollioModel {
     public func handle(_ response: ProposalResponse, anchor: ObjectID) {
         switch response.status {
         case .noChange:
-            preview = nil
+            // AI-03 AC03: "a new request offers to keep or hide the previous one
+            // rather than erasing it." Nothing arrived, so nothing is taken away:
+            // the proposal already on screen is still somebody's thinking and stays
+            // there. Clearing it here used to destroy a pending branch because a
+            // later question produced no answer.
             status = L10n.statusNoChange
         case .needsInput:
             composer = ComposerState(anchorID: anchor, intent: .add)
@@ -1318,8 +1432,40 @@ public final class KollioModel {
                 status = L10n.statusNoChange
                 return
             }
+            // One working group per window, so the new one takes the stage, and the
+            // previous one is *offered* rather than dropped. Whether the person
+            // wants it is their answer to give, not a default.
+            if let previous = preview {
+                supersededProposal = previous
+                keptProposals.append(previous)
+            }
             preview = makePreview(proposal: proposal, anchor: anchor)
         }
+    }
+
+    /// Proposals that were on the canvas and are not any more, still readable.
+    public private(set) var keptProposals: [ProposalPreview] = []
+
+    /// The proposal a new request displaced, waiting for an answer about its fate.
+    public var supersededProposal: ProposalPreview?
+
+    /// Keeps the proposal a new request displaced. It stays readable rather than
+    /// being restored to the canvas, because two branches from one target at once is
+    /// not what the canvas is for.
+    public func keepPreviousProposal() {
+        supersededProposal = nil
+    }
+
+    /// Hides the proposal a new request displaced, and forgets it.
+    ///
+    /// Hiding is not deleting: the objects it would have created were never created,
+    /// so nothing that anybody wrote is lost, and the history of what was proposed
+    /// stays in the document's revision.
+    public func hidePreviousProposal() {
+        if let previous = supersededProposal {
+            keptProposals.removeAll { $0.id == previous.id }
+        }
+        supersededProposal = nil
     }
 
     /// Turns a proposal into a preview: where each proposed object would sit.
@@ -1522,8 +1668,12 @@ public final class KollioModel {
             self.composer = nil
             setAside(composer.anchorID, reason: text.isEmpty ? nil : text)
         case .explore:
-            self.composer = nil
-            await explore(composer.anchorID, intent: .explore)
+            // AI-03: "A local instruction may be added." It used to be discarded
+            // here, which meant a person who typed a steer and pressed the key had
+            // it silently ignored. The draft is only closed once the request has
+            // actually been made, so a refused send leaves the words in place.
+            let sent = await explore(composer.anchorID, intent: .explore, instruction: text)
+            if sent { self.composer = nil }
         case .edit:
             // An edit is a user's own contribution, not a request to a model,
             // so it goes through the command system and never asks anything.

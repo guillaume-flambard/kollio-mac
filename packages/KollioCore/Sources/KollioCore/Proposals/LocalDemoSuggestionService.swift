@@ -89,13 +89,33 @@ public struct LocalDemoSuggestionService: SuggestionService {
             throw DocumentError.unknownObject(targetID)
         }
         if target.isSetAside {
+            // "A rejected branch is not reopened by the model." The person decided;
+            // proposing it again would be the engine arguing with a decision rather
+            // than working with the document.
             return .noChange()
         }
 
         let expansion = expansion(for: target, document: document, language: contentLanguage)
+
+        // What has already been said, in any of the three senses that matter.
         let existingTexts = Set(document.content.values.map(\.text.text))
-        let freshSteps = expansion.steps.filter { !existingTexts.contains($0.text.text) }
+
+        // AI-03 AC02: the directions already rejected, and the reason each was
+        // rejected for. Without this the engine repeats a dead end and the rejection
+        // looks like it never happened. The reason is read as well as the text,
+        // because "no budget" and "tried in March" close different doors and only one
+        // of them is a door.
+        let rejected = RejectedDirections(document: document, readSet: request.context)
+
+        let freshSteps = expansion.steps.filter { step in
+            guard !existingTexts.contains(step.text.text) else { return false }
+            return !rejected.blocks(step.text.text)
+        }
         guard !freshSteps.isEmpty else {
+            // "A repetitive loop yields noChange or a question, never infinite
+            // duplication." Everything this expansion could offer is either already
+            // in the document or something the person turned down, so the honest
+            // answer is that there is nothing new.
             return .noChange()
         }
 
@@ -138,6 +158,53 @@ public struct LocalDemoSuggestionService: SuggestionService {
         )
         try validator.validate(proposal, against: document, scope: request.scope)
         return ProposalResponse(status: .proposed, proposal: proposal)
+    }
+
+    // MARK: - What has already been turned down
+
+    /// The directions the person has already rejected, as this request was told
+    /// about them.
+    ///
+    /// AI-03 AC02. It is built from the request's own read set rather than from the
+    /// whole document on purpose: an engine may only honour the rejections it was
+    /// actually given. Reading the whole document instead would make it look like it
+    /// was consulting the reasoning when it was only pattern-matching the whole
+    /// state, and a client that forgot to transmit a rejection would be quietly
+    /// forgiven.
+    private struct RejectedDirections {
+        /// Text of every rejected direction this request was told about, folded to
+        /// lowercase because a difference in case is not a difference in direction.
+        private let texts: Set<String>
+        /// The reasons, kept so the summary can say *why* rather than only *what*.
+        private let reasons: [String]
+
+        init(document: KollioDocument, readSet: [ProposalRequest.ContextItem]) {
+            var texts: Set<String> = []
+            var reasons: [String] = []
+            for item in readSet {
+                guard item.lifecycle == .setAside else { continue }
+                // A reopened direction is not a rejection any more, and treating it
+                // as one would make the engine refuse a door the person opened.
+                guard let object = document.object(item.objectID), object.isSetAside else { continue }
+                texts.insert(Self.fold(item.text))
+                if let reason = item.reason, reason.isEmpty == false {
+                    reasons.append(reason)
+                }
+            }
+            self.texts = texts
+            self.reasons = reasons
+        }
+
+        /// Whether this candidate is a direction the person already refused.
+        func blocks(_ text: String) -> Bool {
+            texts.contains(Self.fold(text))
+        }
+
+        var isEmpty: Bool { texts.isEmpty }
+
+        private static func fold(_ text: String) -> String {
+            text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        }
     }
 
     // MARK: - Strategies

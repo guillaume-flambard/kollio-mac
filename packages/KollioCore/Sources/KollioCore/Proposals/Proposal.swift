@@ -131,13 +131,55 @@ public struct ProposalRequest: Codable, Hashable, Sendable, Identifiable {
         public var kind: ContentObject.Kind
         public var text: String
         public var lifecycle: ContentObject.Lifecycle
+        /// Why this item is being read, when the person said so.
+        ///
+        /// AI-03: "The readSet includes relevant reasons." A direction that was set
+        /// aside is only useful to intelligence *because* of the reason it was set
+        /// aside for: "no budget" and "we tried it in March" are different
+        /// instructions, and a bare list of rejected texts reads as a ban rather than
+        /// as the reasoning that produced it.
+        public var reason: String?
 
-        public init(objectID: ObjectID, kind: ContentObject.Kind, text: String, lifecycle: ContentObject.Lifecycle) {
+        public init(
+            objectID: ObjectID,
+            kind: ContentObject.Kind,
+            text: String,
+            lifecycle: ContentObject.Lifecycle,
+            reason: String? = nil
+        ) {
             self.objectID = objectID
             self.kind = kind
             self.text = text
             self.lifecycle = lifecycle
+            self.reason = reason
         }
+    }
+
+    /// A stable signature of what a request actually read.
+    ///
+    /// AI-03 requires the "rejection signature" to be stable, and the reason it has
+    /// to be computed rather than remembered is that a fingerprint is only worth
+    /// anything if the same read set always produces the same string. Two runs over
+    /// the same document iterate dictionaries, and a dictionary's order is not part
+    /// of its contents, so this sorts before it hashes. Without that, the same
+    /// unchanged document would produce a different signature on the next call and
+    /// every precondition would look stale.
+    public static func fingerprint(of context: [ProposalRequest.ContextItem]) -> String {
+        let rows = context
+            .map { item in
+                // The reason is folded into the signature because a direction that
+                // was rejected for a different reason is a different piece of
+                // context, even though the text is identical.
+                [
+                    item.objectID.rawValue,
+                    item.kind.rawValue,
+                    item.lifecycle.rawValue,
+                    item.text,
+                    item.reason ?? "",
+                ].joined(separator: "\u{1F}")
+            }
+            .sorted()
+        return rows.joined(separator: "\u{1E}")
     }
 
     public struct Preconditions: Codable, Hashable, Sendable {

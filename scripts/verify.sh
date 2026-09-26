@@ -22,6 +22,13 @@ echo "=== KollioApp"
 echo "=== KollioServer"
 (cd "$ROOT/services/KollioServer" && swift test)
 echo "=== Kollio.xcodeproj (Cmd+R target)"
+# The derived data path is derived from the repository root, not fixed. A fixed
+# /tmp path meant two worktrees verifying at the same time wrote into the same
+# DerivedData, which is the collision that has to happen before parallel work
+# can be trusted. The name is hashed from the root so two checkouts of the same
+# repository still do not share one.
+DERIVED="$(printf '%s' "$ROOT" | shasum | cut -c1-12)"
 xcodebuild -project "$ROOT/apps/macos/Kollio.xcodeproj" -scheme Kollio \
-  -configuration Debug -destination "platform=macOS" -derivedDataPath /tmp/kollio-verify build \
+  -configuration Debug -destination "platform=macOS" \
+  -derivedDataPath "${TMPDIR:-/tmp}/kollio-verify-$DERIVED" build \
   | tail -1
