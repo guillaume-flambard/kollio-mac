@@ -40,20 +40,36 @@ CAPABILITIES = {
     "ecosystem": ("L9", "specs/ecosystem.md", "changes/l9-ecosystem"),
 }
 
-# The status a capability is *delivered* at, judged by its weakest unproved part
-# rather than its best. A capability with one unproved feature is not delivered.
-DELIVERED = {
+# The status a capability is *delivered* at, computed rather than written down.
+#
+# It used to be a hand-maintained table, and it contradicted the very counts printed
+# beside it: `context` claimed `specified` while all seven of its features were
+# `automatedVerified`, and `canvas` claimed `automatedVerified` while two of its
+# features were not proved. A hand-written summary next to a generated count is a
+# second source of truth, so the summary is now derived from the count.
+#
+# The rule is the one this file already stated: the **weakest** unproved part decides,
+# never the best. A capability with one unproved feature is not delivered.
+#
+# This lowers several capabilities, and that is the point. `intelligence` was
+# claiming `automatedVerified` on the strength of seven proved features while four
+# of its eleven were still only specified.
+def delivered_status(counts: dict[str, int], blocked: bool = False) -> str:
+    if blocked:
+        # A capability waiting on an authorisation or on an identity decision is
+        # waiting. Saying `specified` would be true of its features and false about
+        # why they are not being built, and the reason is the useful part.
+        return "blockedExternal"
+    if not counts:
+        return "specified"
+    worst = min(counts, key=lambda status: RANK.get(status, 2))
+    return worst
+
+# Capabilities that carry no V2 feature have no counts to judge, so their status is
+# stated here. They are registered rather than absent so the gap has a status.
+DELIVERED_WITHOUT_FEATURES = {
     "interaction": "specified",
     "backend": "specified",
-    "documents": "implemented",
-    "canvas": "automatedVerified",
-    "context": "specified",
-    "intelligence": "automatedVerified",
-    "decisions": "automatedVerified",
-    "collaboration": "blockedExternal",
-    "studio": "specified",
-    "commerce": "blockedExternal",
-    "ecosystem": "blockedExternal",
 }
 
 # What is still owed to a person, per capability. Never inferred from a test.
@@ -143,7 +159,8 @@ def main() -> int:
             "lot": lot,
             "spec": spec,
             "change": change,
-            "delivered": DELIVERED[name],
+            "delivered": DELIVERED_WITHOUT_FEATURES.get(name)
+            or delivered_status(counts, blocked=bool(BLOCKED_ON.get(name))),
             "features": len(features),
             "acceptanceCriteria": sum(len(f["acceptanceCriteria"]) for f in features),
             "byStatus": dict(sorted(counts.items())),

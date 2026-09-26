@@ -55,7 +55,7 @@
       "lot": "L1",
       "spec": "specs/documents.md",
       "change": "changes/l1-entry-and-canvas",
-      "delivered": "implemented",
+      "delivered": "specified",
       "features": 8,
       "acceptanceCriteria": 24,
       "byStatus": {
@@ -82,7 +82,7 @@
       "lot": "L1",
       "spec": "specs/canvas.md",
       "change": "changes/l1-entry-and-canvas",
-      "delivered": "automatedVerified",
+      "delivered": "specified",
       "features": 10,
       "acceptanceCriteria": 30,
       "byStatus": {
@@ -111,7 +111,7 @@
       "lot": "L1",
       "spec": "specs/context.md",
       "change": "changes/l3-sources-and-provenance",
-      "delivered": "specified",
+      "delivered": "automatedVerified",
       "features": 7,
       "acceptanceCriteria": 21,
       "byStatus": {
@@ -132,7 +132,7 @@
       "lot": "L2",
       "spec": "specs/intelligence.md",
       "change": "changes/l2-living-document",
-      "delivered": "automatedVerified",
+      "delivered": "specified",
       "features": 12,
       "acceptanceCriteria": 36,
       "byStatus": {
@@ -165,7 +165,7 @@
       "lot": "L2",
       "spec": "specs/decisions.md",
       "change": "changes/l2-living-document",
-      "delivered": "automatedVerified",
+      "delivered": "specified",
       "features": 6,
       "acceptanceCriteria": 18,
       "byStatus": {

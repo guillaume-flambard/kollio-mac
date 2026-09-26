@@ -91,7 +91,9 @@ Sarah, one context and two directions
 - [document-format.md](docs/document-format.md): the `.kollio` file, field by field.
 - [action-protocol.md](docs/action-protocol.md): commands, decisions, and what a proposal may and may not do.
 - [backend.md](docs/backend.md): the API, the providers and the safety boundaries.
+- [CONTINUE.md](docs/CONTINUE.md): the current state and the exact next task.
 - [known-limitations.md](docs/known-limitations.md): what is implemented, what is simulated, what is not built.
+- [batch-log.md](docs/batch-log.md): what each verified batch found, in order. History, not truth.
 
 ## Layout
 
