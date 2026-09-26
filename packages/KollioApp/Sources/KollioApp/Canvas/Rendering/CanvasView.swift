@@ -61,6 +61,12 @@ struct CanvasView: View {
 
     private var worldLayer: some View {
         ZStack(alignment: .topLeading) {
+            // Inside the world transform, and first, so a frame pans and zooms with
+            // the nodes it holds and sits behind all of them. Drawn outside this
+            // layer it would be placed with world coordinates in screen space, which
+            // is how the first version drew an empty frame in the corner while its
+            // members sat somewhere else entirely.
+            FrameLayer(model: model)
             ForEach(model.visibleInstances, id: \.id) { instance in
                 node(for: instance)
             }
@@ -78,7 +84,9 @@ struct CanvasView: View {
     @ViewBuilder
     private func node(for instance: NodeInstance) -> some View {
         if let object = model.object(instance.objectID) {
-            let offset = model.dragOffset(for: instance.objectID)
+            // A node inside a frame follows the frame while it is being dragged, so
+            // the whole group travels as one thing under the pointer.
+            let offset = model.nodeDragOffset(for: instance.id)
             Group {
                 if object.isSetAside {
                     CollapsedDirectionView(
@@ -199,6 +207,10 @@ struct CanvasView: View {
             // Above the citations it was opened from, and below nothing else: it is
             // the most specific thing on screen, because it is about one claim and
             // the objects that explicitly depend on it.
+            if let id = model.renamingFrameID {
+                FrameNameView(model: model, id: id)
+                    .position(frameNamePosition(id, viewport: viewport))
+            }
             if let assessment = model.impactAssessment,
                let anchor = model.impactReviewAnchor {
                 ImpactReviewView(model: model, assessment: assessment)
@@ -282,6 +294,20 @@ struct CanvasView: View {
     private func passagePickerPosition(_ claim: ObjectID, viewport: CGSize) -> CGPoint {
         CGPoint(x: citationListPosition(claim, viewport: viewport).x,
                 y: min(citationListPosition(claim, viewport: viewport).y + 240, viewport.height - 120))
+    }
+
+    /// Where the name field opens: at the top-left corner of the frame it names, so
+    /// the name is typed where the name is drawn.
+    private func frameNamePosition(_ id: FrameID, viewport: CGSize) -> CGPoint {
+        guard let frame = model.frame(id) else {
+            return CGPoint(x: viewport.width / 2, y: viewport.height / 2)
+        }
+        let offset = model.frameDragOffset(for: id)
+        let screen = model.camera.toScreen(
+            Position(x: frame.position.x + offset.x, y: frame.position.y + offset.y)
+        )
+        return CGPoint(x: min(max(screen.x + 160, 170), viewport.width - 170),
+                       y: min(max(screen.y, 120), viewport.height - 120))
     }
 
     /// The decision sits beside the branch it is about, clear of the branch

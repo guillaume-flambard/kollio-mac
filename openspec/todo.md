@@ -13,7 +13,7 @@ A view, not a source of truth. Status meanings:
 | `blockedExternal` | Blocked on a capability or authorisation. |
 | `notInCurrentRelease` | Deliberately out of this product. |
 
-Counts: 27 automatedVerified, 1 humanVerified, 43 specified. 71 features, 213 acceptance criteria.
+Counts: 28 automatedVerified, 1 humanVerified, 42 specified. 71 features, 213 acceptance criteria.
 
 ## L1 — 10 features
 
@@ -71,7 +71,8 @@ Counts: 27 automatedVerified, 1 humanVerified, 43 specified. 71 features, 213 ac
 - [ ] **AI-12** Manage a large context · `specified` · 3 AC
 - [x] **CAN-06** Link, select and edit a relation · `automatedVerified` · 3 AC
       AC01 the line is clickable at several zooms: the catch area is wider than the stroke and grows as the view shrinks, and hit testing uses the same routed path the layer draws, at 0.35x through 3x. AC02 the text explains the direction: a sentence derived from the relationship and the two objects, in EN and FR, and refused rather than half-printed when an end is missing. AC03 objects do not become true because they are linked. Reversing is a named command, refused for intelligence, and a duplicate reveals the link that already says it. Still missing: a per-kind label on the connector itself, and the edit cannot be undone across a save.
-- [ ] **CAN-07** Group and fold visually · `specified` · 3 AC
+- [x] **CAN-07** Group and fold visually · `automatedVerified` · 3 AC
+      FrameTests: AC01 folding changes no business status at all, asserted field by field and with semanticRevision unmoved, and a fold is not a way to reopen a branch somebody really set aside; AC02 moving a frame applies one delta to every member so the offsets are compared as differences and not as absolute positions, which a constant could pass; AC03 a second drawing of a member's object stays exactly where it was while the framed one moved. Membership is explicit, reversible, and an empty frame is a state rather than an error. A frame cannot hold a drawing that does not exist, and one drawing cannot be in two frames, which is refused rather than resolved by a rule. Two overlapping frames share no member and one frame's move does not reach the other. Renaming changes the frame's name and nothing inside it. Removing a frame leaves its members and their positions byte-identical. Every frame command is presentation-only, so none of them moves semanticRevision, and a file written before frames existed still opens. FrameInterfaceTests: the action appears only with a selection and behind the secondary menu, the frame is named by the person with a refused empty name keeping the field, folding hides the drawings in the view and a shared object drawn elsewhere stays visible, a drag draws live and writes one transaction, Escape closes the field before the selection, and a frame survives a save with its name and its folded state. Owed: a frame is created from the first drawing of each selected object rather than the drawing under the pointer, moving a frame has no keyboard path, and the frame's rectangle is computed from estimated node sizes until SwiftUI has measured them.
 - [ ] **CAN-09** Search and navigate · `specified` · 3 AC
 - [ ] **CAN-10** Presentation and accessible reading · `specified` · 3 AC
 - [x] **CTX-02** Drop resources and read them · `automatedVerified` · 3 AC

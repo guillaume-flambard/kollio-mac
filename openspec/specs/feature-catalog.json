@@ -5,9 +5,9 @@
     "features": 71,
     "acceptanceCriteria": 213,
     "byStatus": {
-      "automatedVerified": 27,
+      "automatedVerified": 28,
       "humanVerified": 1,
-      "specified": 43
+      "specified": 42
     },
     "byLot": {
       "L1": 10,
@@ -419,7 +419,8 @@
       ],
       "section": "Canvas",
       "lot": "L3",
-      "status": "specified"
+      "status": "automatedVerified",
+      "evidence": "FrameTests: AC01 folding changes no business status at all, asserted field by field and with semanticRevision unmoved, and a fold is not a way to reopen a branch somebody really set aside; AC02 moving a frame applies one delta to every member so the offsets are compared as differences and not as absolute positions, which a constant could pass; AC03 a second drawing of a member's object stays exactly where it was while the framed one moved. Membership is explicit, reversible, and an empty frame is a state rather than an error. A frame cannot hold a drawing that does not exist, and one drawing cannot be in two frames, which is refused rather than resolved by a rule. Two overlapping frames share no member and one frame's move does not reach the other. Renaming changes the frame's name and nothing inside it. Removing a frame leaves its members and their positions byte-identical. Every frame command is presentation-only, so none of them moves semanticRevision, and a file written before frames existed still opens. FrameInterfaceTests: the action appears only with a selection and behind the secondary menu, the frame is named by the person with a refused empty name keeping the field, folding hides the drawings in the view and a shared object drawn elsewhere stays visible, a drag draws live and writes one transaction, Escape closes the field before the selection, and a frame survives a save with its name and its folded state. Owed: a frame is created from the first drawing of each selected object rather than the drawing under the pointer, moving a frame has no keyboard path, and the frame's rectangle is computed from estimated node sizes until SwiftUI has measured them."
     },
     {
       "id": "CAN-08",

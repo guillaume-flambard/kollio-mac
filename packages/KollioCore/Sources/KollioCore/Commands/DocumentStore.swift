@@ -16,6 +16,16 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
     /// An assessment with nothing in it. Applying it would record a decision about
     /// a question nobody asked.
     case nothingToReview
+    case unknownFrame(FrameID)
+    case duplicateFrame(FrameID)
+    /// An occurrence cannot be put in a frame that is not drawn. Naming one would
+    /// mean a frame could hold something the canvas cannot show, which is the
+    /// opposite of an explicit member.
+    case unknownInstanceForFrame(InstanceID)
+    /// A drawing cannot be in two frames. Two overlapping frames are fine, but a
+    /// fold would then have to guess which one owns the drawing, and one of the two
+    /// would hide something the person expected to see.
+    case occurrenceAlreadyFramed(InstanceID, FrameID)
     case decisionTargetNotFound(ObjectID)
     case staleProposal(reason: String)
     /// Someone else changed this object's text after the writer last looked.
@@ -73,6 +83,11 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
         case .unknownDecision(let id): return "Unknown decision \(id)"
         case .duplicateDecision(let id): return "Duplicate decision \(id)"
         case .nothingToReview: return "That assessment has nothing to review"
+        case .unknownFrame(let id): return "Unknown frame \(id)"
+        case .duplicateFrame(let id): return "Duplicate frame \(id)"
+        case .unknownInstanceForFrame(let id): return "Frame member \(id) is not drawn anywhere"
+        case .occurrenceAlreadyFramed(let instance, let frame):
+            return "\(instance) is already in frame \(frame)"
         case .decisionTargetNotFound(let id): return "Decision target \(id) not found"
         case .staleProposal(let reason): return "Stale proposal: \(reason)"
         case .objectHasDecision(let object, let decision):
@@ -208,6 +223,18 @@ public struct DocumentStore: Sendable {
             try editRelationship(edit, in: &document)
         case .applyImpact(let impact):
             try applyImpact(impact, in: &document, at: date)
+        case .createFrame(let create):
+            try createFrame(create, in: &document)
+        case .renameFrame(let rename):
+            try renameFrame(rename, in: &document)
+        case .setFrameMembers(let members):
+            try setFrameMembers(members, in: &document)
+        case .moveFrame(let move):
+            try moveFrame(move, in: &document)
+        case .setFrameFolded(let folded):
+            try setFrameFolded(folded, in: &document)
+        case .removeFrame(let remove):
+            try removeFrame(remove, from: &document)
         }
     }
 
@@ -880,6 +907,123 @@ extension DocumentStore {
             var looked = decision
             looked.status = .superseded
             document.decisions[id] = looked
+        }
+    }
+}
+
+
+// MARK: - Frames
+//
+// A frame is presentation. Nothing in this section may touch an object's text, its
+// lifecycle, a claim, a citation or a decision, and none of it moves
+// `semanticRevision`, which is enforced by `Command.isSemantic` rather than by
+// remembering to be careful here.
+
+extension DocumentStore {
+    private static func createFrame(_ create: CreateFrame, in document: inout KollioDocument) throws {
+        guard document.presentation.frame(create.frame.id) == nil else {
+            throw DocumentError.duplicateFrame(create.frame.id)
+        }
+        // The members are checked up front, so a frame can never exist holding a
+        // drawing that does not exist. An *empty* frame is fine: the specification
+        // says it stays until the user chooses otherwise.
+        try validate(members: create.frame.memberInstanceIDs, of: create.frame.id, in: document)
+        var presentation = document.presentation
+        presentation.setFrame(create.frame)
+        document.presentation = presentation
+    }
+
+    private static func renameFrame(_ rename: RenameFrame, in document: inout KollioDocument) throws {
+        var frame = try requireFrame(rename.id, in: document)
+        // Only the frame's own name. A member's text, and the quote of a citation
+        // made from a source it names, are somebody else's words.
+        guard frame.name != rename.name else { return }
+        frame.name = rename.name
+        var presentation = document.presentation
+        presentation.setFrame(frame)
+        document.presentation = presentation
+    }
+
+    private static func setFrameMembers(
+        _ members: SetFrameMembers,
+        in document: inout KollioDocument
+    ) throws {
+        var frame = try requireFrame(members.id, in: document)
+        try validate(members: members.memberInstanceIDs, of: members.id, in: document)
+        // Membership is replaced, never merged, so removing an occurrence from a
+        // frame is possible at all.
+        frame.memberInstanceIDs = members.memberInstanceIDs
+        var presentation = document.presentation
+        presentation.setFrame(frame)
+        document.presentation = presentation
+    }
+
+    /// One delta for every member, so the shape inside the frame is preserved
+    /// exactly. Two overlapping frames cause no cascade: each moves only the
+    /// occurrences it holds, and an occurrence belongs to at most one frame.
+    private static func moveFrame(_ move: MoveFrame, in document: inout KollioDocument) throws {
+        var frame = try requireFrame(move.id, in: document)
+        try validate(members: frame.memberInstanceIDs, of: frame.id, in: document)
+        for index in document.presentation.instances.indices
+        where frame.contains(document.presentation.instances[index].id) {
+            document.presentation.instances[index].position = document.presentation.instances[index].position
+                .offset(dx: move.delta.x, dy: move.delta.y)
+        }
+        // The frame travels with its contents, so it never has to be told twice
+        // where its members are.
+        frame.position = frame.position.offset(dx: move.delta.x, dy: move.delta.y)
+        var presentation = document.presentation
+        presentation.setFrame(frame)
+        document.presentation = presentation
+    }
+
+    /// Hides or shows the members in this view. `lifecycle` is deliberately not
+    /// touched: folding is not "set aside", it is not a decision, and undoing it
+    /// must never reopen a branch a person actually closed.
+    private static func setFrameFolded(
+        _ folded: SetFrameFolded,
+        in document: inout KollioDocument
+    ) throws {
+        var frame = try requireFrame(folded.id, in: document)
+        guard frame.isFolded != folded.isFolded else { return }
+        frame.isFolded = folded.isFolded
+        var presentation = document.presentation
+        presentation.setFrame(frame)
+        document.presentation = presentation
+    }
+
+    private static func removeFrame(_ remove: RemoveFrame, from document: inout KollioDocument) throws {
+        guard document.presentation.frame(remove.id) != nil else {
+            throw DocumentError.unknownFrame(remove.id)
+        }
+        // The members stay. Removing a frame is removing the frame.
+        var presentation = document.presentation
+        presentation.removeFrame(remove.id)
+        document.presentation = presentation
+    }
+
+    private static func requireFrame(_ id: FrameID, in document: KollioDocument) throws -> Frame {
+        guard let frame = document.presentation.frame(id) else {
+            throw DocumentError.unknownFrame(id)
+        }
+        return frame
+    }
+
+    private static func validate(
+        members: [InstanceID],
+        of frame: FrameID,
+        in document: KollioDocument
+    ) throws {
+        for member in members {
+            guard document.presentation.instance(id: member) != nil else {
+                throw DocumentError.unknownInstanceForFrame(member)
+            }
+            // One drawing, one frame. Checked here rather than left to the caller,
+            // because "the model keeps it straight" is exactly how a folded canvas
+            // ends up hiding a drawing somebody is looking for.
+            if let other = document.presentation.frame(containing: member), other.id != frame {
+                throw DocumentError.occurrenceAlreadyFramed(member, other.id)
+            }
         }
     }
 }

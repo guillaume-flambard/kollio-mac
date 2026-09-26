@@ -186,6 +186,7 @@ struct ImpactAssessmentTests {
         #expect(session.document != before)
 
         let undone = session.undo()
+        #expect(undone)
         // One undo, the whole document back: not one mark at a time.
         #expect(session.document.decisions == before.decisions)
         #expect(session.document.content == before.content)

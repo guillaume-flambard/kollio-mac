@@ -19,8 +19,11 @@ public struct ContextBuilder: Sendable {
             ids.insert(target)
             ids.formUnion(document.incidents(of: target).flatMap { [$0.from, $0.to] })
         }
-        // One more hop, so a provider can see why a target is blocked.
-        for hop in 1..<Swift.max(radius, 1) {
+        // One more hop, so a provider can see why a target is blocked. The counter
+        // is a repeat count and nothing else: each pass widens `ids`, and the pass
+        // itself is the same work every time. Naming it `hop` and then not reading
+        // it was a warning the compiler had been right about for a while.
+        for _ in 1..<Swift.max(radius, 1) {
             var discovered: Set<ObjectID> = []
             for id in ids {
                 for relationship in document.incidents(of: id) {

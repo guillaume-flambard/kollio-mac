@@ -45,6 +45,8 @@ public struct ContextualActionSet: Hashable, Sendable {
         case removeObject
         /// See what new information touched, and what it left alone.
         case reviewImpact
+        /// Put the selection in a named frame, and name it.
+        case groupInFrame
 
         /// The French and English label lives in `L10n`, not here, so the String
         /// Catalog stays the only place an interface string is written.
@@ -64,6 +66,7 @@ public struct ContextualActionSet: Hashable, Sendable {
             case .removeOccurrence: return "action.removeOccurrence"
             case .removeObject: return "action.removeObject"
             case .reviewImpact: return "impact.reviewAction"
+            case .groupInFrame: return "frame.group"
             }
         }
     }
@@ -103,7 +106,7 @@ public struct ContextualActionSet: Hashable, Sendable {
         case .duplicateVariant, .removeObject:
             return .meaning
         case .explore, .add, .setAside, .reopen, .edit, .addSource,
-             .assertClaim, .link, .comment, .reviewImpact:
+             .assertClaim, .link, .comment, .reviewImpact, .groupInFrame:
             return .meaning
         }
     }
@@ -136,7 +139,8 @@ public struct ContextualActionSet: Hashable, Sendable {
         canReopen: Bool,
         canAttachSource: Bool,
         canAssertClaim: Bool,
-        canReviewImpact: Bool = false
+        canReviewImpact: Bool = false,
+        canGroupInFrame: Bool = false
     ) -> ContextualActionSet {
         if canReopen {
             return ContextualActionSet(primary: [.reopen], secondary: [], isDefault: .reopen)
@@ -151,6 +155,9 @@ public struct ContextualActionSet: Hashable, Sendable {
         // opens an empty answer every time is a control that trains people to stop
         // opening it.
         if canReviewImpact { secondary.append(.reviewImpact) }
+        // Offered only with something selected, because the frame's members are the
+        // current selection. A frame around nothing is not a mistake to allow.
+        if canGroupInFrame { secondary.append(.groupInFrame) }
         // Not implemented yet, so not offered. A disabled button is worse than an
         // absent one, and the specification forbids a decorative action.
         //

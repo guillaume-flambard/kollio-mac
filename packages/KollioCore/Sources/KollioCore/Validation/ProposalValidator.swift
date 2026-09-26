@@ -146,6 +146,12 @@ public struct ProposalValidator: Sendable {
                 // inverts. That is a person's to do, and so is rewriting what a
                 // link is claimed to mean.
                 throw DocumentError.forbiddenOperation("editing a relation is the user's to do")
+            case .createFrame, .renameFrame, .setFrameMembers, .moveFrame,
+                 .setFrameFolded, .removeFrame:
+                // A frame is how a person tidies the canvas, and tidying is theirs.
+                // A model that could create or fold a frame would be reorganising a
+                // person's thinking to make its own output easier to present.
+                throw DocumentError.forbiddenOperation("arranging the canvas is the user's to do")
             case .applyImpact:
                 // CTX-05: "intelligence may propose interpretations, never apply
                 // them". An assessment is already a bounded interpretation, and

@@ -109,6 +109,12 @@ struct ContextualActions: View {
             model.requestRemoveFromDocument(target)
         case .reviewImpact:
             _ = model.reviewImpact(of: target)
+        case .groupInFrame:
+            // The frame is created around the selection and named immediately: a
+            // frame is named by the person who makes it, not by the app.
+            if let id = model.createFrame(named: "") {
+                model.startRenaming(id)
+            }
         case .link, .comment:
             // Not reachable: the set never offers them until they are implemented.
             // An action that exists and does nothing is worse than an absent one.

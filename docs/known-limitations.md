@@ -123,6 +123,25 @@ Recorded 2026-09-25, on an arm64 Mac, macOS 27.0 (26A428), Xcode 27.0, SDK 27.0.
   both moved is offered one review, and the other source appears in no assessment until the first has
   been dealt with. The read set says which one was read, so the answer is not wrong, it is partial.
 
+- **A frame is created from the first drawing of each selected object.** Putting a
+  selection in a frame uses each object's first instance, not the drawing under the
+  pointer, so with an object drawn twice the frame may take the one the person was
+  not looking at. It never takes the wrong *object*, and a member can be taken out
+  again in one action, but choosing the occurrence under the pointer is not wired.
+- **Moving a frame has no keyboard path.** Folding, renaming and removing are named
+  buttons in the frame's header, so they are reachable by keyboard; the drag is
+  pointer only, as every direct manipulation on this canvas is today.
+- A frame's rectangle is computed from the estimated node sizes until SwiftUI has
+  measured them, so a frame drawn in the first moments after a launch is slightly
+  the wrong size and then settles. It is a cosmetic inaccuracy and it corrects
+  itself, unlike the cached size the first version stored, which could have
+  disagreed with the members for good.
+- **`"sources": {}` in a hand-written `.kollio` is refused.** The ledgers encode
+  their collections as arrays, and a document that uses an empty object where the
+  format writes an empty array is reported as unreadable and left on disk, which
+  is the correct behaviour and is easy to trip over when writing a fixture by hand.
+  Found while seeding a document to put a frame on screen.
+
 ## Simulated or approximated
 
 - **The offline "intelligence"** is a rule engine with authored demo content, not a language model. It

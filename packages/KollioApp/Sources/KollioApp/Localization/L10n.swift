@@ -198,6 +198,36 @@ public enum L10n {
         String(format: callAsFunction("source.unavailable"), reason)
     }
 
+    // Frames: a named group on the canvas, folded or not
+    public static var frameGroupAction: String { callAsFunction("frame.group") }
+    public static var frameDefaultName: String { callAsFunction("frame.defaultName") }
+    public static var frameNamePrompt: String { callAsFunction("frame.namePrompt") }
+    public static var frameNameEmpty: String { callAsFunction("frame.nameEmpty") }
+    public static var frameNamePlaceholder: String { callAsFunction("frame.namePlaceholder") }
+    public static var frameRename: String { callAsFunction("frame.rename") }
+    public static var frameRenameHint: String { callAsFunction("frame.renameHint") }
+    public static var frameFold: String { callAsFunction("frame.fold") }
+    public static var frameFoldHint: String { callAsFunction("frame.foldHint") }
+    public static var frameUnfold: String { callAsFunction("frame.unfold") }
+    public static var frameRemove: String { callAsFunction("frame.remove") }
+    public static var frameRemoveHint: String { callAsFunction("frame.removeHint") }
+    public static var frameRemoveConfirm: String { callAsFunction("frame.removeConfirm") }
+    public static var frameNothingSelected: String { callAsFunction("frame.nothingSelected") }
+    /// %lld is how many drawings the frame holds.
+    public static func frameCount(_ count: Int) -> String {
+        String(format: callAsFunction("frame.count"), count)
+    }
+    /// %@ is the frame's name, %@ how much is inside it.
+    public static func frameFoldedAccessibility(_ name: String, _ count: String) -> String {
+        String(format: callAsFunction("frame.foldedAccessibility"), name, count)
+    }
+    public static var undoCreateFrame: String { callAsFunction("undo.createFrame") }
+    public static var undoRenameFrame: String { callAsFunction("undo.renameFrame") }
+    public static var undoSetFrameMembers: String { callAsFunction("undo.setFrameMembers") }
+    public static var undoMoveFrame: String { callAsFunction("undo.moveFrame") }
+    public static var undoFoldFrame: String { callAsFunction("undo.foldFrame") }
+    public static var undoRemoveFrame: String { callAsFunction("undo.removeFrame") }
+
     // Undo labels
     public static var undoMove: String { callAsFunction("undo.move") }
     public static var actionDuplicateOccurrence: String { callAsFunction("action.duplicateOccurrence") }

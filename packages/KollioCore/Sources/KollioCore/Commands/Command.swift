@@ -31,11 +31,23 @@ public enum Command: Codable, Hashable, Sendable {
     case markClarificationUnknown(MarkClarificationUnknown)
     case editRelationship(EditRelationship)
     case applyImpact(ApplyImpact)
+    case createFrame(CreateFrame)
+    case renameFrame(RenameFrame)
+    case setFrameMembers(SetFrameMembers)
+    case moveFrame(MoveFrame)
+    case setFrameFolded(SetFrameFolded)
+    case removeFrame(RemoveFrame)
 
     /// Presentation-only commands never change the meaning of the document.
     public var isSemantic: Bool {
         switch self {
-        case .moveNodeInstances, .duplicateNodeInstance, .removeNodeInstance:
+        case .createFrame, .renameFrame, .setFrameMembers, .moveFrame,
+             .setFrameFolded, .removeFrame,
+             .moveNodeInstances, .duplicateNodeInstance, .removeNodeInstance:
+            // A frame is presentation too, and so is everything done to one. CAN-07
+            // says it outright: "a frame is a presentation concern", and folding a
+            // branch to tidy the canvas must not change what the document means.
+            //
             // An occurrence is presentation. Putting a second one on the canvas, or
             // taking one away, changes where something is drawn and nothing about
             // what it means, so it must not move semanticRevision. A *variant* is a
@@ -84,6 +96,12 @@ public enum Command: Codable, Hashable, Sendable {
         case .markClarificationUnknown: return "undo.markClarificationUnknown"
         case .editRelationship: return "undo.editRelationship"
         case .applyImpact: return "undo.applyImpact"
+        case .createFrame: return "undo.createFrame"
+        case .renameFrame: return "undo.renameFrame"
+        case .setFrameMembers: return "undo.setFrameMembers"
+        case .moveFrame: return "undo.moveFrame"
+        case .setFrameFolded: return "undo.foldFrame"
+        case .removeFrame: return "undo.removeFrame"
         }
     }
 }
@@ -567,5 +585,85 @@ public struct ApplyImpact: Codable, Hashable, Sendable {
         self.assessment = assessment
         self.decisionIDs = decisionIDs
         self.provenance = provenance
+    }
+}
+
+
+// MARK: - Frames
+//
+// A named frame with explicit members. Every command here is presentation-only, so
+// none of them may move `semanticRevision`: grouping, folding, moving and renaming
+// are what a person does to the canvas, and the document's meaning is not what
+// changes.
+
+public struct CreateFrame: Codable, Hashable, Sendable {
+    public var frame: Frame
+
+    public init(frame: Frame) {
+        self.frame = frame
+    }
+}
+
+/// Renaming a branch renames the frame and nothing else.
+///
+/// The specification is explicit that it does not rename its sources, so this
+/// command carries no object ids at all: there is no version of it that could.
+public struct RenameFrame: Codable, Hashable, Sendable {
+    public var id: FrameID
+    public var name: LocalizedText
+
+    public init(id: FrameID, name: LocalizedText) {
+        self.id = id
+        self.name = name
+    }
+}
+
+/// Replaces the frame's members with an explicit list.
+///
+/// An empty list is accepted: "an empty frame stays until the user chooses", so
+/// removing everything from a frame is a normal state and not an error.
+public struct SetFrameMembers: Codable, Hashable, Sendable {
+    public var id: FrameID
+    public var memberInstanceIDs: [InstanceID]
+
+    public init(id: FrameID, memberInstanceIDs: [InstanceID]) {
+        self.id = id
+        self.memberInstanceIDs = memberInstanceIDs
+    }
+}
+
+/// Moves the frame, and every occurrence it holds, by one delta.
+///
+/// One transaction so one undo restores the whole group, and the same delta for
+/// every member so the offsets inside the frame are preserved exactly, which is
+/// AC02. An occurrence of the same object that is not a member is not touched,
+/// which is AC03.
+public struct MoveFrame: Codable, Hashable, Sendable {
+    public var id: FrameID
+    public var delta: Position
+
+    public init(id: FrameID, delta: Position) {
+        self.id = id
+        self.delta = delta
+    }
+}
+
+/// Folding hides the members in this view. It is not a decision and it does not
+/// change what the document says.
+public struct SetFrameFolded: Codable, Hashable, Sendable {
+    public var id: FrameID
+    public var isFolded: Bool
+
+    public init(id: FrameID, isFolded: Bool) {
+        self.id = id
+        self.isFolded = isFolded
+    }
+}
+
+public struct RemoveFrame: Codable, Hashable, Sendable {
+    public var id: FrameID
+
+    public init(id: FrameID) {
+        self.id = id
     }
 }

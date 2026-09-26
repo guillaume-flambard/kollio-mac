@@ -2793,6 +2793,402 @@
           }
         }
       }
+    },
+    "frame.group": {
+      "comment": "Put the selection in a named frame. The members are the current selection.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put in a frame"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mettre dans un cadre"
+          }
+        }
+      }
+    },
+    "frame.defaultName": {
+      "comment": "The name a frame gets when the person has not typed one. A placeholder, not a decision.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frame"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cadre"
+          }
+        }
+      }
+    },
+    "frame.namePrompt": {
+      "comment": "The line above the name field of a frame.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name this frame"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nommer ce cadre"
+          }
+        }
+      }
+    },
+    "frame.namePlaceholder": {
+      "comment": "Placeholder of the frame name field.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A group of directions"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un groupe de directions"
+          }
+        }
+      }
+    },
+    "frame.nameEmpty": {
+      "comment": "Said when a rename is submitted with nothing typed. A frame with no name is not what a person meant.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type a name for the frame"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Donnez un nom au cadre"
+          }
+        }
+      }
+    },
+    "frame.rename": {
+      "comment": "Renames the frame, and nothing inside it: a branch's name is not its sources' name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renommer"
+          }
+        }
+      }
+    },
+    "frame.renameHint": {
+      "comment": "Says what renaming does not do, which is the surprising half.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renames the frame only. Nothing inside it changes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renomme le cadre seulement. Rien à l’intérieur ne change."
+          }
+        }
+      }
+    },
+    "frame.fold": {
+      "comment": "Hides the frame's contents in this view. Not a decision: the text, the links and the claims are untouched.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fold"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replier"
+          }
+        }
+      }
+    },
+    "frame.foldHint": {
+      "comment": "Explains that folding is a view state, not 'set aside'.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hides these here. Nothing is set aside, nothing is deleted."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masque ici. Rien n’est écarté, rien n’est supprimé."
+          }
+        }
+      }
+    },
+    "frame.unfold": {
+      "comment": "Shows the frame's contents again.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unfold"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplier"
+          }
+        }
+      }
+    },
+    "frame.remove": {
+      "comment": "Removes the frame and leaves everything inside it exactly where it is.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the frame"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer le cadre"
+          }
+        }
+      }
+    },
+    "frame.removeHint": {
+      "comment": "The members stay: removing a frame is removing the frame.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The contents stay where they are."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le contenu reste en place."
+          }
+        }
+      }
+    },
+    "frame.removeConfirm": {
+      "comment": "The question asked before removing a frame, saying what is kept.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this frame? Everything inside it stays."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer ce cadre ? Tout ce qu’il contient reste."
+          }
+        }
+      }
+    },
+    "frame.nothingSelected": {
+      "comment": "Said when a frame is asked for with nothing selected, rather than framing nothing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select what goes in the frame"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sélectionnez ce qui entre dans le cadre"
+          }
+        }
+      }
+    },
+    "frame.count": {
+      "comment": "How many drawings a frame holds. %lld is the count.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld in this frame"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld dans ce cadre"
+          }
+        }
+      }
+    },
+    "frame.foldedAccessibility": {
+      "comment": "Accessibility label of a folded frame. %@ is its name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, folded, %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, replié, %@"
+          }
+        }
+      }
+    },
+    "undo.createFrame": {
+      "comment": "Undo label: removes the frame and leaves its contents.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo putting in a frame"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler le cadre"
+          }
+        }
+      }
+    },
+    "undo.renameFrame": {
+      "comment": "Undo label: the frame's previous name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the frame's name"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler le nom du cadre"
+          }
+        }
+      }
+    },
+    "undo.setFrameMembers": {
+      "comment": "Undo label: one step restores the previous membership.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the frame's contents"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler le contenu du cadre"
+          }
+        }
+      }
+    },
+    "undo.moveFrame": {
+      "comment": "Undo label: one step puts the whole frame back where it was.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo moving the frame"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler le déplacement du cadre"
+          }
+        }
+      }
+    },
+    "undo.foldFrame": {
+      "comment": "Undo label: folding or unfolding.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo folding"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler le repli"
+          }
+        }
+      }
+    },
+    "undo.removeFrame": {
+      "comment": "Undo label: brings the frame back.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo removing the frame"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler le retrait du cadre"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

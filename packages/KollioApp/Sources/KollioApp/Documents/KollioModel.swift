@@ -299,8 +299,12 @@ public final class KollioModel {
     /// each collapsed direction.
     public var visibleInstances: [NodeInstance] {
         let roots = collapsedRoots
+        // Folded frames hide the drawings they hold, in this view only. An object
+        // drawn again outside the frame is a different occurrence and stays.
+        let folded = document.presentation.hiddenInstanceIDs()
         return document.presentation.instances.filter { instance in
             guard let object = document.object(instance.objectID) else { return false }
+            if folded.contains(instance.id) { return false }
             if object.isSetAside { return roots.contains(object.id) }
             return !isHiddenByCollapsedAncestor(instance.objectID)
         }
@@ -496,6 +500,7 @@ public final class KollioModel {
         case stanceDraft
         case citation
         case readingSource
+        case frameName
         case impactReview
         case preview
         case selection
@@ -509,6 +514,7 @@ public final class KollioModel {
             if model.stanceDraft != nil { return .stanceDraft }
             if model.openCitationClaim != nil { return .citation }
             if model.readingSourceID != nil { return .readingSource }
+            if model.renamingFrameID != nil { return .frameName }
             // The impact review sits above the selection, and below the citations it
             // is read from: it is a card about a claim, so it closes before the
             // claim's own evidence list does.
@@ -541,6 +547,12 @@ public final class KollioModel {
         case .readingSource:
             readingSourceID = nil
             return .readingSource
+        case .frameName:
+            // Closing the field keeps what was typed nowhere and changes nothing: a
+            // rename that was never submitted was never asked for.
+            renamingFrameID = nil
+            renamingFrameDraft = ""
+            return .frameName
         case .impactReview:
             // Closing the review applies nothing and forgets nothing: the
             // assessment was never in the document, and the citation that prompted
@@ -569,6 +581,8 @@ public final class KollioModel {
         composer = nil
         impactAssessment = nil
         impactReviewAnchor = nil
+        renamingFrameID = nil
+        renamingFrameDraft = ""
     }
 
     /// The actions offered for a selected object: at most three shown, the rest
@@ -584,7 +598,8 @@ public final class KollioModel {
             canReopen: canReopen(id),
             canAttachSource: object != nil,
             canAssertClaim: object != nil,
-            canReviewImpact: document.needsImpactReview(id)
+            canReviewImpact: document.needsImpactReview(id),
+            canGroupInFrame: selection.isEmpty == false
         )
     }
 
@@ -675,6 +690,237 @@ public final class KollioModel {
         impactReviewAnchor = nil
     }
 
+
+    // MARK: Frames
+
+    /// The frames on the canvas, in a stable order. Named apart from `frames`,
+    /// which is the measured node rectangles, for the reason given on
+    /// `frameContaining(_:)`: the two are different things and the canvas needs both.
+    public var canvasFrames: [Frame] { document.presentation.framesSorted() }
+
+    public func frame(_ id: FrameID) -> Frame? { document.presentation.frame(id) }
+
+    /// The frame whose name is being typed, and what has been typed. On the model so
+    /// a refused rename, an empty name or a lost focus all leave the sentence where
+    /// the person put it.
+    public var renamingFrameID: FrameID?
+    public var renamingFrameDraft: String = ""
+
+    /// Opens the name field for a frame.
+    public func startRenaming(_ id: FrameID) {
+        renamingFrameID = id
+        renamingFrameDraft = frame(id)?.name.text ?? ""
+    }
+
+    /// Submits the name. An empty field is refused rather than stored: a frame whose
+    /// name is blank is a label nobody can read back.
+    @discardableResult
+    public func submitFrameName() -> Bool {
+        guard let id = renamingFrameID else { return false }
+        guard renameFrame(id, to: renamingFrameDraft) else { return false }
+        renamingFrameID = nil
+        renamingFrameDraft = ""
+        return true
+    }
+
+    /// A live drag on a frame, in world space. The document is untouched while the
+    /// pointer moves: the offset is drawn, and one transaction is committed on
+    /// release, exactly as for a node.
+    public struct FrameDragState: Equatable {
+        public var id: FrameID
+        public var worldDelta: Position
+    }
+
+    public var frameDrag: FrameDragState?
+
+    /// Offsets every member and the frame itself by the live delta, for drawing.
+    public func frameDragOffset(for id: FrameID) -> Position {
+        guard let frameDrag, frameDrag.id == id else { return .zero }
+        return frameDrag.worldDelta
+    }
+
+    public func nodeDragOffset(for instanceID: InstanceID) -> Position {
+        let offset = dragOffset(forInstance: instanceID)
+        guard let frameDrag, let frame = frame(frameDrag.id), frame.contains(instanceID) else {
+            return offset
+        }
+        return offset.offset(dx: frameDrag.worldDelta.x, dy: frameDrag.worldDelta.y)
+    }
+
+    public func beginFrameDrag(_ id: FrameID, screenTranslation: CGSize) {
+        if let frameDrag, frameDrag.id != id { return }
+        frameDrag = FrameDragState(
+            id: id,
+            worldDelta: camera.worldDelta(forScreenDelta: Position(
+                x: screenTranslation.width, y: screenTranslation.height
+            ))
+        )
+    }
+
+    /// One transaction for the whole frame, so one undo puts the arrangement back
+    /// rather than one node at a time.
+    public func endFrameDrag() {
+        guard let frameDrag else { return }
+        self.frameDrag = nil
+        let delta = frameDrag.worldDelta
+        guard abs(delta.x) > 0.5 || abs(delta.y) > 0.5 else { return }
+        moveFrame(frameDrag.id, by: delta)
+    }
+
+    public func cancelFrameDrag() {
+        frameDrag = nil
+    }
+
+    /// The frame a drawing is in, if any.
+    ///
+    /// Named apart from `frame(of:) -> Rect?`, which is a *measured* node frame. Two
+    /// meanings behind one selector is exactly the kind of ambiguity Swift resolves
+    /// by guessing at the call site, and a canvas that drew the wrong rectangle is a
+    /// hard bug to see.
+    public func frameContaining(_ objectID: ObjectID) -> Frame? {
+        document.presentation.frame(of: objectID)
+    }
+
+    /// Whether a drawing is hidden because its frame is folded.
+    public func isHiddenByFoldedFrame(_ instanceID: InstanceID) -> Bool {
+        document.presentation.hiddenInstanceIDs().contains(instanceID)
+    }
+
+    /// Puts the current selection into a named frame.
+    ///
+    /// The members are occurrences, taken from the selection's first instance, so a
+    /// second drawing of the same object on another branch is left where it is
+    /// rather than dragged along. With nothing selected this refuses rather than
+    /// inventing a frame around nothing, because a frame's whole content is what a
+    /// person put in it.
+    @discardableResult
+    public func createFrame(named name: String, containing selected: Set<ObjectID>? = nil) -> FrameID? {
+        let scope = selected ?? selection
+        let members = scope.compactMap { objectID -> InstanceID? in
+            document.presentation.instance(for: objectID)?.id
+        }
+        guard members.isEmpty == false else {
+            status = L10n.frameNothingSelected
+            return nil
+        }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let frame = Frame(
+            id: FrameID("frame:" + UUID().uuidString),
+            name: LocalizedText(trimmed.isEmpty ? L10n.frameDefaultName : trimmed),
+            position: origin(of: members),
+            memberInstanceIDs: members.sorted { $0.rawValue < $1.rawValue }
+        )
+        guard perform([.createFrame(.init(frame: frame))], label: L10n.undoCreateFrame) else { return nil }
+        return frame.id
+    }
+
+    /// Adds occurrences to a frame, keeping the ones already there.
+    @discardableResult
+    public func addToFrame(_ id: FrameID, objects selected: Set<ObjectID>) -> Bool {
+        guard let frame = frame(id) else {
+            status = L10n.errorGeneric
+            return false
+        }
+        let members = frame.memberInstanceIDs
+            + selected.compactMap { document.presentation.instance(for: $0)?.id }
+        return perform([.setFrameMembers(.init(id: id, memberInstanceIDs: unique(members)))], label: L10n.undoSetFrameMembers)
+    }
+
+    /// Takes one occurrence out of a frame. The drawing stays exactly where it is.
+    @discardableResult
+    public func removeFromFrame(_ id: FrameID, instanceID: InstanceID) -> Bool {
+        guard let frame = frame(id) else {
+            status = L10n.errorGeneric
+            return false
+        }
+        let members = frame.memberInstanceIDs.filter { $0 != instanceID }
+        return perform([.setFrameMembers(.init(id: id, memberInstanceIDs: members))], label: L10n.undoSetFrameMembers)
+    }
+
+    /// Renames the frame. Nothing else changes, and in particular nothing that is
+    /// inside it: a branch's name is not its sources' name.
+    @discardableResult
+    public func renameFrame(_ id: FrameID, to name: String) -> Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else {
+            // A frame with no name is still a frame, but a person who typed nothing
+            // has not named it, and saving an empty label is not what they meant.
+            status = L10n.frameNameEmpty
+            return false
+        }
+        return perform([.renameFrame(.init(id: id, name: LocalizedText(trimmed)))], label: L10n.undoRenameFrame)
+    }
+
+    /// Folds or unfolds. One transaction, one undo, and no decision involved.
+    @discardableResult
+    public func setFolded(_ id: FrameID, _ folded: Bool) -> Bool {
+        perform([.setFrameFolded(.init(id: id, isFolded: folded))], label: L10n.undoFoldFrame)
+    }
+
+    @discardableResult
+    public func toggleFold(_ id: FrameID) -> Bool {
+        guard let frame = frame(id) else { return false }
+        return setFolded(id, !frame.isFolded)
+    }
+
+    /// Moves the frame and everything in it, as one transaction.
+    ///
+    /// The same delta for every member, so the arrangement inside the frame is
+    /// preserved exactly, and an occurrence of the same object that is not a member
+    /// does not move. That is AC02 and AC03 in one gesture.
+    @discardableResult
+    public func moveFrame(_ id: FrameID, by delta: Position) -> Bool {
+        guard abs(delta.x) > 0.5 || abs(delta.y) > 0.5 else { return true }
+        return perform([.moveFrame(.init(id: id, delta: delta))], label: L10n.undoMoveFrame)
+    }
+
+    /// Removes the frame and leaves every member where it is.
+    @discardableResult
+    public func removeFrame(_ id: FrameID) -> Bool {
+        return perform([.removeFrame(.init(id: id))], label: L10n.undoRemoveFrame)
+    }
+
+    /// The world rectangle a frame draws around, padded so the members sit inside
+    /// it rather than on its border.
+    ///
+    /// Measured sizes are used when the object has exactly one drawing, and the
+    /// layout estimate otherwise: the measured dictionary is keyed by object, so
+    /// reading it for a second occurrence would place the frame around the wrong
+    /// one. A frame that is slightly the wrong size until the next estimate is a
+    /// cosmetic problem, and guessing from another occurrence's measurement is a
+    /// positional one.
+    public func bounds(of frame: Frame) -> Rect? {
+        guard let bounds = enclosingRect(of: frame.memberInstanceIDs) else { return nil }
+        return bounds.insetBy(dx: -FrameLayout.padding, dy: -FrameLayout.padding)
+    }
+
+    private func enclosingRect(of members: [InstanceID]) -> Rect? {
+        var bounds: Rect?
+        for id in members {
+            guard let instance = document.presentation.instance(id: id),
+                  let object = document.object(instance.objectID)
+            else { continue }
+            let measured = document.presentation.instances(of: instance.objectID).count == 1
+                ? frames[instance.objectID]
+                : nil
+            let rect = Rect(origin: instance.position, size: measured?.size ?? instance.size
+                ?? NodeLayout.estimatedSize(for: object))
+            bounds = bounds.map { $0.union(rect) } ?? rect
+        }
+        return bounds
+    }
+
+    /// Where a frame starts: above and to the left of its members, so the members
+    /// are inside it from the moment it appears rather than after a correction.
+    private func origin(of members: [InstanceID]) -> Position {
+        guard let bounds = enclosingRect(of: members) else { return .zero }
+        return bounds.origin
+    }
+
+    private func unique(_ ids: [InstanceID]) -> [InstanceID] {
+        var seen: Set<InstanceID> = []
+        return ids.filter { seen.insert($0).inserted }
+    }
 
     // MARK: Direct manipulation
 
@@ -2393,3 +2639,15 @@ public struct ClaimSummary: Identifiable, Hashable, Sendable {
     }
 }
 
+
+/// The metrics of a frame, in one place.
+///
+/// The padding is what makes a frame read as a container rather than as a box drawn
+/// around its contents: the name needs somewhere to live, and a border flush with
+/// the first node reads as a selection.
+public enum FrameLayout {
+    public static let padding: Double = 22
+    public static let headerHeight: Double = 26
+    public static let collapsedWidth: Double = 190
+    public static let collapsedHeight: Double = 34
+}

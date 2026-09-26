@@ -513,12 +513,69 @@ into the launched entry field produced no text. Dark appearance was not captured
 either. Both are owed to a person, and the behaviour rests on the twenty-nine
 tests.
 
+## Latest batch: CAN-07, group and fold visually
+
+A named frame with explicit members, moving it moving its occurrences, folding
+hiding them in this view and nothing else. `Frame` lives in `Presentation` and
+every one of the six commands is `isSemantic == false`, so **a frame cannot
+change what the document says** and that is enforced by the command layer rather
+than by remembering to be careful. Folding touches neither `lifecycle`, nor the
+text, nor a decision, nor a citation; a test asserts a branch a person really set
+aside is still set aside after a fold.
+
+**Members are occurrences, not objects.** "Moving the frame moves its
+occurrences", and CAN-03 already told the two apart, so a frame holds
+`InstanceID`s. A frame holding object ids would drag the second drawing of an
+object that somebody had deliberately put on another branch. One drawing belongs
+to one frame, and that is **refused** rather than resolved: two overlapping frames
+are fine, but a fold would otherwise have to guess which of them owns a drawing.
+
+The frame is drawn behind the nodes, inside the world transform, with a dashed
+border, its name, how many drawings it holds, and three controls. Folding turns it
+into a chip that counts rather than summarises, because a frame fold is a way of
+looking at the canvas and a decision is a way of thinking about the document: the
+chip never says a branch was closed. The border and the fill never take a click,
+so a tap on empty frame space is still a tap on the canvas, and the header is the
+only interactive part.
+
+### Two defects the running app produced and the tests did not
+
+**The frame was drawn in screen space.** It was mounted next to the connectors,
+outside the world transform, so it placed world coordinates as if they were screen
+coordinates: an empty rectangle in the corner while its three members sat
+elsewhere. Every unit test passed, because the domain does not know where anything
+is drawn. Caught by looking at the app, fixed by moving the layer inside
+`worldLayer`.
+
+**The folded chip clipped a name it could not have shortened.** A fixed 190pt
+width cut "Set aside for now" mid-word. The chip is now sized by its own name.
+
+A third finding came from the format itself: a hand-written `.kollio` with
+`"sources": {}` is **refused**, because the ledgers encode their collections as
+arrays. The app reported it and left the file alone, which is the right behaviour
+and a useful piece of evidence, but the demo file had to be written to the real
+shape.
+
+Sixteen tests in `FrameTests`, fifteen in `FrameInterfaceTests`.
+`verify.sh`: 143 KollioCore, 274 KollioApp, 29 server, exit 0, zero warnings.
+28 `automatedVerified`, 1 `humanVerified`, 42 `specified`.
+
+### What was captured, and what was not
+
+`screencapture -l` on Kollio's own window, so the file contains the window and
+nothing else: `build/kollio-frames.png`, inspected before being reported. It shows
+one unfolded frame with its name, its count and its three controls, surrounding
+three nodes, with the connectors passing behind it, and a folded frame drawn as a
+chip. Light appearance, English.
+
+**Reaching the frame by hand is still not proved.** The document was seeded
+directly to put a frame on screen, because selecting two objects and choosing the
+action needs clicks this environment refuses. **Dark appearance is not captured.**
+Both are owed to a person.
+
 ## The next things worth doing, in this order
 
-1. **CAN-07, group and fold visually.** A named frame with explicit members, moving
-   it moving its occurrences, folding hiding them in this view without a decision.
-   The next eligible lot with verified prerequisites.
-2. The human pass, which is owed and which no test substitutes for. Three things
+1. The human pass, which is owed and which no test substitutes for. Three things
    only a person can settle: **type a sentence into the entry point and
    press the action**, **scroll with two fingers** (the code says it does nothing; confirm or
    refute), and **watch a real-model proposal arrive and be kept**. Then drag, double-click to
@@ -532,8 +589,8 @@ tests.
    cost will show.
 6. Keyboard traversal between objects, so the canvas is usable without a pointer.
 7. **AI-05, AI-06, AI-11, AI-12**, the rest of L3, then CAN-09 and CAN-10. They
-   are the remaining lots with verified prerequisites, and CTX-05 was the last of
-   the context chapter.
+   are the remaining lots with verified prerequisites: the context chapter is
+   finished and the canvas has one chapter left.
 8. Only then, and only with explicit permission: a small live Groq test, or a PCC eligibility check.
    Everything the transport needs is in place and mocked; what is missing is evidence about a live
    model, not plumbing.
