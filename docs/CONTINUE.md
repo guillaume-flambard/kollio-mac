@@ -283,7 +283,15 @@ The one implemented item is measurement of the intelligence that already existed
 7. **AI-06, synthesise and prepare a deliverable**, then AI-11, AI-12, CAN-09 and
    CAN-10. Those are the remaining L3 lots, and each one now has the layer it
    needs: a comparison is a reading, a synthesis is a derivative that must never
-   replace its sources.
+   replace its sources. **AI-06 is started, not done.** The `SummaryArtifact` and
+   its invariants are in `packages/KollioCore` with 18 tests: an edit keeps the
+   text the model first produced, an empty section is distinguishable from a
+   rendered one, the revision used is recorded, and a synthesis goes outdated when
+   a decision on something it read moves. What does not exist yet: the commands
+   that create and edit one, its place in `KollioDocument` and in the `.kollio`
+   format, the export itself, the compact block in the interface, and the local
+   engine that fills the sections. AI-06 stays `specified` until a named test
+   proves the whole path, and the first three of those gaps are why.
 8. Only then, and only with explicit permission: a small live Groq test, or a PCC eligibility check.
    Everything the transport needs is in place and mocked; what is missing is evidence about a live
    model, not plumbing.
