@@ -73,6 +73,20 @@ if grep -q "No matching test cases were run" "$log"; then
   exit 2
 fi
 
+# An unavailable model is its own outcome, not a structural failure and not a
+# pass. The suite reports it with a distinctive sentence, and this is what turns
+# that sentence into a distinct exit code. Without this branch the run would
+# exit 1 and read as "the model broke a safety rule", which is a different
+# claim about a different thing and would be acted on differently.
+if grep -qF "The on-device model is not usable here" "$log"; then
+  echo "" >&2
+  echo "evaluate-apple-model: the on-device model is not usable on this Mac." >&2
+  echo "  Nothing was measured. This is not a pass and not a failure." >&2
+  sed 's/^/  /' "$log" | grep -F "The on-device model is not usable here" | head -3 >&2
+  rm -f "$log"
+  exit 3
+fi
+
 sed 's/^/  /' "$log" | grep -E "EVALUATION|error:|Test run|✘|Issue recorded" || true
 
 summary="$output_dir/kollio-evaluation-summary.json"

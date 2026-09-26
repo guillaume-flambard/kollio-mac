@@ -378,3 +378,67 @@ struct StructuralAssessorTests {
         verdicts.first { $0.name == name }
     }
 }
+
+/// The script and the suite have to agree on one string, and they are two files
+/// in two languages that never see each other at build time.
+///
+/// This guard exists because the disagreement happened twice while writing the
+/// measurement: the script promised an exit code it did not produce, and then
+/// grepped for a sentence the suite never emitted, in the wrong case. Both
+/// failures are silent — the script still runs, and it still reports something
+/// plausible. A test that reads both files is cheaper than discovering it in a
+/// pipeline.
+@Suite("Evaluation script agreement")
+struct EvaluationScriptTests {
+    private static func repositoryRoot() -> URL? {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()   // Evaluations
+            .deletingLastPathComponent()   // KollioAppTests
+            .deletingLastPathComponent()   // Tests
+            .deletingLastPathComponent()   // KollioApp
+            .deletingLastPathComponent()   // packages
+            .deletingLastPathComponent()   // the repository root
+    }
+
+    @Test("The script's availability marker is a string the suite emits")
+    func availabilityMarkerMatches() throws {
+        let root = try #require(Self.repositoryRoot(), "could not locate the repository root")
+        let script = try String(contentsOf: root.appendingPathComponent("scripts/evaluate-apple-model.sh"), encoding: .utf8)
+        let suite = try String(
+            contentsOf: root.appendingPathComponent(
+                "packages/KollioApp/Tests/KollioAppTests/Evaluations/AppleModelEvaluation.swift"
+            ),
+            encoding: .utf8
+        )
+
+        // Read the marker out of the line that uses it rather than out of a
+        // pattern over the whole file. A pattern here was itself wrong on the
+        // first attempt, which is the argument for the simpler version.
+        let searchLine = try #require(
+            script.split(separator: "\n").first { $0.contains("grep -qF") },
+            "the script no longer searches the log for a fixed string"
+        )
+        let quoted = searchLine.components(separatedBy: "\"")
+        // `if grep -qF "…" "$log"; then` splits into
+        // [`if grep -qF `, `…`, ` `, `$log`, …]: the marker is the second piece.
+        let marker = try #require(
+            quoted.count > 1 ? quoted[1] : nil,
+            "the script's fixed-string search has no quoted marker in it"
+        )
+        #expect(
+            suite.contains(marker),
+            "the script looks for \(marker) and the suite does not emit it; the 'model unavailable' exit code would never fire"
+        )
+    }
+
+    @Test("The script refuses a run that matched no tests")
+    func noTestsIsAFailure() throws {
+        let root = try #require(Self.repositoryRoot())
+        let script = try String(contentsOf: root.appendingPathComponent("scripts/evaluate-apple-model.sh"), encoding: .utf8)
+        // A Swift Testing filter that matches nothing exits zero. Without this
+        // check the script would report a successful measurement of nothing.
+        #expect(script.contains("No matching test cases were run"))
+        #expect(script.contains("exit 2"))
+        #expect(script.contains("exit 3"))
+    }
+}
