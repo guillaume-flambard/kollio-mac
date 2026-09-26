@@ -161,6 +161,20 @@ public struct ProposalValidator: Sendable {
                 // direction on the person's behalf, because keeping is a decision
                 // with a rationale.
                 throw DocumentError.forbiddenOperation("a comparison is the user's to record")
+            case .startSummary, .setSummaryLine, .setSummarySection, .confirmSummary,
+                 .removeSummary:
+                // A synthesis is a deliverable, which makes it the most dangerous
+                // thing in this list. Intelligence may interpret a document, and a
+                // model that could write a synthesis could also hand it over: a
+                // person who reads a summary and acts on it is reading something
+                // nobody agreed to. Worse, it could confirm its own, and
+                // confirmation is the act that makes it a deliverable.
+                //
+                // So every one of the five is refused, including the ones that
+                // look harmless. A summary is produced here as a *proposal* of
+                // lines, validated like any other proposal, and written by the
+                // person who keeps it.
+                throw DocumentError.forbiddenOperation("a synthesis is the user's to write and to hand over")
             case .applyImpact:
                 // CTX-05: "intelligence may propose interpretations, never apply
                 // them". An assessment is already a bounded interpretation, and

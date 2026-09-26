@@ -360,6 +360,33 @@ extension SummaryArtifact {
     }
 }
 
+/// The syntheses held by one document.
+///
+/// Part of the document for the same reason the comparison ledger is: a
+/// synthesis is a record of what was read and what was concluded from it, and it
+/// has to outlive the session that produced it. A deliverable that evaporates on
+/// quit is not a deliverable.
+public struct SummaryLedger: Codable, Hashable, Sendable {
+    public private(set) var summaries: [SummaryID: SummaryArtifact]
+
+    public init(summaries: [SummaryArtifact] = []) {
+        self.summaries = Dictionary(uniqueKeysWithValues: summaries.map { ($0.id, $0) })
+    }
+
+    public func summary(_ id: SummaryID) -> SummaryArtifact? { summaries[id] }
+    public func all() -> [SummaryArtifact] {
+        summaries.values.sorted { $0.id.rawValue < $1.id.rawValue }
+    }
+
+    public mutating func upsert(_ summary: SummaryArtifact) {
+        summaries[summary.id] = summary
+    }
+
+    public mutating func remove(_ id: SummaryID) {
+        summaries.removeValue(forKey: id)
+    }
+}
+
 public struct SummaryID: Hashable, Sendable, Codable, CustomStringConvertible {
     public var rawValue: String
     public init(rawValue: String) { self.rawValue = rawValue }

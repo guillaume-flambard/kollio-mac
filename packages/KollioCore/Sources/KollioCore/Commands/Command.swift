@@ -44,6 +44,11 @@ public enum Command: Codable, Hashable, Sendable {
     case setCriterionWeight(SetCriterionWeight)
     case setCriterionMeasure(SetCriterionMeasure)
     case keepDirection(KeepDirection)
+    case startSummary(StartSummary)
+    case setSummaryLine(SetSummaryLine)
+    case setSummarySection(SetSummarySection)
+    case confirmSummary(ConfirmSummary)
+    case removeSummary(RemoveSummary)
 
     /// Presentation-only commands never change the meaning of the document.
     public var isSemantic: Bool {
@@ -70,10 +75,14 @@ public enum Command: Codable, Hashable, Sendable {
              .editRelationship, .applyImpact,
              .startComparison, .setComparisonCriteria, .confirmComparisonCriteria,
              .recordComparisonCell,
-             .setCriterionWeight, .setCriterionMeasure, .keepDirection:
-            // A comparison is a record of what a person weighed against what, so it
-            // is meaning rather than layout. Setting it aside is what presentation
-            // only buys you.
+             .setCriterionWeight, .setCriterionMeasure, .keepDirection,
+             .startSummary, .setSummaryLine, .setSummarySection, .confirmSummary,
+             .removeSummary:
+            // A comparison is a record of what a person weighed against what, and
+            // a synthesis is a record of what was read and what was concluded from
+            // it, so both are meaning rather than layout. A synthesis is a
+            // deliverable above all: folding it away must not change what the
+            // document says.
             return true
         }
     }
@@ -122,6 +131,11 @@ public enum Command: Codable, Hashable, Sendable {
         case .setCriterionWeight: return "undo.setCriterionWeight"
         case .setCriterionMeasure: return "undo.setCriterionMeasure"
         case .keepDirection: return "undo.keepDirection"
+        case .startSummary: return "undo.startSummary"
+        case .setSummaryLine: return "undo.setSummaryLine"
+        case .setSummarySection: return "undo.setSummarySection"
+        case .confirmSummary: return "undo.confirmSummary"
+        case .removeSummary: return "undo.removeSummary"
         }
     }
 }
@@ -808,6 +822,113 @@ public struct KeepDirection: Codable, Hashable, Sendable {
         self.comparisonID = comparisonID
         self.directionID = directionID
         self.rationale = rationale
+        self.provenance = provenance
+    }
+}
+
+// A synthesis is a derivative: a reading of the document, prepared to hand over.
+// Nothing here writes to content, and nothing here can replace what it read. The
+// five commands below are the whole surface, and each of them exists because the
+// two acts it could have been merged into are genuinely different acts.
+
+/// Opens a synthesis as a draft.
+///
+/// A draft is not a lesser synthesis. It is the state in which nothing has been
+/// agreed, and `ConfirmSummary` is a separate press because confirming means the
+/// deliverable will be handed to someone, which is not the same as having written
+/// it.
+public struct StartSummary: Codable, Hashable, Sendable {
+    public var summary: SummaryArtifact
+    public var provenance: Provenance
+
+    public init(summary: SummaryArtifact, provenance: Provenance) {
+        self.summary = summary
+        self.provenance = provenance
+    }
+}
+
+/// Adds a line to a section, or replaces one that is already there.
+///
+/// One command for both, because they are one act: a person writing a line into a
+/// synthesis, whether the line is new or a correction of what was there. The
+/// correction is what makes AC01 checkable, so it is handled here rather than by a
+/// separate `editLine` that could be used to overwrite without a trace.
+public struct SetSummaryLine: Codable, Hashable, Sendable {
+    public var summaryID: SummaryID
+    public var section: SummaryArtifact.Section
+    public var line: SummaryArtifact.SummaryLine
+    public var provenance: Provenance
+
+    public init(
+        summaryID: SummaryID,
+        section: SummaryArtifact.Section,
+        line: SummaryArtifact.SummaryLine,
+        provenance: Provenance
+    ) {
+        self.summaryID = summaryID
+        self.section = section
+        self.line = line
+        self.provenance = provenance
+    }
+}
+
+/// Replaces a section wholesale, including declaring that nothing was recorded.
+///
+/// The declaration is the reason this is a command and not a property. "Nobody
+/// wrote down what is not known" and "nothing was written here" look identical in
+/// a list and mean opposite things, so a person has to be able to say which one
+/// they mean.
+public struct SetSummarySection: Codable, Hashable, Sendable {
+    public var summaryID: SummaryID
+    /// Named rather than inferred from the section's identifier. The first version
+    /// reverse-mapped `SummarySectionID` back to a `Section` and fell back to
+    /// `.currentState` for anything it did not recognise, which meant a typo in an
+    /// identifier would have written a person's section into the wrong place.
+    public var kind: SummaryArtifact.Section
+    public var section: SummaryArtifact.SummarySection
+    public var provenance: Provenance
+
+    public init(
+        summaryID: SummaryID,
+        kind: SummaryArtifact.Section,
+        section: SummaryArtifact.SummarySection,
+        provenance: Provenance
+    ) {
+        self.summaryID = summaryID
+        self.kind = kind
+        self.section = section
+        self.provenance = provenance
+    }
+}
+
+/// Confirms a draft, which is what makes it a deliverable.
+///
+/// Refuses while any section is silently blank. That refusal is the whole of
+/// "the AI does not fabricate conclusions to fill a template", expressed as
+/// something a command can check: a confirmed synthesis has said something about
+/// every part of itself, or has declared that there was nothing to say.
+public struct ConfirmSummary: Codable, Hashable, Sendable {
+    public var summaryID: SummaryID
+    public var provenance: Provenance
+
+    public init(summaryID: SummaryID, provenance: Provenance) {
+        self.summaryID = summaryID
+        self.provenance = provenance
+    }
+}
+
+/// Removes a synthesis.
+///
+/// Removing is not setting aside, and there is no other kind of removal here: a
+/// synthesis holds no content, so nothing is lost with it that the document does
+/// not still hold. The read set goes with it, which is the one thing worth saying
+/// out loud, and is why this is a command a person presses.
+public struct RemoveSummary: Codable, Hashable, Sendable {
+    public var summaryID: SummaryID
+    public var provenance: Provenance
+
+    public init(summaryID: SummaryID, provenance: Provenance) {
+        self.summaryID = summaryID
         self.provenance = provenance
     }
 }

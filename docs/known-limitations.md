@@ -43,6 +43,17 @@ SDK 27.0.
   than saying no such source exists. Nothing unsafe reached the document, and
   structurally a fabricated source is unreachable: the candidate type has no
   citation capability. The behaviour is still wrong.
+- **A second confirm is recorded as a command that changes nothing.** Confirming a
+  synthesis, or a comparison's criteria, twice leaves the artefact byte-identical
+  but still moves the document's revision, so undoing the second press undoes
+  nothing. It is shared with comparisons, and it is recorded here rather than
+  fixed for syntheses alone, which would leave the two behaviours divergent for
+  the sake of tidiness.
+- **A synthesis has no export, no compact block and no local engine yet.** The
+  model, the commands, the refusals and the file format are in place; the three
+  parts that would make it useful to a person are not. AI-06 stays `specified`
+  until they are, because the acceptance criteria are about what a person
+  receives, not about what the document can store.
 - **The running app holds no network socket.** Checked with `lsof` against the app's own pid. This is
   evidence about the on-device path specifically, not a claim that no Mac feature the user turns on
   will ever reach the network.

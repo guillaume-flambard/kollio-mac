@@ -19,8 +19,8 @@
     "schemaVersion": {
       "type": "integer",
       "minimum": 1,
-      "maximum": 5,
-      "description": "2 added `sources`, 3 added `claims`, 4 added `clarifications`, 5 added `comparisons`. A file written before any of them is a document without them, not a broken one."
+      "maximum": 6,
+      "description": "2 added `sources`, 3 added `claims`, 4 added `clarifications`, 5 added `comparisons`, 6 added `summaries`. A file written before any of them is a document without them, not a broken one."
     },
     "documentId": {
       "type": "string"
@@ -120,6 +120,27 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/clarification"
+          }
+        }
+      }
+    },
+    "summaries": {
+      "type": "object",
+      "description": "Syntheses prepared for handing over. Absent before version 6. A summary is a derivative: it carries the revision it read and a section may be present with no lines, which is how the format says 'nothing was recorded here' rather than 'nothing was written yet'. Those are different claims and the schema keeps them apart by allowing an empty section to exist at all.",
+      "additionalProperties": false,
+      "properties": {
+        "summaries": {
+          "type": "array",
+          "description": "Keyed by synthesis id in the alternating `[id, value]` form the codec uses for a keyed container of single-value keys, exactly like `sources`, `claims`, `clarifications` and `comparisons`.",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/summary"
+              }
+            ]
           }
         }
       }
@@ -1369,6 +1390,272 @@
             "number",
             "string"
           ]
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "objective",
+        "currentState",
+        "reasons",
+        "uncertainties",
+        "nextVerifications",
+        "sourceRefs",
+        "readSet",
+        "baseSemanticRevision",
+        "isDraft"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Never empty. A synthesis with no title cannot be found in a list of deliverables."
+        },
+        "objective": {
+          "$ref": "#/$defs/summaryLine"
+        },
+        "currentState": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/summarySection"
+          }
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/summarySection"
+          }
+        },
+        "uncertainties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/summarySection"
+          },
+          "description": "May be a single section with no lines and `isNothingRecorded` true. AC02: 'nothing is known to be uncertain' is a finding and the format has to be able to say it."
+        },
+        "nextVerifications": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/summarySection"
+          }
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/summarySourceRef"
+          }
+        },
+        "readSet": {
+          "$ref": "#/$defs/summaryReadSet"
+        },
+        "baseSemanticRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "AC03: the document revision this synthesis read. Without it a synthesis cannot answer whether it is still true."
+        },
+        "isDraft": {
+          "type": "boolean",
+          "description": "True until confirmed. A confirmed synthesis has said something about every section or declared that there was nothing to say."
+        },
+        "proposedNarrowerScope": {
+          "$ref": "#/$defs/narrowerScope"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "summaryLine": {
+      "type": "object",
+      "required": [
+        "id",
+        "text",
+        "provenance",
+        "references"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "text": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        },
+        "originalText": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/localizedText"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "AC01: the text as first produced, kept when a person edits the line. Present only after an edit, which is what makes 'the initial text stays intact' checkable rather than asserted."
+        },
+        "editedBy": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/summaryReference"
+          }
+        }
+      }
+    },
+    "summarySection": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "lines",
+        "isNothingRecorded"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/summaryLine"
+          }
+        },
+        "isNothingRecorded": {
+          "type": "boolean",
+          "description": "True when the section is empty on purpose. An empty section and a deliberate absence are different claims, and only the second one is allowed to be confirmed."
+        }
+      }
+    },
+    "summaryReference": {
+      "type": "object",
+      "required": [
+        "kind",
+        "id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "object",
+            "source",
+            "citation",
+            "claim",
+            "decision",
+            "note"
+          ]
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "summarySourceRef": {
+      "type": "object",
+      "required": [
+        "id",
+        "sourceID",
+        "revisionID",
+        "isCurrent"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sourceID": {
+          "type": "string"
+        },
+        "revisionID": {
+          "type": "string",
+          "description": "The revision that was read, not merely that the source exists. AC03."
+        },
+        "isCurrent": {
+          "type": "boolean"
+        }
+      }
+    },
+    "summaryReadSet": {
+      "type": "object",
+      "required": [
+        "objectIDs",
+        "sourceRevisionIDs",
+        "citationIDs",
+        "decisionIDs",
+        "wasTruncated"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "objectIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sourceRevisionIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "citationIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "decisionIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The decisions read when the synthesis was written. A later decision on one of these objects is what makes it outdated."
+        },
+        "wasTruncated": {
+          "type": "boolean"
+        }
+      }
+    },
+    "narrowerScope": {
+      "type": "object",
+      "required": [
+        "objectIDs",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "objectIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Why the wide selection was refused, in words a person can act on."
         }
       }
     }

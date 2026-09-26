@@ -29,6 +29,18 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
     /// A cell wants a number and the criterion has no measure. AC01 refused at the
     /// only place where refusing is worth anything.
     case criterionHasNoMeasure(CriterionID)
+    // A synthesis, its sections and its lines. Each refusal below is one of the
+    // ways a synthesis could have lied, named so the interface can explain itself.
+    case unknownSummary(SummaryID)
+    case duplicateSummary(SummaryID)
+    case emptySummaryTitle(SummaryID)
+    case emptySummaryLine(SummaryLineID)
+    /// An engine line that rests on nothing.
+    case unsupportedSummaryAssertion(SummaryLineID)
+    /// A section that says nothing was recorded and carries lines anyway.
+    case contradictorySummarySection(SummaryID)
+    /// A section that is present but neither says something nor declares absence.
+    case silentSummarySection(SummaryID, SummaryArtifact.Section)
     case unknownComparison(ComparisonID)
     case unknownCriterion(CriterionID)
     case duplicateComparison(ComparisonID)
@@ -107,8 +119,17 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
             return "\(instance) is already in frame \(frame)"
         case .criterionHasNoMeasure(let id):
             return "Criterion \(id) has no measure, so it cannot hold a number"
-        case .unknownComparison(let id): return "Unknown comparison \(id)"
-        case .unknownCriterion(let id): return "Unknown criterion \(id)"
+        case .unknownSummary(let id): return "Unknown synthesis \(id)"
+        case .duplicateSummary(let id): return "Synthesis \(id) already exists"
+        case .emptySummaryTitle(let id): return "Synthesis \(id) has no title"
+        case .emptySummaryLine(let id): return "Line \(id) is empty"
+        case .unsupportedSummaryAssertion(let id):
+            return "Line \(id) came from a model and rests on nothing"
+        case .contradictorySummarySection(let id):
+            return "Synthesis \(id) says a section is empty and fills it"
+        case .silentSummarySection(let id, let section):
+            return "Synthesis \(id) has a \(section.rawValue) section that says nothing"
+        case .unknownComparison(let id): return "Unknown comparison \(id)"        case .unknownCriterion(let id): return "Unknown criterion \(id)"
         case .duplicateComparison(let id): return "Duplicate comparison \(id)"
         case .comparisonIsDraft(let id):
             return "Comparison \(id) is still a draft: confirm its criteria first"
@@ -279,6 +300,202 @@ public struct DocumentStore: Sendable {
             try setCriterionMeasure(measure, in: &document)
         case .keepDirection(let keep):
             try keepDirection(keep, in: &document)
+        case .startSummary(let start):
+            try startSummary(start, in: &document)
+        case .setSummaryLine(let line):
+            try setSummaryLine(line, in: &document)
+        case .setSummarySection(let section):
+            try setSummarySection(section, in: &document)
+        case .confirmSummary(let confirm):
+            try confirmSummary(confirm, in: &document)
+        case .removeSummary(let remove):
+            try removeSummary(remove, from: &document)
+        }
+    }
+
+    private static func startSummary(_ start: StartSummary, in document: inout KollioDocument) throws {
+        let summary = start.summary
+        guard document.summaries.summary(summary.id) == nil else {
+            throw DocumentError.duplicateSummary(summary.id)
+        }
+        try validate(summary, in: document)
+        var ledger = document.summaries
+        // Always stored as a draft. A synthesis that arrived confirmed would let
+        // an engine hand over a deliverable without anybody agreeing to it, and
+        // the draft is the only thing standing between a proposal and authority.
+        var stored = summary
+        stored.isDraft = true
+        ledger.upsert(stored)
+        document.summaries = ledger
+    }
+
+    private static func setSummaryLine(_ set: SetSummaryLine, in document: inout KollioDocument) throws {
+        guard var summary = document.summaries.summary(set.summaryID) else {
+            throw DocumentError.unknownSummary(set.summaryID)
+        }
+        var line = set.line
+        guard !line.text.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw DocumentError.emptySummaryLine(line.id)
+        }
+        // AC01. A line that already exists keeps the text it had, and the person
+        // who replaced it is recorded. Without this, an edit is indistinguishable
+        // from a generation and "the initial text stays intact" is a claim nobody
+        // can check.
+        if let existing = summary.line(line.id) {
+            line.originalText = existing.originalText ?? existing.text
+            // The person who replaced it. The first version kept the original
+            // text and forgot the author of the edit, which made a correction
+            // indistinguishable from a line nobody had touched.
+            line.editedBy = set.provenance.actor
+        }
+        try validateLine(line, in: document)
+
+        // The objective is the person's purpose and is written once, at open. A
+        // later write to it through a section would be ambiguous about which of
+        // the two it meant, so it is refused rather than guessed at.
+        guard line.id != summary.objective.id else {
+            throw DocumentError.forbiddenOperation("the objective is written when the synthesis opens")
+        }
+        var section = summary.sections(set.section).first {
+            $0.lines.contains { $0.id == line.id }
+        } ?? SummaryArtifact.SummarySection(set.section)
+        if let index = section.lines.firstIndex(where: { $0.id == line.id }) {
+            section.lines[index] = line
+        } else {
+            section.lines.append(line)
+        }
+        section.lines.sort { $0.id.rawValue < $1.id.rawValue }
+        // Writing a line makes the section no longer a declaration of absence:
+        // the person has now said something about it.
+        section.isNothingRecorded = false
+        summary = summary.settingSections([section], for: set.section)
+        var ledger = document.summaries
+        ledger.upsert(summary)
+        document.summaries = ledger
+    }
+
+    private static func setSummarySection(
+        _ set: SetSummarySection,
+        in document: inout KollioDocument
+    ) throws {
+        guard var summary = document.summaries.summary(set.summaryID) else {
+            throw DocumentError.unknownSummary(set.summaryID)
+        }
+        var section = set.section
+        // A declaration of nothing recorded and a section with lines contradict
+        // each other, and the contradiction is refused rather than resolved: a
+        // person who means both has not decided what they mean.
+        if section.isNothingRecorded && !section.lines.isEmpty {
+            throw DocumentError.contradictorySummarySection(set.summaryID)
+        }
+        for line in section.lines { try validateLine(line, in: document) }
+        section.lines.sort { $0.id.rawValue < $1.id.rawValue }
+        summary = summary.settingSections([section], for: set.kind)
+        var ledger = document.summaries
+        ledger.upsert(summary)
+        document.summaries = ledger
+    }
+
+    private static func confirmSummary(
+        _ confirm: ConfirmSummary,
+        in document: inout KollioDocument
+    ) throws {
+        guard var summary = document.summaries.summary(confirm.summaryID) else {
+            throw DocumentError.unknownSummary(confirm.summaryID)
+        }
+        guard summary.isDraft else { return }
+        // Every section has to have said something, or said that there was nothing
+        // to say. A confirmed template with silent blanks is exactly what "the AI
+        // does not fabricate conclusions to fill a template" forbids, and this is
+        // where it is checked.
+        for section in SummaryArtifact.Section.allCases {
+            let value = summary.sections(section)
+            if value.isEmpty {
+                throw DocumentError.silentSummarySection(confirm.summaryID, section)
+            }
+            if value.allSatisfy({ $0.lines.isEmpty && !$0.isNothingRecorded }) {
+                throw DocumentError.silentSummarySection(confirm.summaryID, section)
+            }
+        }
+        try validate(summary, in: document)
+        summary.isDraft = false
+        var ledger = document.summaries
+        ledger.upsert(summary)
+        document.summaries = ledger
+    }
+
+    private static func removeSummary(_ remove: RemoveSummary, from document: inout KollioDocument) throws {
+        guard document.summaries.summary(remove.summaryID) != nil else {
+            throw DocumentError.unknownSummary(remove.summaryID)
+        }
+        var ledger = document.summaries
+        ledger.remove(remove.summaryID)
+        document.summaries = ledger
+    }
+
+    /// The source that carries a revision, or nothing.
+    ///
+    /// A `SourceRevision` names its source, but the ledger is keyed by source, so
+    /// the lookup goes the other way round. It is spelled out here rather than
+    /// guessed at by prefix, because a source id is not a prefix of every
+    /// revision id in general and a lookup that assumed it would accept a
+    /// revision belonging to a source that had been removed.
+    private static func findSource(
+        of revision: SourceRevisionID,
+        in document: KollioDocument
+    ) -> SourceID? {
+        for (id, source) in document.sources.sources where source.revision(revision) != nil {
+            return id
+        }
+        return nil
+    }
+
+    private static func validate(_ summary: SummaryArtifact, in document: KollioDocument) throws {
+        if summary.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            throw DocumentError.emptySummaryTitle(summary.id)
+        }
+        for object in summary.readSet.objectIDs where document.content[object] == nil {
+            throw DocumentError.unknownObject(object)
+        }
+        for revision in summary.readSet.sourceRevisionIDs
+        where findSource(of: revision, in: document) == nil {
+            throw DocumentError.unknownSourceRevision(SourceID(revision.rawValue), revision)
+        }
+        for ref in summary.sourceRefs {
+            guard document.sources.source(ref.sourceID) != nil else {
+                throw DocumentError.unknownSource(ref.sourceID)
+            }
+            guard findSource(of: ref.revisionID, in: document) == nil else { continue }
+            throw DocumentError.unknownSourceRevision(ref.sourceID, ref.revisionID)
+        }
+        try validateLine(summary.objective, in: document)
+        for line in summary.allLines.dropFirst() { try validateLine(line, in: document) }
+    }
+
+    private static func validateLine(
+        _ line: SummaryArtifact.SummaryLine,
+        in document: KollioDocument
+    ) throws {
+        guard !line.text.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw DocumentError.emptySummaryLine(line.id)
+        }
+        // An engine line that rests on nothing is an assertion, and an assertion
+        // with no reference is the shape a fabricated conclusion takes. A person's
+        // own line needs no reference: they are the source.
+        guard !line.isUnsupportedAssertion else {
+            throw DocumentError.unsupportedSummaryAssertion(line.id)
+        }
+        for reference in line.references {
+            switch reference.kind {
+            case .object:
+                guard document.content[ObjectID(reference.id)] != nil else {
+                    throw DocumentError.unknownObject(ObjectID(reference.id))
+                }
+            case .source, .citation:
+                break
+            case .claim, .decision, .note:
+                break
+            }
         }
     }
 

@@ -35,6 +35,11 @@ public struct KollioDocument: Codable, Hashable, Sendable {
     /// for the same reason the ledgers above are: a comparison is a record of what
     /// was weighed against what, and it has to outlive the session that produced it.
     public var comparisons: ComparisonLedger
+    /// The syntheses prepared for handing over. Part of the document because a
+    /// synthesis is a deliverable: it has to survive a quit, a failure and a
+    /// share, and because the read set it carries is the only record of what was
+    /// consulted when the conclusions were drawn.
+    public var summaries: SummaryLedger
 
     public init(
         schemaVersion: Int = KollioDocument.currentSchemaVersion,
@@ -52,7 +57,8 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         sources: SourceLedger = SourceLedger(),
         claims: ClaimLedger = ClaimLedger(),
         clarifications: ClarificationLedger = ClarificationLedger(),
-        comparisons: ComparisonLedger = ComparisonLedger()
+        comparisons: ComparisonLedger = ComparisonLedger(),
+        summaries: SummaryLedger = SummaryLedger()
     ) {
         self.schemaVersion = schemaVersion
         self.documentId = documentId
@@ -70,11 +76,13 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         self.claims = claims
         self.clarifications = clarifications
         self.comparisons = comparisons
+        self.summaries = summaries
     }
 
-    /// 5 added the `comparisons` ledger. A file written before it decodes to a
+    /// 6 added the `summaries` ledger. 5 added the `comparisons` ledger. A file written before it decodes to a
     /// document with no comparisons, which is the truth about it.
-    public static let currentSchemaVersion = 5
+    /// 6 adds `summaries`.
+    public static let currentSchemaVersion = 6
 
     /// 2 added the `sources` ledger. A file written at version 1 has no `sources`
     /// key and decodes as a document with no sources, which is the truth about it.
@@ -88,7 +96,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case schemaVersion, documentId, revision, semanticRevision, createdAt, updatedAt
         case content, relationships, decisions, contributions, products
-        case presentation, sources, claims, clarifications, comparisons
+        case presentation, sources, claims, clarifications, comparisons, summaries
     }
 
     private struct IdKey: CodingKey {
@@ -119,6 +127,9 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         claims = try container.decodeIfPresent(ClaimLedger.self, forKey: .claims) ?? ClaimLedger()
         clarifications = try container.decodeIfPresent(ClarificationLedger.self, forKey: .clarifications) ?? ClarificationLedger()
         comparisons = try container.decodeIfPresent(ComparisonLedger.self, forKey: .comparisons) ?? ComparisonLedger()
+        // A file written before syntheses existed decodes to a document with none,
+        // which is the truth about it rather than a file to repair.
+        summaries = try container.decodeIfPresent(SummaryLedger.self, forKey: .summaries) ?? SummaryLedger()
     }
 
     private static func decodeMap<Key: KollioIdentifier, Value: Decodable>(
@@ -154,6 +165,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         try container.encode(claims, forKey: .claims)
         try container.encode(clarifications, forKey: .clarifications)
         try container.encode(comparisons, forKey: .comparisons)
+        try container.encode(summaries, forKey: .summaries)
     }
 
     private static func encodeMap<Key: KollioIdentifier, Value: Encodable>(
