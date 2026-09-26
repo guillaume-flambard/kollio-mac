@@ -13,7 +13,7 @@ A view, not a source of truth. Status meanings:
 | `blockedExternal` | Blocked on a capability or authorisation. |
 | `notInCurrentRelease` | Deliberately out of this product. |
 
-Counts: 24 automatedVerified, 1 humanVerified, 46 specified. 71 features, 213 acceptance criteria.
+Counts: 25 automatedVerified, 1 humanVerified, 45 specified. 71 features, 213 acceptance criteria.
 
 ## L1 — 10 features
 
@@ -52,7 +52,8 @@ Counts: 24 automatedVerified, 1 humanVerified, 46 specified. 71 features, 213 ac
       AppleAdapterTests: minted ids, dropped kinds, bounded branch, noChange.
 - [x] **AI-08** Keep, set aside, or dismiss · `automatedVerified` · 3 AC
       VerticalSliceTests: one Keep undoes as one action.
-- [ ] **AI-09** Cancel, retry, understand errors · `specified` · 3 AC
+- [x] **AI-09** Cancel, retry, understand errors · `automatedVerified` · 3 AC
+      AC01 a late answer after a switch, an undo or a close is dropped rather than published; AC02 the draft is kept; AC03 a refusal starts no loop. RequestLifecycleTests, LateAnswerTests, and a new request now supersedes one in flight instead of being refused. Still missing: the Cancel and Ask again actions in the interface, and remote cancel, which cannot be claimed before a provider answers ownership.
 - [x] **CAN-08** Place proposals and organise locally · `automatedVerified` · 3 AC
       AC01 keeping does not shift the ghosts; AC02 earlier objects stay still; AC03 undo restores the view exactly. ProposalPlacementTests, against the real model. A branch placed off screen offers a way to see it, and nothing ever moves the view on its own. Still missing: the local organisation gesture, and a density measure for when to widen the search rather than place.
 - [x] **DEC-01** Take an explicit decision · `automatedVerified` · 3 AC

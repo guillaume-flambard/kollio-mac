@@ -108,6 +108,11 @@ public struct ProposalRequest: Codable, Hashable, Sendable, Identifiable {
     public var contentLocale: String
     public var context: [ContextItem]
     public var preconditions: Preconditions
+    /// The generation this request belongs to. A response that does not carry the
+    /// matching nonce is stale by construction and must not be published: a person
+    /// who has asked again, undone or closed must not have the older answer land on
+    /// top of whatever replaced it.
+    public var generationNonce: UInt64?
     public var scope: Scope
     /// The slice of the client's document this request reasons about.
     ///
@@ -214,6 +219,7 @@ public struct ProposalRequest: Codable, Hashable, Sendable, Identifiable {
         contentLocale: String = "fr",
         context: [ContextItem] = [],
         preconditions: Preconditions? = nil,
+        generationNonce: UInt64? = nil,
         scope: Scope = Scope(),
         snapshot: DocumentSnapshot? = nil
     ) {
@@ -226,6 +232,7 @@ public struct ProposalRequest: Codable, Hashable, Sendable, Identifiable {
         self.contentLocale = contentLocale
         self.context = context
         self.preconditions = preconditions ?? Preconditions(semanticRevision: baseSemanticRevision)
+        self.generationNonce = generationNonce
         self.scope = scope
         self.snapshot = snapshot
     }

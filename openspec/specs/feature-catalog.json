@@ -5,9 +5,9 @@
     "features": 71,
     "acceptanceCriteria": 213,
     "byStatus": {
-      "automatedVerified": 24,
+      "automatedVerified": 25,
       "humanVerified": 1,
-      "specified": 46
+      "specified": 45
     },
     "byLot": {
       "L1": 10,
@@ -209,7 +209,8 @@
       ],
       "section": "Intelligence",
       "lot": "L2",
-      "status": "specified"
+      "status": "automatedVerified",
+      "evidence": "AC01 a late answer after a switch, an undo or a close is dropped rather than published; AC02 the draft is kept; AC03 a refusal starts no loop. RequestLifecycleTests, LateAnswerTests, and a new request now supersedes one in flight instead of being refused. Still missing: the Cancel and Ask again actions in the interface, and remote cancel, which cannot be claimed before a provider answers ownership."
     },
     {
       "id": "AI-10",

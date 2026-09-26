@@ -67,6 +67,10 @@ public enum L10n {
     public static var claimScopeEmpty: String { callAsFunction("claim.scopeEmpty") }
     public static var undoAssertClaim: String { callAsFunction("undo.assertClaim") }
     public static var undoRecordStance: String { callAsFunction("undo.recordStance") }
+    public static var statusAnswerSuperseded: String { callAsFunction("status.answerSuperseded") }
+    public static var retry: String { callAsFunction("action.retry") }
+    public static var retryHint: String { callAsFunction("action.retryHint") }
+    public static var cancelHint: String { callAsFunction("action.cancelHint") }
     public static var undoAskClarification: String { callAsFunction("undo.askClarification") }
     public static var undoAnswerClarification: String { callAsFunction("undo.answerClarification") }
     public static var undoMarkUnknown: String { callAsFunction("undo.markUnknown") }

@@ -147,6 +147,13 @@ STATUS_NOTES = {
               "AppleAdapterTests: minted ids, dropped kinds, bounded branch, noChange."),
     "AI-08": ("automatedVerified",
               "VerticalSliceTests: one Keep undoes as one action."),
+    "AI-09": ("automatedVerified",
+               "AC01 a late answer after a switch, an undo or a close is dropped rather than "
+               "published; AC02 the draft is kept; AC03 a refusal starts no loop. "
+               "RequestLifecycleTests, LateAnswerTests, and a new request now supersedes one in "
+               "flight instead of being refused. Still missing: the Cancel and Ask again actions "
+               "in the interface, and remote cancel, which cannot be claimed before a provider "
+               "answers ownership."),
     "AI-04": ("automatedVerified",
                "AC01 an answer is in the document and survives a reload; AC02 'I don't know' is a "
                "real state and is never an empty answer; AC03 a question resolves beside its object "

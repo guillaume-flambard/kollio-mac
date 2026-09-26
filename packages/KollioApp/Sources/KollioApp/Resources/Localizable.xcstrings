@@ -20,6 +20,7 @@
       }
     },
     "canvas.cancel": {
+      "comment": "Cancels the request in flight. Keeps everything typed; only stops the work.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2281,6 +2282,78 @@
           "stringUnit": {
             "state": "translated",
             "value": "Elle reste inconnue"
+          }
+        }
+      }
+    },
+    "status.answerSuperseded": {
+      "comment": "An answer arrived after the person had moved on, and was dropped. Says so rather than showing nothing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That answer arrived after you had moved on, so it was not used"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette réponse est arrivée après votre dernière action : elle n’a pas été utilisée"
+          }
+        }
+      }
+    },
+    "action.retry": {
+      "comment": "Asks the same question again as a new, linked request.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask again"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redemander"
+          }
+        }
+      }
+    },
+    "action.retryHint": {
+      "comment": "A retry is a new request that points at the one before it, never an invisible repeat.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask again as a new request, linked to this one"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redemander comme une nouvelle demande, liée à celle-ci"
+          }
+        }
+      }
+    },
+    "action.cancelHint": {
+      "comment": "Cancelling keeps everything typed. It only stops the work in flight.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop the work. Nothing you typed is lost"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrête le travail. Rien de ce que vous avez écrit n’est perdu"
           }
         }
       }

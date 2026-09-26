@@ -873,6 +873,15 @@ public final class KollioModel {
         }
     }
 
+    /// Which answer is still wanted. Every request takes a nonce, and an answer
+    /// that does not carry the current one is dropped rather than published.
+    public var lifecycle = RequestLifecycle()
+    /// The request a retry would continue from, when the person asked for one.
+    public var retryingRequestId: String?
+    /// The request this model last started, so a completion can tell whether it is
+    /// still the one that was asked for.
+    private var requestIdForLifecycle: String?
+
     public var openClarificationID: ClarificationID?
     public var clarificationDraft: ClarificationDraft?
 
@@ -1411,9 +1420,18 @@ public final class KollioModel {
         intent: Intent = .explore,
         instruction: String? = nil
     ) async -> Bool {
-        guard !isThinking else { return false }
+        // A new request supersedes the one in flight rather than being refused.
+        // Refusing meant a person could not change their mind while waiting, which
+        // is the case the nonce exists to handle: the older answer becomes stale and
+        // is dropped when it lands, and only the newest publishes. The first version
+        // of this kept the old guard, and a test for the race hung on it.
         isThinking = true
-        defer { isThinking = false }
+        defer {
+            // Only the request that is still current may clear the busy state. Two
+            // overlapping requests would otherwise have the first one to finish
+            // report "not thinking" while the second is still working.
+            if lifecycle.currentRequestId == requestIdForLifecycle { isThinking = false }
+        }
         status = nil
 
         let trimmed = instruction?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1421,8 +1439,13 @@ public final class KollioModel {
         // transmission, and the words a person chose are the part that cannot be
         // reconstructed from the target alone.
         let context = readSet(for: id)
+        // A retry is a visible link to the request it continues, never an
+        // invisible repeat of the same identifier.
+        let requestId = UUID().uuidString
+        requestIdForLifecycle = requestId
+        let nonce = lifecycle.begin(requestId: requestId, retrying: retryingRequestId)
         let request = ProposalRequest(
-            requestId: UUID().uuidString,
+            requestId: requestId,
             documentId: document.documentId,
             baseSemanticRevision: session.semanticRevision,
             intent: intent == .explore ? .explore : .add,
@@ -1436,7 +1459,8 @@ public final class KollioModel {
             preconditions: ProposalRequest.Preconditions(
                 semanticRevision: session.semanticRevision,
                 readSetFingerprint: ProposalRequest.fingerprint(of: context)
-            )
+            ),
+            generationNonce: nonce
         )
         do {
             let response: ProposalResponse
@@ -1449,6 +1473,16 @@ public final class KollioModel {
                 }
             } else {
                 response = try await service.respond(to: request, document: document)
+            }
+            // A late answer is dropped. This is the whole point of the nonce: a
+            // person who asked again, undid, or closed the window must not have
+            // this answer land on top of whatever replaced it. Nothing is published,
+            // and nothing is removed either: whatever is on screen now was put there
+            // by a request the person is still waiting on.
+            guard lifecycle.accepts(nonce: nonce, requestId: request.requestId) else {
+                progress = nil
+                status = L10n.statusAnswerSuperseded
+                return false
             }
             progress = nil
             handle(response, anchor: id, requestId: request.requestId)
@@ -1956,6 +1990,14 @@ public final class KollioModel {
 
     public var canUndo: Bool { session.history.canUndo }
     public var canRedo: Bool { session.history.canRedo }
+
+    /// Invalidates any answer still in flight.
+    ///
+    /// Called wherever the person has moved on: undo, close, and every new request.
+    /// A response already on its way is now stale and will be dropped when it lands.
+    public func invalidateInFlightAnswer() {
+        lifecycle.invalidate()
+    }
 
     public func undo() {
         if session.undo() {
