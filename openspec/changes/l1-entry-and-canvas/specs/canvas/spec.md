@@ -5,10 +5,9 @@ Reconstructed from `proposal.md` and the accumulated present tense in
 
 ---
 
-Statut : 3 exigence(s) appliquée(s), 2 exigence(s) en attente.
+Statut : 4 exigence(s) appliquée(s), 1 exigence(s) en attente.
 
 En attente, donc non opposables :
-- a gesture is a presentation event
 - a collapsed direction is reachable by name
 
 ## ADDED Requirements

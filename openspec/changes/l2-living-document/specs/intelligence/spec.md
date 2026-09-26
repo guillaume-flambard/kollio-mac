@@ -5,13 +5,12 @@ Reconstructed from `proposal.md` and the accumulated present tense in
 
 ---
 
-Statut : 7 exigence(s) appliquée(s), 4 exigence(s) en attente.
+Statut : 8 exigence(s) appliquée(s), 3 exigence(s) en attente.
 
 En attente, donc non opposables :
 - the candidate is smaller than the document
 - a session is disposable
 - a progress can never become a proposal
-- a rejected direction is not proposed again
 
 ## ADDED Requirements
 
@@ -145,9 +144,14 @@ without a changed premise.
 - **THEN** the proposal is either different or is a `noChange`, never a repeat of
       the set-aside branch
 
-#### Scenario: the premise changed
-- **GIVEN** a set-aside direction and new information that contradicts its
-      premise
-- **WHEN** the branch is explored
-- **THEN** reconsidering it is possible, and it is presented as a proposal rather
-      than as a reopening
+#### Scenario: the branch is explored directly
+- **GIVEN** a direction that was set aside
+- **WHEN** that branch itself is explored
+- **THEN** nothing is proposed, and the decision that set it aside is untouched
+
+# The reconstruction had also carried a second scenario offering to reconsider a
+# set-aside direction whose premise had changed. `SPECIFICATIONS.md` says the
+# opposite and more simply: "A rejected branch is not reopened by the model." There
+# is no exception clause in the normative text, so the delta is not free to invent
+# one. Reopening a direction is what a person does, through a named action, and
+# until somebody builds that exception deliberately it does not exist.

@@ -6,10 +6,7 @@ requirement; the rest of the capability arrives with L3.
 
 ---
 
-Statut : 1 exigence(s) appliquée(s), 1 exigence(s) en attente.
-
-En attente, donc non opposables :
-- adding information is one transaction
+Statut : 2 exigence(s) appliquée(s), 0 exigence(s) en attente.
 
 ## ADDED Requirements
 

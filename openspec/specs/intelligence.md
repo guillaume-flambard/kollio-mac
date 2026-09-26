@@ -64,3 +64,19 @@ opt-in and skipped by default.
 #### Scenario: default verification
 - **WHEN** `./scripts/verify.sh` runs
 - **THEN** no test requires Apple Intelligence, a key or a network
+
+### Requirement: a rejected direction is not proposed again
+A direction that was set aside SHALL carry a signature of what it was and why,
+and a new request SHALL receive that signature so the model does not repeat it.
+Exploring a set-aside branch SHALL propose nothing, and SHALL NOT reopen it.
+
+#### Scenario: the same direction twice
+- **GIVEN** a direction that was set aside with a reason
+- **WHEN** the same branch is explored again
+- **THEN** the proposal is either different or is a `noChange`, never a repeat of
+      the set-aside branch
+
+#### Scenario: the branch is explored directly
+- **GIVEN** a direction that was set aside
+- **WHEN** that branch itself is explored
+- **THEN** nothing is proposed, and the decision that set it aside is untouched

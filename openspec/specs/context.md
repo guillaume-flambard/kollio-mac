@@ -36,3 +36,13 @@ a truncation is visible rather than silent.
 #### Scenario: the context exceeds the model's limit
 - **WHEN** the assembled context is too large for the model
 - **THEN** what was dropped is recorded and shown
+
+### Requirement: adding information is one transaction
+Information added at a chosen place SHALL be attached to that place in the same
+transaction, SHALL keep its author's words exactly as written, and SHALL survive a
+later failure of any intelligence request.
+
+#### Scenario: the request that followed failed
+- **GIVEN** an information added to an object
+- **WHEN** a later exploration of that object fails
+- **THEN** the information is still there, attached to the same object

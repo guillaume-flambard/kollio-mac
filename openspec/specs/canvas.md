@@ -47,3 +47,12 @@ objects when they move, and SHALL avoid an obstacle it cannot cross.
 #### Scenario: an obstacle between the ends
 - **WHEN** a relationship would cross another object
 - **THEN** it is routed around it and labelled at the point it actually took
+
+### Requirement: a gesture is a presentation event
+A drag, a pan, a pinch and a selection SHALL NOT change the document's meaning,
+and SHALL produce at most one transaction when they end.
+
+#### Scenario: one drag, one transaction
+- **GIVEN** several objects are selected and dragged together
+- **WHEN** the person releases
+- **THEN** one undo restores every position they had
