@@ -162,3 +162,39 @@ These cannot be automated here, and no line of code substitutes for them.
   subtree from hit testing, so AppKit never routes a scroll to it. The view is now
   a topmost overlay that claims a hit only while a scroll event is being routed,
   proved by `ScrollDeliveryTests`.
+- The evaluation harness does not aggregate its own metrics.
+  `Evaluation.aggregateMetrics(using:)` is a protocol requirement with no default,
+  and it is implemented as an empty function. The reason is that the numbers this
+  run is judged on come from the verdict recorder, and computing means the report
+  does not read would create a second set of figures to keep in step with the
+  first. Apple's own `.xcevalresult` is written beside the summary for the cases
+  where that aggregate is wanted.
+- The first real evaluation run failed 23 findings, and 21 of them were bugs in
+  the harness, not in the model. It counted every operation as an idea, so a
+  three-direction proposal with a relationship read as four directions; and it
+  treated references to objects the proposal itself had just created as
+  fabrications. A measurement that reports its own tooling bugs as product
+  defects is worse than no measurement, because it is believed.
+- Three gate entries were demoted to observations after watching them run, not
+  before. `statusWithinExpectation` flipped between `noChange` and `proposed` on
+  the same adversarial case across two runs while fabricating nothing either
+  time; the language check reads "none" on any short answer; and a bound stated
+  in a case's instruction is not enforced anywhere in the code. Each of them
+  looked like a reasonable gate in a design and none of them survived contact
+  with a real model. The gate now asserts only what the code guarantees, and a
+  test fails if the mirrored bounds drift from `AppleCandidateConverter` and
+  `ProposalValidator`.
+- `Evaluations.framework` cannot be linked into a shipped Kollio product as it
+  stands. Its install name is `@rpath/Developer/Platforms/...`, no rpath on a
+  SwiftPM product resolves it, and it is a Developer framework rather than a
+  system one. The evaluation therefore lives in the test target and needs
+  `DYLD_FRAMEWORK_PATH` at run time. That is a measurement tool, not app code,
+  and nothing in the product links it.
+- The first claim that Apple's evaluation report excludes content was false.
+  `includeTranscripts: false` does not redact: the framework serialises the
+  sample's expected value, so the authored text of all 18 cases was written into
+  the `.xcevalresult`. The fix was structural rather than cosmetic. The
+  expectation no longer encodes any authored text at all, the context and the
+  instruction reach the runner through a non-`Codable` index, and a test fails if
+  an encoded outcome contains an authored string. Verified by grepping the
+  produced report after the fix: no fragment, and the report is 112 Ko of counts.

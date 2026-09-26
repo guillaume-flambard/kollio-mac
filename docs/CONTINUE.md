@@ -225,10 +225,45 @@ Read `docs/known-limitations.md` before promising anything. The short version:
 
 ## Verified batches, in order
 
-CAN-02, CAN-03, CAN-04, CAN-05, CTX-01, AI-03, CTX-05, CAN-07, AI-05, and the
-earlier DOC-01..04, CAN-01, AI-01, AI-02, AI-04, CTX-02..04, CTX-06, CTX-07, DEC-01..03
-and CAN-06. What each one found is in [batch-log.md](batch-log.md); the current
-state and the exact next task are below and in the table above.
+CAN-02, CAN-03, CAN-04, CAN-05, CTX-01, AI-03, CTX-05, CAN-07, AI-05, the
+Apple 27 measurement batch, and the earlier DOC-01..04, CAN-01, AI-01, AI-02,
+AI-04, CTX-02..04, CTX-06, CTX-07, DEC-01..03 and CAN-06. What each one found is
+in [batch-log.md](batch-log.md); the current state and the exact next task are
+below and in the table above.
+
+## What the Apple 27 measurement batch established
+
+The Apple 27 landscape is mapped capability by capability in
+[apple-intelligence-27-roadmap.md](apple-intelligence-27-roadmap.md), with each
+status read out of the installed SDK rather than out of a release note. Two
+capabilities in the request do not exist under the names given: there is no
+`ImageInput` type and no `SpotlightSearchTool` in this SDK, and `ViewAnnotation`
+exists only in a binary stub with no Swift declaration. They are recorded as
+`UNKNOWN`, not as planned work.
+
+The one implemented item is measurement of the intelligence that already existed:
+
+- `packages/KollioApp/Sources/KollioEvaluationKit` holds the structural gate as a
+  pure function. No model, no framework, no flags. 21 tests, and they run in
+  ordinary `verify.sh`.
+- `scripts/evaluate-apple-model.sh` runs 18 synthetic FR/EN cases against the
+  real on-device model, serially, using Apple's `Evaluations` framework. It
+  reports availability first, and it exits 3 when the model is absent rather than
+  printing a success it did not earn.
+- The gate passed on all 18 cases. `noChange` came back in both languages for
+  "there is nothing to reopen", which is the result that matters most: the model
+  is not agreeable for the sake of it. Every proposing case returned exactly two
+  directions and passed `ProposalValidator`. A cancelled generation produced no
+  proposal.
+- Three corrections came out of the run itself, and they are recorded in the
+  roadmap: the shape of an answer is a judgement and not a gate, the language
+  check is a stop-word heuristic and cannot be a gate, and a bound a case asked
+  for is not a bound the code enforces.
+- Two product gaps are now visible rather than hypothetical: the adapter cannot
+  honour a per-request instruction limit, and the adversarial case is answered as
+  an ordinary one in English. Neither is a safety failure, and neither is fixed.
+- Relevance, usefulness of the next step and language quality are named as
+  unmeasured. No model judge exists yet, and a score would be a fiction.
 
 ## The next things worth doing, in this order
 

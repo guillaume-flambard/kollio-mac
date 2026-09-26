@@ -1,9 +1,11 @@
 # Kollio product blueprint
 
-Version 1.1, 2026-09-25. Apple-native first. This is the direction, not a
+Version 1.2, 2026-09-26. Apple-native first. This is the direction, not a
 permission to build every part of it at once. The active milestone, the tasks
 left and the evidence collected live in [CONTINUE.md](CONTINUE.md), which is the
-document a new session should read.
+document a new session should read. The Apple system-integration landscape is
+mapped capability by capability, with the state of each one read out of the
+installed SDK, in [apple-intelligence-27-roadmap.md](apple-intelligence-27-roadmap.md).
 
 ## What Kollio is
 
@@ -143,6 +145,55 @@ Secrets stay out of source control and artifacts. A request cannot choose an
 arbitrary provider endpoint. The software stays useful offline when cloud
 services fail.
 
+## Apple Intelligence 27 direction
+
+Apple 27 extends this architecture. It does not replace it, and most of it is
+not yet reachable from Kollio at all. What follows is the shape of the
+direction; the per-capability status, the SDK evidence and the dependency order
+are in [apple-intelligence-27-roadmap.md](apple-intelligence-27-roadmap.md).
+
+- **Foundation Models stays behind `SuggestionService`.** The domain never sees a
+  session, a model, or a destination. `KollioCore` imports no Foundation Models
+  type, and adding a `LanguageModel` adapter changes nothing about that.
+- **Apple system integration is a later product gate, not a current one.** App
+  Entities, intents and indexing come after the SOLO beta, not before it. A person
+  who cannot reliably drag an object has not got a product that a Siri surface
+  would rescue.
+- **IntentLane is the integration and verification tooling** for that gate, and
+  its capabilities are checked before anything is hand-written here.
+- **App Entities are derived views over Kollio ids.** An entity is a way for the
+  system to name something that already exists. It is never a second source of
+  truth, and no Apple-specific field enters the `.kollio` file to satisfy one.
+- **App Intents call validated Kollio commands.** Open and Find navigate. Add
+  Thought is a validated human-authored command. Explore produces a proposal and
+  never accepts one. Reopen uses the existing decision command. No intent edits a
+  collection or skips a permission.
+- **Explore creates proposals, not accepted mutations.** The distinction is the
+  product: the model proposes, a person decides, and the document keeps the
+  memory of the refusal.
+- **Spotlight indexing is safe, derived and rebuildable.** Titles, kinds, stable
+  ids and dates. Not full source text, not hidden branches, not transcripts. A
+  successful indexing call is not proof; a person finding the item is.
+- **View annotations expose identity, not authority.** An annotation says which
+  object is on screen. It does not grant a mutation, does not pick a canonical
+  instance, and never reports off-screen or folded content as visible. The API is
+  currently not readable from the installed SDK, so no code is written against it.
+- **Evaluations precede prompt and profile expansion.** A second prompt without a
+  measurement is a guess with extra steps. The evaluation suite exists first, and
+  the three dimensions it cannot yet judge are named as unmeasured rather than
+  quietly scored.
+- **Private Cloud Compute is explicit and conditional.** It is a destination a
+  person chooses with a label attached, never a fallback that a local failure
+  triggers. Local intelligence failing is a local failure.
+- **Core AI is specialised and later.** A small measured task, behind a fast
+  deterministic layer, with calibrated confidence. It never decides truth and
+  never bypasses `ProposalValidator`.
+
+Two capabilities in that request are not in the installed SDK at all under the
+names given: there is no `ImageInput` type, and there is no `SpotlightSearchTool`.
+Both are recorded as unknown rather than planned, because writing against a name
+that does not exist is how a codebase acquires fiction.
+
 ## Gates
 
 **G0 — real entry + on-device Apple intelligence.** The active milestone.
@@ -155,6 +206,13 @@ verify the server transport. Never a prerequisite for local success.
 
 **G2 — distributable native beta.** File recovery, relationship selection,
 keyboard and accessibility, a measured 100/200 workload, signing.
+
+**G2.5 — Apple system intelligence / IntentLane dogfood.** Added in v1.2, and
+placed before nothing. It opens only after G2's human journey is done. It is one
+small package: a document entity, a thought entity, open, find, add thought, safe
+indexing, and an App Intents testing harness using identifiers read from real
+generated metadata. One verified journey before a second intent. No Siri claim
+without a person saying the words.
 
 **G3 — organization pilot.** Tenancy, PostgreSQL where justified, sharing and
 conflicts, policy, runbooks.

@@ -4,7 +4,8 @@ An honest inventory. Nothing here is a surprise: this is the prototype, not the 
 
 ## Verified on this machine
 
-Recorded 2026-09-25, on an arm64 Mac, macOS 27.0 (26A428), Xcode 27.0, SDK 27.0.
+Recorded 2026-09-26, on an arm64 Mac, macOS 27.0 (26A428), Xcode 27.0 (27A266a),
+SDK 27.0.
 
 - **The on-device model is genuinely available here.** `SystemLanguageModel.default.availability`
   is `.available`, 24 supported languages, a context size of 8192 tokens. This was probed directly
@@ -17,6 +18,31 @@ Recorded 2026-09-25, on an arm64 Mac, macOS 27.0 (26A428), Xcode 27.0, SDK 27.0.
   process, 2.2 to 2.7 s warm, 2.50 / 2.68 / 2.29 s for three calls in one process, measured serially
   with `--no-parallel`). Reproduce with
   `KOLLIO_REAL_MODEL=1 swift test --package-path packages/KollioApp --filter RealOnDeviceModelTests --no-parallel`.
+- **A measurement suite for the real model exists, and its gate passes.**
+  `./scripts/evaluate-apple-model.sh` runs 18 synthetic FR/EN cases serially
+  through the real adapter, with Apple's `Evaluations` framework, and wrote
+  `build/evaluations/` on this machine. 291 findings, structural gate pass, 5
+  behavioural warnings, 44.0 s wall clock. Twenty-one deterministic tests cover
+  the gate itself with no model involved. Reproduce with the script above; it
+  exits 3 rather than claiming success when the model is unavailable.
+- **Three things the evaluation deliberately does not do**, and this is the
+  limit of the evidence, not a formality: it does not judge relevance, it does
+  not judge whether the next step is useful, and it does not judge language
+  quality. All three need a model judge, which is not implemented, so they are
+  reported as unmeasured. The two claims that a model is *relevant* and a model
+  is *good* are therefore not made anywhere.
+- **The language check in the suite is a stop-word heuristic**, and it reads
+  "none" on any short answer. Four of the five warnings in the run are that
+  heuristic declining to guess. It is not a gate for that reason.
+- **The adapter cannot honour a per-request instruction limit.** Its budget is
+  `min(request.scope.maxOperations, maximumIdeas)`; the instruction a person typed
+  is not a term in it. A case that asks for at most two directions returned two,
+  but because the model complied, not because anything enforced it.
+- **The adversarial case is answered as an ordinary one, in English.** Asked to
+  cite a source that does not exist, the model produced a normal proposal rather
+  than saying no such source exists. Nothing unsafe reached the document, and
+  structurally a fabricated source is unreachable: the candidate type has no
+  citation capability. The behaviour is still wrong.
 - **The running app holds no network socket.** Checked with `lsof` against the app's own pid. This is
   evidence about the on-device path specifically, not a claim that no Mac feature the user turns on
   will ever reach the network.
