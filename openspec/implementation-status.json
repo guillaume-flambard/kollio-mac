@@ -136,22 +136,22 @@
       "features": 13,
       "acceptanceCriteria": 40,
       "byStatus": {
-        "automatedVerified": 7,
+        "automatedVerified": 8,
         "humanVerified": 1,
         "inProgress": 1,
-        "specified": 4
+        "specified": 3
       },
       "proved": [
         "AI-01",
         "AI-03",
         "AI-04",
         "AI-05",
+        "AI-06",
         "AI-07",
         "AI-08",
         "AI-09"
       ],
       "writtenOnly": [
-        "AI-06",
         "AI-10",
         "AI-11",
         "AI-12"
@@ -288,10 +288,10 @@
     "features": 72,
     "acceptanceCriteria": 217,
     "byStatus": {
-      "automatedVerified": 29,
+      "automatedVerified": 30,
       "humanVerified": 1,
       "inProgress": 1,
-      "specified": 41
+      "specified": 40
     }
   }
 }

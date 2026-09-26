@@ -419,6 +419,12 @@ public struct DocumentStore: Sendable {
         }
         try validate(summary, in: document)
         summary.isDraft = false
+        // The revision the claim is made about. Confirming is itself a semantic
+        // change and moves the revision by one, so the revision the claim covers
+        // is the one *after* this command. Reading it off the document as it stands
+        // here would record a revision the synthesis has never described, and the
+        // staleness check would fire immediately on a document nobody has touched.
+        summary.confirmedAtSemanticRevision = document.semanticRevision + 1
         var ledger = document.summaries
         ledger.upsert(summary)
         document.summaries = ledger

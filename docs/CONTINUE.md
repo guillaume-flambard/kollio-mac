@@ -283,8 +283,9 @@ The one implemented item is measurement of the intelligence that already existed
 7. **AI-06, synthesise and prepare a deliverable**, then AI-11, AI-12, CAN-09 and
    CAN-10. Those are the remaining L3 lots, and each one now has the layer it
    needs: a comparison is a reading, a synthesis is a derivative that must never
-    replace its sources. **AI-06 is started, not done.** The model, the commands,
-    the refusals and the file format are in: `SummaryArtifact` and a
+    replace its sources. **AI-06 is verified.** The model, the commands,
+    the refusals, the file format, the export, the composer and the card are in:
+    `SummaryArtifact` and a
     `SummaryLedger` on the document at schema version 6, and five commands, with
     44 tests across the domain and the commands. An edit keeps the first text and
     records who changed it. A section can be declared empty on purpose, but not be
@@ -312,10 +313,24 @@ The one implemented item is measurement of the intelligence that already existed
     fact, and leaves **uncertainties absent**, because a deterministic reader knows
     what the document says and has no way of knowing what it failed to say.
 
-    71 tests cover the domain, the commands, the export and the composer. What
-    does not exist yet is the interface: nothing draws the compact block, and no
-    menu composes or exports. AI-06 stays `specified` until a named test proves
-    what a person receives *on a screen*, and that is the remaining reason.
+    85 tests cover the domain, the commands, the export, the composer and the
+    interface. The card is on the canvas, opened from a contextual action called
+    "compose a synthesis", and it offers reading it all, confirming, and
+    exporting. All three acceptance criteria are proved by named tests, so AI-06
+    is `automatedVerified` rather than `specified`.
+
+    What is still owed is a person. The card has never been seen, in either
+    appearance, in either language, and a compact block that reads correctly in a
+    test can still be unreadable at a glance on a screen. That is the same debt
+    CTX-05, CAN-07 and AI-05 carry, and it is the reason the next task is still a
+    human pass rather than a feature.
+
+    Two corrections this lot forced, both of which were mine. The composer listed
+    a set-aside object under the current state, which is the one thing it must
+    never do. And a synthesis reported itself outdated the moment it was written,
+    because writing it moved the document it had just read: a badge that is always
+    lit is a badge that means nothing, so a draft is never outdated and a claim is
+    measured from the revision it was confirmed at.
 8. Only then, and only with explicit permission: a small live Groq test, or a PCC eligibility check.
    Everything the transport needs is in place and mocked; what is missing is evidence about a live
    model, not plumbing.

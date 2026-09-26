@@ -63,12 +63,12 @@ SDK 27.0.
   nothing. It is shared with comparisons, and it is recorded here rather than
   fixed for syntheses alone, which would leave the two behaviours divergent for
   the sake of tidiness.
-- **A synthesis has no interface.** The model, the commands, the refusals, the
-  file format, the Markdown export and the deterministic composer are all in, and
-  all covered by 71 tests. Nothing draws the compact block, no menu composes or
-  exports, and no person has ever seen a synthesis. AI-06 stays `specified` until
-  a named test proves what someone receives on a screen, and a screenshot proves
-  what it looks like.
+- **No person has seen a synthesis.** The model, the commands, the refusals, the
+  file format, the Markdown export, the deterministic composer and the card are all
+  in, covered by 85 tests, and AI-06 is `automatedVerified` because its three
+  acceptance criteria are proved by named tests. None of that is a screenshot. The
+  compact block, the expansion, the outdated banner and the confirmation refusal
+  have never been looked at by anyone, in either appearance or either language.
 - **The composer is deterministic and has no model behind it.** It writes only
   what it can point at: active objects, rejections with their reasons, hypotheses
   no claim touches. It cannot conclude, and it cannot tell that nothing is

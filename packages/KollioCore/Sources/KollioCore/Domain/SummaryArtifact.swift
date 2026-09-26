@@ -43,6 +43,17 @@ public struct SummaryArtifact: Codable, Hashable, Sendable, Identifiable {
     /// which revision it read cannot answer "is this still true?".
     public var baseSemanticRevision: Int
     public var isDraft: Bool
+    /// The document revision this synthesis was confirmed against.
+    ///
+    /// Separate from `baseSemanticRevision`, and it has to be. Writing a synthesis
+    /// moves the document, so the revision it *read* is always one behind the
+    /// revision that exists once it has been written. Comparing the two made every
+    /// synthesis outdated the instant it was composed, which turns a badge that
+    /// means something into a badge that is always lit.
+    ///
+    /// A claim is made at confirmation, not at composition, so that is the moment
+    /// the revision is recorded.
+    public var confirmedAtSemanticRevision: Int?
     /// Set when the selection was too wide to read honestly. The synthesis still
     /// exists, and it proposes the narrower scope it would have preferred rather
     /// than summarising everything badly.
@@ -61,6 +72,7 @@ public struct SummaryArtifact: Codable, Hashable, Sendable, Identifiable {
         readSet: SummaryReadSet,
         baseSemanticRevision: Int,
         isDraft: Bool = true,
+        confirmedAtSemanticRevision: Int? = nil,
         proposedNarrowerScope: NarrowerScope? = nil,
         createdAt: Date = Date(timeIntervalSince1970: 0)
     ) {
@@ -75,6 +87,7 @@ public struct SummaryArtifact: Codable, Hashable, Sendable, Identifiable {
         self.readSet = readSet
         self.baseSemanticRevision = baseSemanticRevision
         self.isDraft = isDraft
+        self.confirmedAtSemanticRevision = confirmedAtSemanticRevision
         self.proposedNarrowerScope = proposedNarrowerScope
         self.createdAt = createdAt
     }
@@ -323,6 +336,10 @@ extension SummaryArtifact {
     /// does not make this synthesis outdated, and a synthesis that went stale on
     /// every edit would be ignored.
     public func staleness(against document: KollioDocument) -> [SummaryStaleness] {
+        // A draft is a question being written, not a claim about the document, so
+        // it is never outdated. Marking unfinished work as out of date is how a
+        // person learns to ignore the marker.
+        guard isDraft == false else { return [] }
         var found: [SummaryStaleness] = []
         let readObjects = Set(readSet.objectIDs)
         let readDecisions = Set(readSet.decisionIDs)
@@ -343,8 +360,12 @@ extension SummaryArtifact {
             found.append(.sourceRevisionSuperseded(source.id))
         }
 
-        if document.semanticRevision != baseSemanticRevision, found.isEmpty {
-            found.append(.revisionMoved(from: baseSemanticRevision, to: document.semanticRevision))
+        // Compared against the revision it was confirmed at, which is the revision
+        // the claim was made about. The revision it read is one behind by
+        // construction, so using that here would report movement on every run.
+        let claimed = confirmedAtSemanticRevision ?? baseSemanticRevision
+        if document.semanticRevision != claimed, found.isEmpty {
+            found.append(.revisionMoved(from: claimed, to: document.semanticRevision))
         }
         return found
     }
