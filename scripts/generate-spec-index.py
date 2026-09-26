@@ -83,6 +83,26 @@ STATUS_NOTES = {
     "CAN-01": ("automatedVerified",
                "Two-finger scroll wired via ScrollCatcher; pan is screen space at any zoom. "
                "Gesture feel still unverified by a human."),
+    "CAN-02": ("automatedVerified",
+               "SelectionAndActionsTests: Escape dismisses one level then the selection, through "
+               "one function, with the selection pruned in one place; a context offers exactly "
+               "three primary actions and the rest sit behind a native menu. Still owed to a "
+               "person: the pointer affordance, and a capture cropped to the selection."),
+    "CAN-03": ("automatedVerified",
+               "MovingInstancesTests: a group drag is one transaction and one undo, AC01 asserted "
+               "with the zoom division and with the three results differing so it cannot pass on "
+               "a constant, and a move leaves content and semanticRevision untouched. Two "
+               "occurrences of one object move independently, which needed instances(of:) and an "
+               "InstanceID in the drag state. Still owed to a person: whether the drag feels "
+               "direct on a trackpad."),
+    "CAN-04": ("automatedVerified",
+               "EditingContentTests: the exact characters typed are stored, an edit is one "
+               "transaction, the document's undo cannot reach an open draft, and changing the "
+               "interface language leaves authored text byte-identical. A conflict is refused as "
+               "staleObjectText and keeps both the draft and the current text. DocumentFormatTests "
+               "proves a file written before objectVersion existed still opens. Still owed: the "
+               "two versions side by side, and Cmd+Z inside the field, which is an interaction "
+               "between two undo systems this repository does not own."),
     "AI-01": ("automatedVerified",
               "AppleAdapterTests: every availability state is a refusal, never a fallback."),
     "AI-02": ("humanVerified",

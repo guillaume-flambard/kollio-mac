@@ -13,15 +13,18 @@ A view, not a source of truth. Status meanings:
 | `blockedExternal` | Blocked on a capability or authorisation. |
 | `notInCurrentRelease` | Deliberately out of this product. |
 
-Counts: 16 automatedVerified, 1 humanVerified, 54 specified. 71 features, 213 acceptance criteria.
+Counts: 19 automatedVerified, 1 humanVerified, 51 specified. 71 features, 213 acceptance criteria.
 
 ## L1 — 10 features
 
 - [x] **CAN-01** Navigate with trackpad and mouse · `automatedVerified` · 3 AC
       Two-finger scroll wired via ScrollCatcher; pan is screen space at any zoom. Gesture feel still unverified by a human.
-- [ ] **CAN-02** Select and reach the actions · `specified` · 3 AC
-- [ ] **CAN-03** Move one or several instances · `specified` · 3 AC
-- [ ] **CAN-04** Edit content in place · `specified` · 3 AC
+- [x] **CAN-02** Select and reach the actions · `automatedVerified` · 3 AC
+      SelectionAndActionsTests: Escape dismisses one level then the selection, through one function, with the selection pruned in one place; a context offers exactly three primary actions and the rest sit behind a native menu. Still owed to a person: the pointer affordance, and a capture cropped to the selection.
+- [x] **CAN-03** Move one or several instances · `automatedVerified` · 3 AC
+      MovingInstancesTests: a group drag is one transaction and one undo, AC01 asserted with the zoom division and with the three results differing so it cannot pass on a constant, and a move leaves content and semanticRevision untouched. Two occurrences of one object move independently, which needed instances(of:) and an InstanceID in the drag state. Still owed to a person: whether the drag feels direct on a trackpad.
+- [x] **CAN-04** Edit content in place · `automatedVerified` · 3 AC
+      EditingContentTests: the exact characters typed are stored, an edit is one transaction, the document's undo cannot reach an open draft, and changing the interface language leaves authored text byte-identical. A conflict is refused as staleObjectText and keeps both the draft and the current text. DocumentFormatTests proves a file written before objectVersion existed still opens. Still owed: the two versions side by side, and Cmd+Z inside the field, which is an interaction between two undo systems this repository does not own.
 - [ ] **CAN-05** Create, duplicate, remove · `specified` · 3 AC
 - [ ] **CTX-01** Add information at a precise place · `specified` · 3 AC
 - [x] **DOC-01** First launch and restoration · `automatedVerified` · 3 AC
