@@ -63,6 +63,37 @@ public struct ContentObject: Codable, Hashable, Sendable, Identifiable {
     /// the contribution, its owner, or any royalty claim.
     public var contributionID: ActorID?
     public var provenance: Provenance
+    /// Increments on every change to this object's own content.
+    ///
+    /// CAN-04: "`UpdateObjectText` checks the object version." Without it two
+    /// people editing the same title both succeed and the second one silently
+    /// wins, which is the one outcome the product forbids. A presentation move
+    /// does not touch it: a position is not content.
+    public var objectVersion: Int
+
+    // MARK: - Codable
+
+    private enum CodingKeys: String, CodingKey {
+        case id, kind, text, detail, lifecycle, setAsideByDecision
+        case contributionID, provenance, objectVersion
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(ObjectID.self, forKey: .id)
+        kind = try container.decode(Kind.self, forKey: .kind)
+        text = try container.decode(LocalizedText.self, forKey: .text)
+        detail = try container.decodeIfPresent(LocalizedText.self, forKey: .detail)
+        lifecycle = try container.decode(Lifecycle.self, forKey: .lifecycle)
+        setAsideByDecision = try container.decodeIfPresent(DecisionID.self, forKey: .setAsideByDecision)
+        contributionID = try container.decodeIfPresent(ActorID.self, forKey: .contributionID)
+        provenance = try container.decode(Provenance.self, forKey: .provenance)
+        // Absent in a file written before object versions existed, which is an
+        // object nobody has edited yet rather than a broken one. Zero is the
+        // honest reading: no edit has happened, so there is nothing to be stale
+        // against.
+        objectVersion = try container.decodeIfPresent(Int.self, forKey: .objectVersion) ?? 0
+    }
 
     public init(
         id: ObjectID,
@@ -72,7 +103,8 @@ public struct ContentObject: Codable, Hashable, Sendable, Identifiable {
         lifecycle: Lifecycle = .active,
         setAsideByDecision: DecisionID? = nil,
         contributionID: ActorID? = nil,
-        provenance: Provenance
+        provenance: Provenance,
+        objectVersion: Int = 0
     ) {
         self.id = id
         self.kind = kind
@@ -82,6 +114,7 @@ public struct ContentObject: Codable, Hashable, Sendable, Identifiable {
         self.setAsideByDecision = setAsideByDecision
         self.contributionID = contributionID
         self.provenance = provenance
+        self.objectVersion = objectVersion
     }
 
     /// Derived presentation family. A product, method or technical block is an

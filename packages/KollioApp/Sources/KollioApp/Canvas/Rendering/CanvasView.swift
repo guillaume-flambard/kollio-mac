@@ -51,7 +51,9 @@ struct CanvasView: View {
             .onChange(of: proxy.size) { _, newValue in
                 model.viewport = Size(width: newValue.width, height: newValue.height)
             }
-            .onExitCommand { model.clearContextualState() }
+            // Escape closes one level, then the next. Clearing everything at once
+            // threw away a selection the person had built on the way out.
+            .onExitCommand { model.dismissOneLevel() }
         }
     }
 
@@ -96,7 +98,7 @@ struct CanvasView: View {
                         detail: model.detail(of: object.id),
                         isSelected: model.selection.contains(object.id),
                         isHovered: model.hoveredObjectID == object.id,
-                        isDragging: model.dragState?.id == object.id,
+                        isDragging: model.isDragging(instance.id),
                         width: instance.size?.width ?? NodeLayout.estimatedSize(for: object).width,
                         sourceChips: model.sourceChips(for: object.id),
                         isCitationsOpen: model.openCitationClaim == object.id,
@@ -110,7 +112,8 @@ struct CanvasView: View {
                             }
                         },
                         onDragChanged: { translation in
-                            model.beginDrag(object.id, screenTranslation: translation)
+                            model.beginDrag(model.draggableInstances(for: object.id),
+                                          screenTranslation: translation)
                         },
                         onDragEnded: { model.endDrag() },
                         onDoubleClick: { Task { await model.explore(object.id) } }

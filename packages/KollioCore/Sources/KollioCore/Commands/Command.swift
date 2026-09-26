@@ -99,12 +99,27 @@ public struct UpdateObjectText: Codable, Hashable, Sendable {
     public var text: LocalizedText
     public var detail: LocalizedText?
     public var provenance: Provenance
+    /// The version this text was written against, when the writer knows it.
+    ///
+    /// `nil` means "I did not look", which is allowed and is how a first edit of
+    /// a freshly created object is expressed. A number means "I saw this version",
+    /// and a mismatch is refused rather than merged. The distinction matters: a
+    /// writer that never looked is asking to overwrite, and one that looked and is
+    /// out of date is asking a question the interface should answer.
+    public var expectedVersion: Int?
 
-    public init(id: ObjectID, text: LocalizedText, detail: LocalizedText? = nil, provenance: Provenance) {
+    public init(
+        id: ObjectID,
+        text: LocalizedText,
+        detail: LocalizedText? = nil,
+        provenance: Provenance,
+        expectedVersion: Int? = nil
+    ) {
         self.id = id
         self.text = text
         self.detail = detail
         self.provenance = provenance
+        self.expectedVersion = expectedVersion
     }
 }
 

@@ -15,11 +15,34 @@ struct ContextualActions: View {
         if let anchor = anchorPoint() {
             VStack(alignment: .leading, spacing: Space.s) {
                 HStack(spacing: Space.xs) {
-                    ForEach(actions) { action in
-                        ActionButton(title: action.title, isDefault: action.isDefault) {
-                            action.perform()
+                    ForEach(actionSet.primary, id: \.self) { kind in
+                        ActionButton(title: L10n.callAsFunction(kind.localizationKey),
+                                     isDefault: kind == actionSet.isDefault) {
+                            perform(kind)
                         }
-                        .help(action.hint)
+                        .help(L10n.callAsFunction(kind.localizationKey))
+                    }
+                    if !actionSet.secondary.isEmpty {
+                        // One named control, not a row of icons. A native Menu is
+                        // keyboard reachable, keeps its own focus, and cannot be
+                        // confused with a tooltip that happens to hold buttons.
+                        Menu {
+                            ForEach(actionSet.secondary, id: \.self) { kind in
+                                Button(L10n.callAsFunction(kind.localizationKey)) {
+                                    perform(kind)
+                                }
+                            }
+                        } label: {
+                            Text(L10n.moreActions)
+                                .font(TypeScale.action)
+                                .foregroundStyle(theme.textPrimary)
+                                .padding(.horizontal, Space.m)
+                                .padding(.vertical, 6)
+                        }
+                        .menuStyle(.borderlessButton)
+                        .menuIndicator(.visible)
+                        .fixedSize()
+                        .help(L10n.moreActions)
                     }
                 }
                 if !setAsideReason.isEmpty {
@@ -47,40 +70,33 @@ struct ContextualActions: View {
 
     // MARK: Actions
 
-    private struct LocalAction: Identifiable {
-        let id = UUID()
-        let title: String
-        let hint: String
-        var isDefault: Bool = false
-        let perform: () -> Void
+    /// The set is decided by the model, not by this view, so the limit of three
+    /// is one fact rather than a layout that happens to fit.
+    private var actionSet: ContextualActionSet {
+        model.contextualActions(for: target)
     }
 
-    private var actions: [LocalAction] {
-        if model.canReopen(target) {
-            return [
-                LocalAction(title: L10n.reopen, hint: L10n.reopen, isDefault: true) { model.reopen(target) }
-            ]
+    private func perform(_ kind: ContextualActionSet.Kind) {
+        switch kind {
+        case .explore:
+            Task { await model.explore(target) }
+        case .add:
+            model.startComposer(anchor: target, intent: .add)
+        case .setAside:
+            model.requestSetAsideReason(for: target)
+        case .reopen:
+            model.reopen(target)
+        case .edit:
+            model.startEditing(anchor: target)
+        case .addSource:
+            chooseSource()
+        case .assertClaim:
+            model.startClaim(role: .hypothesis, anchor: target)
+        case .link, .comment, .duplicate:
+            // Not reachable: the set never offers them until they are implemented.
+            // An action that exists and does nothing is worse than an absent one.
+            break
         }
-        return [
-            LocalAction(title: L10n.explore, hint: L10n.explore, isDefault: true) {
-                Task { await model.explore(target) }
-            },
-            LocalAction(title: L10n.clarify, hint: L10n.clarify) {
-                model.startComposer(anchor: target, intent: .add)
-            },
-            LocalAction(title: L10n.edit, hint: L10n.edit) {
-                model.startEditing(anchor: target)
-            },
-            LocalAction(title: L10n.setAside, hint: L10n.setAside) {
-                model.requestSetAsideReason(for: target)
-            },
-            LocalAction(title: L10n.addSource, hint: L10n.addSourceHint) {
-                chooseSource()
-            },
-            LocalAction(title: L10n.claimComposerPrompt, hint: L10n.claimScopeHint) {
-                model.startClaim(role: .hypothesis, anchor: target)
-            }
-        ]
     }
 
     /// Asks for a file, reads it, and attaches what came out.
@@ -181,7 +197,6 @@ struct ComposerView: View {
                 y: min(max(screen.y + 70, 90), max(model.viewport.height - 90, 90))
             )
             .onAppear { focused = true }
-            .onExitCommand { model.composer = nil }
             .accessibilityLabel(placeholder)
         }
     }
@@ -392,7 +407,6 @@ struct CitationListView: View {
                 .fill(theme.surfacePrimary)
                 .shadow(color: .black.opacity(theme.isDark ? 0.38 : 0.13), radius: 14, y: 6)
         )
-        .onExitCommand { model.openCitationClaim = nil }
     }
 
     /// A check needs an observation, so the input is the whole action. There is no
@@ -520,7 +534,6 @@ struct PassagePickerView: View {
                 .fill(theme.surfacePrimary)
                 .shadow(color: .black.opacity(theme.isDark ? 0.38 : 0.13), radius: 14, y: 6)
         )
-        .onExitCommand { model.readingSourceID = nil }
     }
 
     private func lineRow(_ line: String, index: Int) -> some View {
@@ -660,7 +673,6 @@ struct ClaimComposerView: View {
                     .fill(theme.surfacePrimary)
                     .shadow(color: .black.opacity(theme.isDark ? 0.38 : 0.13), radius: 14, y: 6)
             )
-            .onExitCommand { model.claimDraft = nil }
         }
     }
 
@@ -756,7 +768,6 @@ struct ClaimStanceView: View {
                     .fill(theme.surfacePrimary)
                     .shadow(color: .black.opacity(theme.isDark ? 0.38 : 0.13), radius: 14, y: 6)
             )
-            .onExitCommand { model.stanceDraft = nil }
         }
     }
 

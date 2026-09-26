@@ -128,6 +128,12 @@ public final class KollioModel {
         public var anchorID: ObjectID
         public var text: String = ""
         public var intent: Intent = .add
+        /// The object's version when this draft was opened, for an edit.
+        ///
+        /// CAN-04: a conflict "shows my version and the current one, and never
+        /// closes the input without recovery". Remembering what the person was
+        /// looking at is what lets the interface say so instead of overwriting.
+        public var baseVersion: Int?
     }
 
     public static let systemLanguage: String = {
@@ -364,57 +370,225 @@ public final class KollioModel {
 
     public var primarySelection: ObjectID? { selection.sorted { $0.rawValue < $1.rawValue }.first }
 
+    /// Drops from the selection any object that is no longer in the document.
+    ///
+    /// CAN-02: an object removed elsewhere "clears the selection and explains if
+    /// an edit was active, and never selects something else." Pruning is the only
+    /// place that rule lives, so undo, redo and a remote change all obey it.
+    public func pruneSelection() {
+        selection = selection.filter { document.object($0) != nil }
+    }
+
+    /// The transient surfaces that Escape can close, in the order a person leaves
+    /// them: the deepest open thing first, the selection last.
+    ///
+    /// CAN-02 AC03: "Escape closes one level, then the selection." Closing
+    /// everything at once is a different behaviour, and a worse one — a person who
+    /// meant to dismiss a draft loses the selection they had built up.
+    public enum TransientLevel: Equatable {
+        case composer
+        case claimDraft
+        case stanceDraft
+        case citation
+        case readingSource
+        case preview
+        case selection
+
+        /// The level Escape would close right now, or nil when there is nothing
+        /// transient left. A drag owns the pointer, so it is not dismissible here.
+        @MainActor
+        public static func topmost(in model: KollioModel) -> TransientLevel? {
+            if model.composer != nil { return .composer }
+            if model.claimDraft != nil { return .claimDraft }
+            if model.stanceDraft != nil { return .stanceDraft }
+            if model.openCitationClaim != nil { return .citation }
+            if model.readingSourceID != nil { return .readingSource }
+            if model.preview != nil { return .preview }
+            if !model.selection.isEmpty { return .selection }
+            return nil
+        }
+    }
+
+    /// Closes exactly one level. Returns the level it closed, so a caller can
+    /// report it and a test can assert it.
+    @discardableResult
+    public func dismissOneLevel() -> TransientLevel? {
+        switch TransientLevel.topmost(in: self) {
+        case .composer:
+            // A closed composer keeps its draft; the draft belongs to the target,
+            // not to the surface.
+            composer = nil
+            return .composer
+        case .claimDraft:
+            claimDraft = nil
+            return .claimDraft
+        case .stanceDraft:
+            stanceDraft = nil
+            return .stanceDraft
+        case .citation:
+            openCitationClaim = nil
+            return .citation
+        case .readingSource:
+            readingSourceID = nil
+            return .readingSource
+        case .preview:
+            // Closing a proposal hides it. It is not a rejection and not a
+            // deletion: nothing was applied and nothing is forgotten.
+            preview = nil
+            return .preview
+        case .selection:
+            selection = []
+            return .selection
+        case .none:
+            return nil
+        }
+    }
+
+    /// Used when a document is closed or reset, where there is no level to
+    /// preserve.
     public func clearContextualState() {
         selection = []
         preview = nil
         composer = nil
     }
 
+    /// The actions offered for a selected object: at most three shown, the rest
+    /// behind one named control.
+    ///
+    /// The set is a model fact so that `ContextualActionSet.maximumPrimary` can be
+    /// checked by a test rather than trusted to a `HStack`.
+    public func contextualActions(for id: ObjectID) -> ContextualActionSet {
+        let object = document.object(id)
+        return ContextualActionSet.forObject(
+            id: id,
+            kind: object?.kind ?? .need,
+            canReopen: canReopen(id),
+            canAttachSource: object != nil,
+            canAssertClaim: object != nil
+        )
+    }
+
     // MARK: Direct manipulation
 
-    /// Live drag state. The document is not touched while the cursor moves: the
+    /// Live drag state. The document is not touched while the pointer moves: the
     /// offset is applied visually, and one single transaction is committed on
     /// release.
+    ///
+    /// `ids` is a set, not one id, because CAN-03 moves a *group*: the chosen
+    /// instances keep their relative positions and undo restores them together.
     public struct DragState: Equatable {
-        public var id: ObjectID
+        /// The instance under the pointer. It is the anchor of the gesture and the
+        /// one that decides whether an update belongs to this drag.
+        public var anchor: InstanceID
+        /// Every instance that follows the pointer. Order is not significant; the
+        /// relative positions are preserved by applying the same delta to each.
+        public var ids: Set<InstanceID>
         public var worldDelta: Position
     }
 
     public var dragState: DragState?
 
-    public func dragOffset(for objectID: ObjectID) -> Position {
-        guard let dragState, dragState.id == objectID else { return .zero }
+    /// The live offset for one instance. Addressing an instance rather than an
+    /// object is what lets two occurrences of the same object move independently.
+    public func dragOffset(forInstance instanceID: InstanceID) -> Position {
+        guard let dragState, dragState.ids.contains(instanceID) else { return .zero }
         return dragState.worldDelta
     }
 
+    /// The live offset of the first instance of an object, which is what a canvas
+    /// that has not resolved instances yet needs.
+    public func dragOffset(for objectID: ObjectID) -> Position {
+        guard let instance = document.presentation.instance(for: objectID) else { return .zero }
+        return dragOffset(forInstance: instance.id)
+    }
+
+    public func isDragging(_ instanceID: InstanceID) -> Bool {
+        dragState?.ids.contains(instanceID) ?? false
+    }
+
     public func beginDrag(_ id: ObjectID, screenTranslation: CGSize) {
+        guard let instance = document.presentation.instance(for: id) else { return }
+        beginDrag([instance.id], screenTranslation: screenTranslation)
+    }
+
+    /// Starts a group drag.
+    ///
+    /// The caller passes the instances that should follow the pointer. The canvas
+    /// resolves the selection to instances before calling, because a selection is
+    /// a set of *objects* and a move is a set of *places*.
+    public func beginDrag(_ instanceIDs: [InstanceID], screenTranslation: CGSize) {
+        guard let anchor = instanceIDs.first else { return }
+
         // A gesture reports the cumulative translation from its start, so an
-        // update for the same object replaces the delta instead of being ignored.
-        if let dragState, dragState.id != id { return }
+        // update for the same anchor replaces the delta instead of being ignored.
+        // A different anchor is a different gesture and is refused rather than
+        // merging two gestures into one delta.
+        if let dragState, dragState.anchor != anchor { return }
+
         dragState = DragState(
-            id: id,
+            anchor: anchor,
+            ids: Set(instanceIDs),
             worldDelta: camera.worldDelta(forScreenDelta: Position(x: screenTranslation.width, y: screenTranslation.height))
         )
     }
 
-    /// One transaction, one undo entry, whatever the path the object took.
+    /// The instances a drag on this object should move: its own, plus the other
+    /// selected objects' first instance when the object is part of a multi-selection.
+    ///
+    /// An unselected object dragged while something else is selected moves alone.
+    /// That is the difference between "move what I picked" and "move what I
+    /// happened to touch", and only the first is what a person means.
+    public func draggableInstances(for id: ObjectID) -> [InstanceID] {
+        guard let instance = document.presentation.instance(for: id) else { return [] }
+        guard selection.contains(id), selection.count > 1 else { return [instance.id] }
+        return selection
+            .compactMap { document.presentation.instance(for: $0)?.id }
+    }
+
+    /// One transaction, one undo entry, whatever the path the objects took.
     public func endDrag() {
         guard let dragState else { return }
         self.dragState = nil
         let delta = dragState.worldDelta
         guard abs(delta.x) > 0.5 || abs(delta.y) > 0.5 else { return }
-        moveObject(dragState.id, by: delta)
+        moveInstances(dragState.ids, by: delta)
     }
 
-    public func moveObject(_ id: ObjectID, by delta: Position) {
-        guard let instance = document.presentation.instance(for: id) else { return }
-        let destination = instance.position.offset(dx: delta.x, dy: delta.y)
-        let move = MoveNodeInstance(instanceID: instance.id, position: destination)
+    /// Cancels the gesture without writing. CAN-03: "cancelling mid-gesture
+    /// restores all positions."
+    public func cancelDrag() {
+        dragState = nil
+    }
+
+    /// Moves several instances in one transaction, so one undo restores the group.
+    ///
+    /// CAN-03 AC02. The domain already accepts a list of moves; this is where a
+    /// group drag stops being a set of single drags. Addressing by instance is
+    /// what keeps two occurrences of one object independent.
+    public func moveInstances(_ instanceIDs: Set<InstanceID>, by delta: Position) {
+        let moves = instanceIDs.compactMap { id -> MoveNodeInstance? in
+            guard let instance = document.presentation.instance(id: id) else { return nil }
+            return MoveNodeInstance(
+                instanceID: instance.id,
+                position: instance.position.offset(dx: delta.x, dy: delta.y)
+            )
+        }
+        guard moves.isEmpty == false else { return }
         session.apply(
-            [.moveNodeInstances(MoveNodeInstances(moves: [move]))],
+            [.moveNodeInstances(MoveNodeInstances(moves: moves))],
             label: L10n.undoMove
         )
     }
+
+    /// Convenience for a whole object, used by the tests and by any call site that
+    /// genuinely means "everywhere this object is drawn".
+    public func moveObject(_ id: ObjectID, by delta: Position) {
+        moveInstances(
+            Set(document.presentation.instances(of: id).map(\.id)),
+            by: delta
+        )
+    }
+
 
     // MARK: Commands
 
@@ -1081,7 +1255,8 @@ public final class KollioModel {
         composer = ComposerState(
             anchorID: anchor,
             text: object.text.text,
-            intent: .edit
+            intent: .edit,
+            baseVersion: object.objectVersion
         )
     }
 
@@ -1104,8 +1279,15 @@ public final class KollioModel {
         case .edit:
             // An edit is a user's own contribution, not a request to a model,
             // so it goes through the command system and never asks anything.
-            self.composer = nil
-            applyEdit(to: composer.anchorID, text: text)
+            // The composer is *not* cleared before the write: a refusal has to
+            // leave the person their text, and clearing first would throw it away
+            // on the way to finding out it failed.
+            let applied = applyEdit(
+                to: composer.anchorID,
+                text: text,
+                expectedVersion: composer.baseVersion
+            )
+            if applied { self.composer = nil }
         }
     }
 
@@ -1115,20 +1297,31 @@ public final class KollioModel {
     /// no other object moves, and the object stays the same object. It is one
     /// transaction, so it undoes as one action.
     @discardableResult
-    public func applyEdit(to id: ObjectID, text: String) -> Bool {
+    public func applyEdit(to id: ObjectID, text: String, expectedVersion: Int? = nil) -> Bool {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let object = object(id) else { return false }
         guard object.text.text != trimmed else { return true }
         let command = Command.updateObjectText(UpdateObjectText(
             id: id,
             text: LocalizedText(trimmed),
-            provenance: .human("local-user")
+            provenance: .human("local-user"),
+            expectedVersion: expectedVersion
         ))
         guard session.apply([command], label: L10n.undoEdit) else {
-            status = L10n.errorGeneric
+            // The refusal is about the text, not about the application, so it is
+            // reported as such. The draft is still in the composer.
+            status = L10n.errorEditConflict
             return false
         }
         return true
+    }
+
+    /// Whether the object moved on while this draft was open, so the interface can
+    /// say so *before* the person presses the key rather than after.
+    public func hasEditConflict(_ composer: ComposerState) -> Bool {
+        guard composer.intent == .edit, let base = composer.baseVersion else { return false }
+        guard let object = object(composer.anchorID) else { return true }
+        return object.objectVersion != base
     }
 
     // MARK: First experience
@@ -1227,13 +1420,13 @@ public final class KollioModel {
 
     public func undo() {
         if session.undo() {
-            selection = selection.filter { document.object($0) != nil }
+            pruneSelection()
         }
     }
 
     public func redo() {
         if session.redo() {
-            selection = selection.filter { document.object($0) != nil }
+            pruneSelection()
         }
     }
 

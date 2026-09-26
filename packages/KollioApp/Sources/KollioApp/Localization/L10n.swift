@@ -27,6 +27,7 @@ public enum L10n {
     public static var explore: String { callAsFunction("canvas.explore") }
     public static var add: String { callAsFunction("canvas.add") }
     public static var setAside: String { callAsFunction("canvas.setAside") }
+    public static var moreActions: String { callAsFunction("canvas.moreActions") }
     public static var keep: String { callAsFunction("canvas.keep") }
     public static var reopen: String { callAsFunction("canvas.reopen") }
     public static var clarify: String { callAsFunction("canvas.clarify") }
@@ -135,6 +136,7 @@ public enum L10n {
         String(format: callAsFunction("progress.directions"), count)
     }
     public static var errorGeneric: String { callAsFunction("error.generic") }
+    public static var errorEditConflict: String { callAsFunction("error.editConflict") }
     public static var errorSaveFailed: String { callAsFunction("error.saveFailed") }
     public static var errorLoadFailed: String { callAsFunction("error.loadFailed") }
     public static var submitHint: String { callAsFunction("action.submitHint") }

@@ -126,6 +126,24 @@
         }
       }
     },
+    "canvas.moreActions": {
+      "comment": "The single named control that opens the secondary actions for a selected object. One entry, never a row of icons.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus"
+          }
+        }
+      }
+    },
     "canvas.setAside": {
       "comment": "Collapse a direction without deleting it",
       "extractionState": "manual",
@@ -299,6 +317,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Décrivez la situation, une idée ou un problème."
+          }
+        }
+      }
+    },
+    "error.editConflict": {
+      "comment": "Someone else changed this text after you opened it. Your text is kept and the current one is shown beside it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This text changed elsewhere. Your version is kept."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce texte a changé ailleurs. Votre version est conservée."
           }
         }
       }

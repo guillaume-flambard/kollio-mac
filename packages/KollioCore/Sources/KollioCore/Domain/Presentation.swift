@@ -40,6 +40,17 @@ public struct Presentation: Codable, Hashable, Sendable {
     public func instance(id: InstanceID) -> NodeInstance? {
         instances.first { $0.id == id }
     }
+
+    /// Every instance of one object.
+    ///
+    /// `instance(for:)` answers with the *first* instance, which is what a canvas
+    /// wants when it needs "where is this object drawn". It is the wrong answer for
+    /// a move: CAN-03 says "moving an occurrence does not move its other
+    /// occurrences", so anything that addresses a place on the canvas has to be
+    /// able to say which occurrence it means.
+    public func instances(of objectID: ObjectID) -> [NodeInstance] {
+        instances.filter { $0.objectID == objectID }
+    }
 }
 
 /// A product assembling reusable contributions. Provenance for later revenue

@@ -43,6 +43,41 @@ struct DocumentFormatTests {
         #expect(Set(document.presentation.instances.map(\.objectID)) == Set(decoded.presentation.instances.map(\.objectID)))
     }
 
+    /// CAN-04 added `objectVersion`. A file written before it existed has no such
+    /// key, and that is a document that has never been edited concurrently rather
+    /// than a corrupt one. It has to keep opening: the alternative is that adding
+    /// a field makes every existing document unreadable.
+    @Test("Reads a file written before objects had a version")
+    func legacyObjectWithoutAVersion() throws {
+        let data = try DocumentCodec.encode(Fixture.sarah())
+        var json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        var content = json["content"] as! [String: Any]
+        for (id, raw) in content {
+            var object = raw as! [String: Any]
+            object.removeValue(forKey: "objectVersion")
+            content[id] = object
+        }
+        json["content"] = content
+
+        let legacy = try JSONSerialization.data(withJSONObject: json)
+        let decoded = try DocumentCodec.decode(legacy)
+
+        #expect(decoded.content.count == Fixture.sarah().content.count)
+        #expect(decoded.content.values.allSatisfy { $0.objectVersion == 0 })
+        // And the text survived, which is the part that actually matters.
+        #expect(decoded.content[ObjectID("object:sarah-crm")]?.text.text
+                == Fixture.sarah().content[ObjectID("object:sarah-crm")]?.text.text)
+    }
+
+    @Test("A version that was written comes back the same")
+    func versionRoundTrip() throws {
+        var document = Fixture.sarah()
+        let id = ObjectID("object:sarah-crm")
+        document.content[id]?.objectVersion = 7
+        let decoded = try DocumentCodec.decode(try DocumentCodec.encode(document))
+        #expect(decoded.content[id]?.objectVersion == 7)
+    }
+
     @Test("Derives three visual forms from the semantic kinds")
     func visualForms() {
         let object = ContentObject(id: "a", kind: .hypothesis, text: LocalizedText("x"), provenance: .human("me"))

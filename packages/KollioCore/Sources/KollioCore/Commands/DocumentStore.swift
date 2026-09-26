@@ -14,6 +14,10 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
     case unknownDecision(DecisionID)
     case decisionTargetNotFound(ObjectID)
     case staleProposal(reason: String)
+    /// Someone else changed this object's text after the writer last looked.
+    /// Named apart from a stale proposal because the recovery is different: a
+    /// person has to choose between two texts, not recalculate a branch.
+    case staleObjectText(id: ObjectID, expected: Int, actual: Int)
     case tooManyOperations(Int)
     case forbiddenOperation(String)
     case unknownContributionReference(ObjectID, ActorID)
@@ -51,6 +55,8 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
         case .unknownDecision(let id): return "Unknown decision \(id)"
         case .decisionTargetNotFound(let id): return "Decision target \(id) not found"
         case .staleProposal(let reason): return "Stale proposal: \(reason)"
+        case .staleObjectText(let id, let expected, let actual):
+            return "Object \(id) was edited by someone else: expected version \(expected), found \(actual)"
         case .tooManyOperations(let n): return "Too many operations: \(n)"
         case .forbiddenOperation(let name): return "Forbidden operation \(name)"
         case .unknownContributionReference(let object, let contribution): return "Object \(object) references unknown contribution \(contribution)"
@@ -190,9 +196,21 @@ public struct DocumentStore: Sendable {
         guard !update.text.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw DocumentError.emptyText(update.id)
         }
+        // The version check is what makes a concurrent edit a question instead of a
+        // silent overwrite. It runs before anything is written, so a refusal leaves
+        // the object exactly as it was.
+        if let expected = update.expectedVersion, expected != object.objectVersion {
+            throw DocumentError.staleObjectText(id: update.id, expected: expected, actual: object.objectVersion)
+        }
+        guard object.text != update.text || object.detail != update.detail else {
+            // Nothing actually changed, so the version does not move. A version that
+            // rises on a no-op would make every writer look stale for no reason.
+            return
+        }
         object.text = update.text
         object.detail = update.detail
         object.provenance = update.provenance
+        object.objectVersion += 1
         document.content[update.id] = object
     }
 
