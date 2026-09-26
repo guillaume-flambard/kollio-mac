@@ -152,6 +152,16 @@ Recorded 2026-09-25, on an arm64 Mac, macOS 27.0 (26A428), Xcode 27.0, SDK 27.0.
   compared as a range, or whose weight depends on the direction being weighed, is
   not expressible, and a total is therefore defined over single numbers only.
 
+- **Building the app target in Xcode rewrites `Localizable.xcstrings` in the source
+  tree.** Observed 2026-09-26: a Cmd+R build left the file with five
+  `relationship.*` keys missing and five new keys that are bare format patterns
+  (`%@ %@`, `%@ · %lld`), which is Xcode's automatic string extraction writing back
+  into the repository. The committed catalog is the one that was verified, and the
+  rewrite was reverted with `git checkout`. Until the project turns extraction
+  output off, **a build can leave the working tree dirty in a way that has nothing
+  to do with the change being made**, so `git status` after a Cmd+R is worth reading
+  and `verify.sh` does not protect against it.
+
 ## Simulated or approximated
 
 - **The offline "intelligence"** is a rule engine with authored demo content, not a language model. It
