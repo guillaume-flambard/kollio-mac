@@ -115,20 +115,18 @@
       "features": 7,
       "acceptanceCriteria": 21,
       "byStatus": {
-        "automatedVerified": 6,
-        "specified": 1
+        "automatedVerified": 7
       },
       "proved": [
         "CTX-01",
         "CTX-02",
         "CTX-03",
         "CTX-04",
+        "CTX-05",
         "CTX-06",
         "CTX-07"
       ],
-      "writtenOnly": [
-        "CTX-05"
-      ]
+      "writtenOnly": []
     },
     "intelligence": {
       "lot": "L2",
@@ -289,9 +287,9 @@
     "features": 71,
     "acceptanceCriteria": 213,
     "byStatus": {
-      "automatedVerified": 26,
+      "automatedVerified": 27,
       "humanVerified": 1,
-      "specified": 44
+      "specified": 43
     }
   }
 }

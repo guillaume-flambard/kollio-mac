@@ -107,6 +107,8 @@ struct ContextualActions: View {
         case .removeObject:
             // The destructive one asks first, and the question says what is lost.
             model.requestRemoveFromDocument(target)
+        case .reviewImpact:
+            _ = model.reviewImpact(of: target)
         case .link, .comment:
             // Not reachable: the set never offers them until they are implemented.
             // An action that exists and does nothing is worse than an absent one.
@@ -886,6 +888,143 @@ struct ClarificationView: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel(clarification.question.resolve(languageCode: model.languageCode))
         .onAppear { focused = true }
+    }
+}
+
+/// What new information touched, and what it left alone.
+///
+/// CTX-05 asks for three things at once: what needs review, what stays valid, and
+/// why. So the card has two lists and never hides the second one: an assessment
+/// that only names the problems reads as "everything is now suspect", which is the
+/// opposite of what a scoped dependency walk actually established.
+///
+/// The buttons are *mark* and *not now*. There is no "apply" that rewrites
+/// anything, because the operation is not a rewrite: it records one precise mark
+/// per object and leaves every object, every branch and every decision exactly
+/// where it was. `Cmd+Z` puts the whole thing back in one step.
+struct ImpactReviewView: View {
+    let model: KollioModel
+    let assessment: ImpactAssessment
+
+    @Environment(\.kollioTheme) private var theme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.s) {
+            Text(L10n.impactTitle)
+                .font(TypeScale.metadata.weight(.semibold))
+                .foregroundStyle(theme.textSecondary)
+
+            Text(assessment.trigger.reason)
+                .font(TypeScale.body)
+                .foregroundStyle(theme.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            section(title: L10n.impactNeedsReview, count: assessment.proposedChanges.count) {
+                ForEach(assessment.proposedChanges) { change in
+                    row(
+                        text: model.text(of: change.objectID),
+                        detail: reasonLabel(change.reason),
+                        emphasised: true
+                    )
+                }
+            }
+
+            if assessment.unaffectedRefs.isEmpty == false {
+                section(title: L10n.impactStaysValid, count: assessment.unaffectedRefs.count) {
+                    ForEach(assessment.unaffectedRefs) { ref in
+                        row(
+                            text: model.text(of: ref.objectID),
+                            detail: unaffectedLabel(ref.why),
+                            emphasised: false
+                        )
+                    }
+                }
+            }
+
+            // What was read, so the answer can be checked rather than believed. And
+            // the bound, when the walk stopped early: a truncated answer that does
+            // not say it was truncated is a lie of omission.
+            Text(readSetLabel)
+                .font(TypeScale.metadata)
+                .foregroundStyle(theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: Space.s) {
+                ActionButton(title: L10n.impactNotNow, isDefault: false) {
+                    model.dismissImpactReview()
+                }
+                ActionButton(title: L10n.impactMark, isDefault: true) {
+                    _ = model.applyImpactReview()
+                }
+                .help(L10n.impactMarkHint)
+            }
+        }
+        .padding(Space.l)
+        .frame(width: 340, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
+                .fill(theme.surfacePrimary)
+                .shadow(color: .black.opacity(theme.isDark ? 0.4 : 0.14), radius: 18, y: 8)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
+                .strokeBorder(theme.attention.opacity(0.35), lineWidth: 1)
+        )
+        .accessibilityElement(children: .contain)
+    }
+
+    private func section<Content: View>(
+        title: String,
+        count: Int,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: Space.xs) {
+            Text("\(title) · \(count)")
+                .font(TypeScale.metadata)
+                .foregroundStyle(theme.textSecondary)
+            content()
+        }
+    }
+
+    private func row(text: String, detail: String, emphasised: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(text.isEmpty ? "—" : text)
+                .font(TypeScale.body.weight(emphasised ? .medium : .regular))
+                .foregroundStyle(theme.textPrimary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(detail)
+                .font(TypeScale.metadata)
+                .foregroundStyle(emphasised ? theme.attention : theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func reasonLabel(_ reason: ImpactReason) -> String {
+        switch reason {
+        case .evidenceMoved: return L10n.impactReasonMoved
+        case .evidenceLost: return L10n.impactReasonLost
+        case .reliesOnImpactedObject: return L10n.impactReasonRelies
+        }
+    }
+
+    private func unaffectedLabel(_ why: UnaffectedRef.Why) -> String {
+        switch why {
+        case .citationStillCurrent: return L10n.impactUnaffectedCurrent
+        case .linkIsNotADependence: return L10n.impactUnaffectedLink
+        case .setAside: return L10n.impactUnaffectedSetAside
+        }
+    }
+
+    private var readSetLabel: String {
+        let read = L10n.impactReadSet(
+            assessment.readSet.citationIDs.count,
+            assessment.readSet.visitedObjectIDs.count,
+            assessment.readSet.relationshipIDs.count
+        )
+        guard assessment.wasTruncated else { return read }
+        return "\(read) \(L10n.impactTruncated)"
     }
 }
 

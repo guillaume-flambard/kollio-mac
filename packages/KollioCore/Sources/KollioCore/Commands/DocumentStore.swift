@@ -12,6 +12,10 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
     case missingInstanceForObject(ObjectID)
     case emptyText(ObjectID)
     case unknownDecision(DecisionID)
+    case duplicateDecision(DecisionID)
+    /// An assessment with nothing in it. Applying it would record a decision about
+    /// a question nobody asked.
+    case nothingToReview
     case decisionTargetNotFound(ObjectID)
     case staleProposal(reason: String)
     /// Someone else changed this object's text after the writer last looked.
@@ -67,6 +71,8 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
         case .missingInstanceForObject(let id): return "No visual instance for object \(id)"
         case .emptyText(let id): return "Object \(id) has empty text"
         case .unknownDecision(let id): return "Unknown decision \(id)"
+        case .duplicateDecision(let id): return "Duplicate decision \(id)"
+        case .nothingToReview: return "That assessment has nothing to review"
         case .decisionTargetNotFound(let id): return "Decision target \(id) not found"
         case .staleProposal(let reason): return "Stale proposal: \(reason)"
         case .objectHasDecision(let object, let decision):
@@ -200,6 +206,8 @@ public struct DocumentStore: Sendable {
             try markClarificationUnknown(unknown, in: &document)
         case .editRelationship(let edit):
             try editRelationship(edit, in: &document)
+        case .applyImpact(let impact):
+            try applyImpact(impact, in: &document, at: date)
         }
     }
 
@@ -427,6 +435,13 @@ public struct DocumentStore: Sendable {
     /// deleting anything; `reopened` restores it exactly as it was, positions
     /// included.
     private static func recordDecision(_ command: RecordDecision, in document: inout KollioDocument, at date: Date) throws {
+        // An impact is only ever recorded together with the assessment that produced
+        // it, so that the reasons travel with the mark. Accepting a bare `.impacted`
+        // here would allow a durable "look again" with nothing behind it, which is
+        // the badge-with-no-observation this document refuses everywhere else.
+        guard command.kind != .impacted else {
+            throw DocumentError.forbiddenOperation("an impact is applied with the assessment that produced it")
+        }
         guard let target = document.content[command.targetObjectID] else {
             throw DocumentError.decisionTargetNotFound(command.targetObjectID)
         }
@@ -443,6 +458,10 @@ public struct DocumentStore: Sendable {
                     .map { ObjectID($0.rawValue) }
             )
             if branch.isEmpty { branch = [command.targetObjectID] }
+        case .impacted:
+            // Unreachable: refused above. `applyImpact` writes this kind itself, and
+            // it names the one object rather than walking a branch.
+            branch = [command.targetObjectID]
         }
 
         // A new decision supersedes the previous active decision on the same target.
@@ -482,6 +501,11 @@ public struct DocumentStore: Sendable {
                 document.content[id] = object
             }
         case .kept:
+            break
+        case .impacted:
+            // Unreachable: refused at the top of this function. Listed rather than
+            // folded into `default` so that adding a fifth kind is a compile error
+            // here instead of a silently unhandled decision.
             break
         }
         _ = target
@@ -674,6 +698,11 @@ extension DocumentStore {
         var ledger = document.claims
         ledger.upsert(claim)
         document.claims = ledger
+        // The person has now said how it stands, so the mark that said "look again"
+        // has been looked at. Nothing about the earlier record is erased; it becomes
+        // superseded, which is the same thing that happens to a decision a person
+        // has replaced.
+        clearImpactReview(on: claim.objectID, in: &document)
     }
 
     private static func resolveConstraint(
@@ -695,6 +724,7 @@ extension DocumentStore {
         var ledger = document.claims
         ledger.upsert(claim)
         document.claims = ledger
+        clearImpactReview(on: claim.objectID, in: &document)
     }
 
     // MARK: - Clarifications
@@ -784,5 +814,71 @@ extension DocumentStore {
         }
         relationship.provenance = edit.provenance
         document.relationships[edit.id] = relationship
+    }
+
+    // MARK: - Impact of new information
+
+    /// Records the objects an assessment marks, one precise decision each.
+    ///
+    /// What this deliberately does **not** do is the thing CTX-05 names as the
+    /// failure mode. It does not set anything aside, does not clear a lifecycle,
+    /// does not remove an object, and does not supersede a decision a person took
+    /// earlier. A branch whose ground moved is still a branch, and the honest state
+    /// of it is "look again", which is exactly what a durable record of "look again"
+    /// says.
+    ///
+    /// The rationale carries the reason and the path rather than a bare flag, so a
+    /// person reading the record months later can see *why* this object is marked
+    /// and what it was marked because of, without re-running the walk.
+    private static func applyImpact(
+        _ impact: ApplyImpact,
+        in document: inout KollioDocument,
+        at date: Date
+    ) throws {
+        let assessment = impact.assessment
+        guard assessment.proposedChanges.isEmpty == false else {
+            throw DocumentError.nothingToReview
+        }
+        guard impact.decisionIDs.count == assessment.proposedChanges.count else {
+            throw DocumentError.forbiddenOperation("an assessment needs one decision per impacted object")
+        }
+        for decisionID in impact.decisionIDs where document.decisions[decisionID] != nil {
+            throw DocumentError.duplicateDecision(decisionID)
+        }
+        for change in assessment.proposedChanges {
+            guard document.content[change.objectID] != nil else {
+                throw DocumentError.unknownObject(change.objectID)
+            }
+        }
+
+        for (change, decisionID) in zip(assessment.proposedChanges, impact.decisionIDs) {
+            document.decisions[decisionID] = Decision(
+                id: decisionID,
+                kind: .impacted,
+                targetObjectID: change.objectID,
+                // Exactly the one object, never the branch it sits in. The whole
+                // point is that marking is precise: a decision whose
+                // `branchObjectIDs` named the branch would be the purge this
+                // command refuses to perform.
+                branchObjectIDs: [change.objectID],
+                rationale: LocalizedText(change.reason.rationale),
+                createdAt: date,
+                provenance: impact.provenance
+            )
+        }
+    }
+
+    /// Marks an assessment as looked at, on the object it was about.
+    ///
+    /// Called by the two commands that record a person taking a position. A mark
+    /// that no stance can ever clear is a mark that never goes away, which is
+    /// another way of saying the review does not matter.
+    private static func clearImpactReview(on objectID: ObjectID, in document: inout KollioDocument) {
+        for (id, decision) in document.decisions
+        where decision.kind == .impacted && decision.status == .active && decision.targetObjectID == objectID {
+            var looked = decision
+            looked.status = .superseded
+            document.decisions[id] = looked
+        }
     }
 }

@@ -151,6 +151,32 @@ public enum L10n {
     public static var sourceStateMissing: String { callAsFunction("source.state.missing") }
     public static var sourceStateUnverifiable: String { callAsFunction("source.state.unverifiable") }
 
+    // Impact of new information
+    public static var impactReviewAction: String { callAsFunction("impact.reviewAction") }
+    public static var impactTitle: String { callAsFunction("impact.title") }
+    public static var impactNeedsReview: String { callAsFunction("impact.needsReview") }
+    public static var impactStaysValid: String { callAsFunction("impact.staysValid") }
+    public static var impactMark: String { callAsFunction("impact.mark") }
+    public static var impactMarkHint: String { callAsFunction("impact.markHint") }
+    public static var impactNotNow: String { callAsFunction("impact.notNow") }
+    public static var impactNothingMoved: String { callAsFunction("impact.nothingMoved") }
+    public static var impactReasonMoved: String { callAsFunction("impact.reason.moved") }
+    public static var impactReasonLost: String { callAsFunction("impact.reason.lost") }
+    public static var impactReasonRelies: String { callAsFunction("impact.reason.relies") }
+    public static var impactUnaffectedCurrent: String { callAsFunction("impact.unaffected.current") }
+    public static var impactUnaffectedLink: String { callAsFunction("impact.unaffected.link") }
+    public static var impactUnaffectedSetAside: String { callAsFunction("impact.unaffected.setAside") }
+    public static var impactTruncated: String { callAsFunction("impact.truncated") }
+    public static var undoApplyImpact: String { callAsFunction("undo.applyImpact") }
+    /// %lld citations read, %lld objects walked, %lld links followed.
+    public static func impactReadSet(_ citations: Int, _ objects: Int, _ links: Int) -> String {
+        String(format: callAsFunction("impact.readSet"), citations, objects, links)
+    }
+    /// %lld is how many objects were marked, said after the fact rather than before.
+    public static func impactMarked(_ count: Int) -> String {
+        String(format: callAsFunction("impact.marked"), count)
+    }
+
     // Status
     public static var statusNoChange: String { callAsFunction("status.noChange") }
     public static var statusKept: String { callAsFunction("status.kept") }

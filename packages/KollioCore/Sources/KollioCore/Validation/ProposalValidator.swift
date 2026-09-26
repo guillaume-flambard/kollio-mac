@@ -146,8 +146,14 @@ public struct ProposalValidator: Sendable {
                 // inverts. That is a person's to do, and so is rewriting what a
                 // link is claimed to mean.
                 throw DocumentError.forbiddenOperation("editing a relation is the user's to do")
-            case .answerClarification, .markClarificationUnknown:
-                // Only a person answers. A model that could answer its own question
+            case .applyImpact:
+                // CTX-05: "intelligence may propose interpretations, never apply
+                // them". An assessment is already a bounded interpretation, and
+                // applying it writes durable decisions into the document. A model
+                // that could mark a person's own hypothesis as needing review would
+                // be annotating somebody's reasoning about their own work.
+                throw DocumentError.forbiddenOperation("applying an impact is the user's to do")
+            case .answerClarification, .markClarificationUnknown:                // Only a person answers. A model that could answer its own question
                 // would be manufacturing the contribution the answer is supposed to
                 // be, and would be able to record "I do not know" as a fact about
                 // somebody else's uncertainty.

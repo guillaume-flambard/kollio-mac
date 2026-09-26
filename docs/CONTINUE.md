@@ -105,7 +105,7 @@ After adding or removing a file under `packages/KollioApp/Sources`, run:
 ## Verify before believing anything
 
 ```bash
-./scripts/verify.sh     # the spec views, 3 test suites (154 tests), the Xcode app target
+./scripts/verify.sh     # the spec views, 3 test suites (415 tests), the Xcode app target
 ./scripts/run-app.sh --shot   # builds, launches, screenshots into build/
 ```
 
@@ -115,6 +115,9 @@ looks like.
 
 Note: `run-app.sh --shot` prints a path whether or not the capture worked, and it captures the whole
 screen rather than the Kollio window. Check the file exists and shows the app before trusting it.
+Capturing **only** Kollio's window does work, by hand: read the window id from
+`CGWindowListCopyWindowInfo` and pass it to `screencapture -l`. See the CTX-05 batch below for two
+captures made that way and inspected.
 
 ## The specification is decomposed, and the views are generated
 
@@ -442,9 +445,79 @@ The offer to keep or hide is not on screen: the state and the four functions exi
 tested, nothing asks. Second-degree reach is a documented guess, not a rule of
 applicability. And the read set is bounded by reach but not by a budget.
 
+## Latest batch: CTX-05, understand the impact of new information
+
+`ImpactAssessment` existed nowhere: one sentence in the specification and no type.
+It is now a pure function of the document in
+`packages/KollioCore/Sources/KollioCore/Domain/ImpactAssessment.swift`, with
+`readSet`, `proposedChanges` and `unaffectedRefs` and no provider, no session and
+no network anywhere in it. That is what "propagation rules do not depend on the
+provider" has to mean to be true rather than aspirational.
+
+**The two lists are both on screen.** A card that named only the problems would
+read as "everything is now suspect", which is the opposite of what a scoped
+dependency walk established. So the card shows what needs review, what was
+examined and left alone, and the reason for each. It also prints what it read
+(citations, objects, links) and declares itself truncated when the walk hits its
+bound, because a truncated answer that does not say so is a lie of omission.
+
+**A link is walked towards what relies on it, never away from it.** The first
+implementation had the direction of `dependsOn` and `supports` inverted, and the
+fixture did not catch it: the fixture was self-contradictory, saying the shared
+tool both rested on the export and was used by two branches. Fixed in both. The
+consequence of getting it wrong is precise and bad, so it is now a named test: a
+step somebody else relies on does not move because the person using it changed
+their mind, and one branch's evidence must not flag every branch that needs the
+same tool. `alternativeTo`, `addresses` and `associatedWith` are not dependencies
+at all, and the other end is reported as unaffected **with that reason** rather
+than by its absence.
+
+**Nothing here can invert a decision.** `ImpactReason` has three cases and none
+of them is a verdict; a bare `Decision(kind: .impacted)` through `RecordDecision`
+is refused, so a durable "look again" can only exist with the assessment that
+produced it attached. Removing a source marks the citation and leaves the
+hypothesis supported, with its observation and its author. Taking a stance
+supersedes the mark rather than deleting it, and the citation stays marked: a
+position taken on a claim does not put the old revision back.
+
+**Applying is one command, one transaction, one undo**, and it is not a branch
+purge: content, relationships and every object's lifecycle come back byte
+identical, and the decision names one object rather than the branch it sits in.
+Intelligence is refused `applyImpact` in the validator, beside the existing
+refusals for removals, stances and citations.
+
+The action is offered only when the document says there is something to say, and
+it sits behind the named secondary menu so the three primary actions the
+specification fixes are untouched. The mark is drawn on the object, so it is not
+only readable in a card that has been closed. Escape closes the card before the
+selection, and opening it puts the citations card away rather than stacking two
+cards on one object.
+
+Sixteen tests in `ImpactAssessmentTests`, thirteen in
+`ImpactReviewInterfaceTests`. `verify.sh`: 127 KollioCore, 259 KollioApp,
+29 server, exit 0. 27 `automatedVerified`, 1 `humanVerified`, 43 `specified`.
+
+### What was captured, and what was not
+
+The app was launched twice against a throwaway `HOME`, so the user's document was
+never opened or rewritten. `screencapture -l <window id>` with the id read from
+`CGWindowListCopyWindowInfo` captured **the Kollio window and nothing else**, in
+English and in French, light appearance: `build/kollio-window.png` and
+`build/kollio-window-fr.png`. Both were inspected before being reported here.
+That is the fourth attempt at an honest capture and the first that worked; the
+three before it are described in `known-limitations.md`.
+
+**The review card itself has not been seen on screen.** It needs a selection and
+a click, and injection is refused by this environment: an `osascript` keystroke
+into the launched entry field produced no text. Dark appearance was not captured
+either. Both are owed to a person, and the behaviour rests on the twenty-nine
+tests.
+
 ## The next things worth doing, in this order
 
-1. A human pass. Three things only a human can settle: **type a sentence into the entry point and
+1. **CAN-07, the keyboard and the pointer journey**, or the human pass, whichever
+   comes first. Both are owed and no test substitutes for either. A human pass has
+   three things only a person can settle: **type a sentence into the entry point and
    press the action**, **scroll with two fingers** (the code says it does nothing; confirm or
    refute), and **watch a real-model proposal arrive and be kept**. Then drag, double-click to
    explore, contextual buttons, `Cmd+0` / `Cmd+1` / `Cmd+Z` / `Cmd+S`, and quit without `Cmd+S`.
@@ -456,6 +529,9 @@ applicability. And the read set is bounded by reach but not by a budget.
    camera's visible rectangle to cull. Connector routing samples its curve, so this is where the
    cost will show.
 5. Keyboard traversal between objects, so the canvas is usable without a pointer.
-6. Only then, and only with explicit permission: a small live Groq test, or a PCC eligibility check.
+6. **AI-05, AI-06, AI-11, AI-12**, the rest of L3, then CAN-09 and CAN-10. They
+   are the remaining lots with verified prerequisites, and CTX-05 was the last of
+   the context chapter.
+7. Only then, and only with explicit permission: a small live Groq test, or a PCC eligibility check.
    Everything the transport needs is in place and mocked; what is missing is evidence about a live
    model, not plumbing.

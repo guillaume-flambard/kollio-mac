@@ -13,7 +13,7 @@ A view, not a source of truth. Status meanings:
 | `blockedExternal` | Blocked on a capability or authorisation. |
 | `notInCurrentRelease` | Deliberately out of this product. |
 
-Counts: 26 automatedVerified, 1 humanVerified, 44 specified. 71 features, 213 acceptance criteria.
+Counts: 27 automatedVerified, 1 humanVerified, 43 specified. 71 features, 213 acceptance criteria.
 
 ## L1 — 10 features
 
@@ -80,7 +80,8 @@ Counts: 26 automatedVerified, 1 humanVerified, 44 specified. 71 features, 213 ac
       A citation keeps its revision, is refused towards anything absent, and cannot be verified without an observation and an author. Intelligence is refused these commands outright. SourceLedgerTests, SourceCommandTests. The interface opens a citation at the lines its locator names, from the revision it was read against, records a check only with an observation, and lets a passage be chosen so the quote is the selection verbatim: SourceChipTests. Still missing: opening the file itself in a reader, and a page locator that can be pointed at a passage.
 - [x] **CTX-04** Define a hypothesis or a constraint · `automatedVerified` · 3 AC
       AC01 a constraint only blocks within its scope; AC02 not applicable is not satisfied; AC03 supported is not absolute truth. ClaimLedgerTests, and a scope with nothing in it is refused rather than read as everything. Intelligence may suggest a claim but may not record how it stands. The interface states a claim with its scope taken from the current selection, and records a stance only with an observation. Still missing: asking for precision when two scopes overlap.
-- [ ] **CTX-05** Understand the impact of new information · `specified` · 3 AC
+- [x] **CTX-05** Understand the impact of new information · `automatedVerified` · 3 AC
+      ImpactAssessmentTests: the read set, the proposed changes and the unaffected references are all recorded, and the read set is stable between runs. Propagation follows the direction of reliance and a link is walked towards what relies on it, never away from it, so a shared tool a branch merely uses is reported as unaffected rather than as a casualty. AC01 an available CSV touches only the object that cited it plus what explicitly depends on it, and never the CRM identifiers; AC02 the shared tool and the alternative branch keep their links, their lifecycle and their usability; AC03 one command, one transaction, one undo, and content, relationships and revision all come back. A cycle terminates through a visited set, a walk that hits its bound declares itself truncated, and the same document gives the same assessment twice. A reason cannot invert a decision: ImpactReason has no refuted case, a bare .impacted decision is refused, and taking a stance supersedes the mark rather than deleting it. Intelligence is refused applyImpact. ImpactReviewInterfaceTests: the action is offered only when the document has something to say and sits behind the secondary menu, the card names both lists, reading asks no model, the marks survive a save and a reload, Escape closes the card before the selection, and the mark is drawn on the object. Owed: the card has never been seen on a screen, and an assessment records only the first moved citation of a claim when two sources have both moved.
 - [x] **CTX-06** See and limit what intelligence will use · `automatedVerified` · 3 AC
       The projection is built and measured on the real request path: omissions are counted, a required item is never dropped, and the budget cannot exceed the model's window. ContextProjectionTests, AppleAdapterTests. The interface that shows the list to a person is not built.
 - [x] **CTX-07** Update a resource without erasing history · `automatedVerified` · 3 AC

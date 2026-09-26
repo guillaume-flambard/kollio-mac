@@ -16,6 +16,11 @@ struct ObjectNodeView: View {
     /// Sources cited by this object. Empty for most objects, and never invented:
     /// the chip is drawn from the ledger or not at all.
     let sourceChips: [SourceChip]
+    /// Set when this object's evidence moved, or when a mark applied by a previous
+    /// assessment has not been looked at. A mark nobody can see on the canvas is a
+    /// record in a file and nothing else, so it is drawn here rather than only
+    /// being readable in the review card.
+    let needsReview: Bool
     let isCitationsOpen: Bool
     let onToggleCitations: () -> Void
     let onSelect: (Bool) -> Void
@@ -36,6 +41,22 @@ struct ObjectNodeView: View {
                 reference
             case .richResult:
                 richResult
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            if needsReview {
+                // Small, quiet, and not a control: it says the ground under this
+                // moved, and the control that reads it is the action beside the
+                // object, not the badge.
+                Text(L10n.impactNeedsReview)
+                    .font(TypeScale.metadata)
+                    .foregroundStyle(theme.attention)
+                    .padding(.horizontal, Space.xs)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(theme.attention.opacity(0.12)))
+                    .offset(x: 4, y: -6)
+                    .allowsHitTesting(false)
+                    .accessibilityLabel(L10n.impactNeedsReview)
             }
         }
         .frame(width: width, alignment: .leading)

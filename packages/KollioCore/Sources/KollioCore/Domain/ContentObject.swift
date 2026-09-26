@@ -213,6 +213,15 @@ public struct Decision: Codable, Hashable, Sendable, Identifiable {
         case setAside
         case reopened
         case kept
+        /// The ground under an object moved, and a person has not looked at it yet.
+        ///
+        /// This is the fourth kind, and it is a *record* rather than a verdict: it
+        /// says "this was marked, here is why, and nobody has decided since". It
+        /// deliberately has no paired "resolved" kind, because resolving it is not a
+        /// different opinion, it is the person taking the stance they already have
+        /// the vocabulary for. CTX-05's "precise decisions, not a branch purge"
+        /// is expressed by this kind naming one object and one reason.
+        case impacted
     }
 
     public enum Status: String, Codable, Sendable {

@@ -30,6 +30,7 @@ public enum Command: Codable, Hashable, Sendable {
     case answerClarification(AnswerClarification)
     case markClarificationUnknown(MarkClarificationUnknown)
     case editRelationship(EditRelationship)
+    case applyImpact(ApplyImpact)
 
     /// Presentation-only commands never change the meaning of the document.
     public var isSemantic: Bool {
@@ -47,7 +48,7 @@ public enum Command: Codable, Hashable, Sendable {
              .removeSource, .assertClaim, .assessHypothesis, .resolveConstraint,
              .duplicateObject, .removeObject,
              .askClarification, .answerClarification, .markClarificationUnknown,
-             .editRelationship:
+             .editRelationship, .applyImpact:
             return true
         }
     }
@@ -82,6 +83,7 @@ public enum Command: Codable, Hashable, Sendable {
         case .answerClarification: return "undo.answerClarification"
         case .markClarificationUnknown: return "undo.markClarificationUnknown"
         case .editRelationship: return "undo.editRelationship"
+        case .applyImpact: return "undo.applyImpact"
         }
     }
 }
@@ -537,6 +539,33 @@ public struct EditRelationship: Codable, Hashable, Sendable {
     public init(id: RelationshipID, edit: RelationshipEdit, provenance: Provenance) {
         self.id = id
         self.edit = edit
+        self.provenance = provenance
+    }
+}
+
+// MARK: - Impact
+//
+// Applying an impact is one transaction and one undo step, whatever the
+// assessment names. That is AC03 stated as a type constraint: a single command
+// carrying a single assessment either lands whole or leaves nothing behind.
+
+/// Records the objects an assessment says need another look.
+///
+/// It carries the assessment rather than a list of conclusions, so the durable
+/// record can always be read back against the reasons that produced it. The
+/// decision identifiers are supplied rather than minted here, for the same reason
+/// every other command in this file does: an actor that does not own the document
+/// does not get to invent identifiers inside it.
+public struct ApplyImpact: Codable, Hashable, Sendable {
+    public var assessment: ImpactAssessment
+    /// One decision per impacted object, in the same order as
+    /// `assessment.proposedChanges`.
+    public var decisionIDs: [DecisionID]
+    public var provenance: Provenance
+
+    public init(assessment: ImpactAssessment, decisionIDs: [DecisionID], provenance: Provenance) {
+        self.assessment = assessment
+        self.decisionIDs = decisionIDs
         self.provenance = provenance
     }
 }

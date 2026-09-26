@@ -101,6 +101,7 @@ struct CanvasView: View {
                         isDragging: model.isDragging(instance.id),
                         width: instance.size?.width ?? NodeLayout.estimatedSize(for: object).width,
                         sourceChips: model.sourceChips(for: object.id),
+                        needsReview: model.needsImpactReview(object.id),
                         isCitationsOpen: model.openCitationClaim == object.id,
                         onToggleCitations: { model.toggleCitations(of: object.id) },
                         onSelect: { extend in model.select(object.id, extending: extend) },
@@ -194,6 +195,14 @@ struct CanvasView: View {
             if let claim = model.openCitationClaim {
                 CitationListView(model: model, claim: claim)
                     .position(citationListPosition(claim, viewport: viewport))
+            }
+            // Above the citations it was opened from, and below nothing else: it is
+            // the most specific thing on screen, because it is about one claim and
+            // the objects that explicitly depend on it.
+            if let assessment = model.impactAssessment,
+               let anchor = model.impactReviewAnchor {
+                ImpactReviewView(model: model, assessment: assessment)
+                    .position(composerPosition(anchor, viewport: viewport))
             }
             if let source = model.readingSourceID, let claim = model.openCitationClaim {
                 PassagePickerView(model: model, sourceID: source, claim: claim)

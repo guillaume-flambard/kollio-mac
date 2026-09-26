@@ -2469,6 +2469,330 @@
           }
         }
       }
+    },
+    "impact.reviewAction": {
+      "comment": "Reading what new information touched, on an object whose evidence moved. Offered only when the document says there is something to read.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See what changed"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir ce qui a changé"
+          }
+        }
+      }
+    },
+    "impact.title": {
+      "comment": "The card that answers CTX-05: what new information touched.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What this touches"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce que cela touche"
+          }
+        }
+      }
+    },
+    "impact.needsReview": {
+      "comment": "Heading of the objects an assessment marks. A mark, never a verdict.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs review"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À revoir"
+          }
+        }
+      }
+    },
+    "impact.staysValid": {
+      "comment": "Heading of what an assessment examined and left alone. Shown on purpose: a list of only the problems reads as everything being suspect.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stays valid"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reste valable"
+          }
+        }
+      }
+    },
+    "impact.mark": {
+      "comment": "Records one precise mark per object, in one transaction. It changes no object, no branch and no decision.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark for review"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marquer pour révision"
+          }
+        }
+      }
+    },
+    "impact.markHint": {
+      "comment": "Explains what marking does, since the button does not sound like it rewrites anything.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Records why each object needs another look. Nothing is changed, removed or set aside."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistre pourquoi chaque objet doit être revu. Rien n’est modifié, retiré ni écarté."
+          }
+        }
+      }
+    },
+    "impact.notNow": {
+      "comment": "Closes the assessment without recording anything. The citation that prompted it stays marked.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not now"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas maintenant"
+          }
+        }
+      }
+    },
+    "impact.nothingMoved": {
+      "comment": "Said when the review is asked for and no evidence has moved. Better an honest refusal than an empty card.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing moved under this one"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien n’a bougé sous celui-ci"
+          }
+        }
+      }
+    },
+    "impact.reason.moved": {
+      "comment": "A citation points at a revision that is no longer the one being read.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Its source has a newer version"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sa source a une version plus récente"
+          }
+        }
+      }
+    },
+    "impact.reason.lost": {
+      "comment": "The source behind a citation is gone. The claim is still here.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Its source is no longer available"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sa source n’est plus disponible"
+          }
+        }
+      }
+    },
+    "impact.reason.relies": {
+      "comment": "Reached by an explicit dependency, not by being nearby.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relies on something that moved"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repose sur quelque chose qui a bougé"
+          }
+        }
+      }
+    },
+    "impact.unaffected.current": {
+      "comment": "The citation is still on the version being read.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Its source has not changed"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sa source n’a pas changé"
+          }
+        }
+      }
+    },
+    "impact.unaffected.link": {
+      "comment": "The link examined does not say this relies on the other. Two alternatives do not collapse because one changed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not dependent on it"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "N’en dépend pas"
+          }
+        }
+      }
+    },
+    "impact.unaffected.setAside": {
+      "comment": "A direction the person set aside. The walk stops at its border rather than reopening a decision.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A direction you set aside"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une direction que vous avez écartée"
+          }
+        }
+      }
+    },
+    "impact.truncated": {
+      "comment": "Said when the walk stopped at its bound. A truncated answer that does not say so is a lie of omission.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(the walk stopped early; this is not the whole graph)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(le parcours s’est arrêté tôt ; ce n’est pas tout le graphe)"
+          }
+        }
+      }
+    },
+    "impact.readSet": {
+      "comment": "What was read to produce this. %lld citations, %lld objects walked, %lld links followed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read %lld citations, walked %lld objects, followed %lld links"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld citations lues, %lld objets parcourus, %lld liens suivis"
+          }
+        }
+      }
+    },
+    "impact.marked": {
+      "comment": "How many objects were marked, said after the fact rather than before.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marked %lld for review"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld marqué(s) pour révision"
+          }
+        }
+      }
+    },
+    "undo.applyImpact": {
+      "comment": "Undo label: one step puts the whole assessment back.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo the review marks"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler les marques de révision"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

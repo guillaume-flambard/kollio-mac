@@ -43,6 +43,8 @@ public struct ContextualActionSet: Hashable, Sendable {
         case removeOccurrence
         /// Take the idea out of the document.
         case removeObject
+        /// See what new information touched, and what it left alone.
+        case reviewImpact
 
         /// The French and English label lives in `L10n`, not here, so the String
         /// Catalog stays the only place an interface string is written.
@@ -61,6 +63,7 @@ public struct ContextualActionSet: Hashable, Sendable {
             case .duplicateVariant: return "action.duplicateVariant"
             case .removeOccurrence: return "action.removeOccurrence"
             case .removeObject: return "action.removeObject"
+            case .reviewImpact: return "impact.reviewAction"
             }
         }
     }
@@ -100,7 +103,7 @@ public struct ContextualActionSet: Hashable, Sendable {
         case .duplicateVariant, .removeObject:
             return .meaning
         case .explore, .add, .setAside, .reopen, .edit, .addSource,
-             .assertClaim, .link, .comment:
+             .assertClaim, .link, .comment, .reviewImpact:
             return .meaning
         }
     }
@@ -132,7 +135,8 @@ public struct ContextualActionSet: Hashable, Sendable {
         kind: ContentObject.Kind,
         canReopen: Bool,
         canAttachSource: Bool,
-        canAssertClaim: Bool
+        canAssertClaim: Bool,
+        canReviewImpact: Bool = false
     ) -> ContextualActionSet {
         if canReopen {
             return ContextualActionSet(primary: [.reopen], secondary: [], isDefault: .reopen)
@@ -142,6 +146,11 @@ public struct ContextualActionSet: Hashable, Sendable {
         var secondary: [Kind] = [.edit]
         if canAttachSource { secondary.append(.addSource) }
         if canAssertClaim { secondary.append(.assertClaim) }
+        // Offered only when the document says there is something to look at: a
+        // citation that moved, or a mark nobody has looked at yet. A control that
+        // opens an empty answer every time is a control that trains people to stop
+        // opening it.
+        if canReviewImpact { secondary.append(.reviewImpact) }
         // Not implemented yet, so not offered. A disabled button is worse than an
         // absent one, and the specification forbids a decorative action.
         //

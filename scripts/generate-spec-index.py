@@ -198,6 +198,26 @@ STATUS_NOTES = {
                "suggest a claim but may not record how it stands. The interface states a claim with "
                "its scope taken from the current selection, and records a stance only with an "
                "observation. Still missing: asking for precision when two scopes overlap."),
+    "CTX-05": ("automatedVerified",
+               "ImpactAssessmentTests: the read set, the proposed changes and the unaffected "
+               "references are all recorded, and the read set is stable between runs. Propagation "
+               "follows the direction of reliance and a link is walked towards what relies on it, "
+               "never away from it, so a shared tool a branch merely uses is reported as "
+               "unaffected rather than as a casualty. AC01 an available CSV touches only the object "
+               "that cited it plus what explicitly depends on it, and never the CRM identifiers; "
+               "AC02 the shared tool and the alternative branch keep their links, their lifecycle "
+               "and their usability; AC03 one command, one transaction, one undo, and content, "
+               "relationships and revision all come back. A cycle terminates through a visited set, "
+               "a walk that hits its bound declares itself truncated, and the same document gives "
+               "the same assessment twice. A reason cannot invert a decision: ImpactReason has no "
+               "refuted case, a bare .impacted decision is refused, and taking a stance supersedes "
+               "the mark rather than deleting it. Intelligence is refused applyImpact. "
+               "ImpactReviewInterfaceTests: the action is offered only when the document has "
+               "something to say and sits behind the secondary menu, the card names both lists, "
+               "reading asks no model, the marks survive a save and a reload, Escape closes the "
+               "card before the selection, and the mark is drawn on the object. Owed: the card has "
+               "never been seen on a screen, and an assessment records only the first moved "
+               "citation of a claim when two sources have both moved."),
     "CTX-06": ("automatedVerified",
                "The projection is built and measured on the real request path: omissions are "
                "counted, a required item is never dropped, and the budget cannot exceed the "

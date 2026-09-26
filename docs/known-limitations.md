@@ -107,6 +107,21 @@ Recorded 2026-09-25, on an arm64 Mac, macOS 27.0 (26A428), Xcode 27.0, SDK 27.0.
   is drawn there. The CAN-05 menu was **not** seen on screen; its behaviour rests on the twenty tests.
   The script should capture the window by id (`screencapture -l`) and should fail loudly when the
   frontmost process is not Kollio, rather than printing a path either way.
+- **Capturing Kollio's own window works, done by hand.** `screencapture -l <window id>` with the id
+  read from `CGWindowListCopyWindowInfo` produces a picture of Kollio and nothing else, which the
+  three earlier attempts in this file did not manage. Two captures were inspected for CTX-05 this way:
+  the entry point in English (`build/kollio-window.png`) and in French
+  (`build/kollio-window-fr.png`), both in the light appearance, both containing only the Kollio
+  window. It is not in `run-app.sh` yet, because the id lookup needs a small helper and a capture path
+  that can fail silently is the thing this file is complaining about.
+- **CTX-05's review card has not been seen on a screen.** Reading and marking an impact is covered by
+  `ImpactReviewInterfaceTests` and `ImpactAssessmentTests`, and the resting state of the app was
+  captured, but reaching the card needs a selection and a click, and keystroke and click injection are
+  refused by this environment: an `osascript` keystroke into the launched entry field produced no text.
+  The card's layout, its two lists and the mark on the object are unverified by a person.
+- An assessment records the **first** moved citation of a claim. A claim citing two sources that have
+  both moved is offered one review, and the other source appears in no assessment until the first has
+  been dealt with. The read set says which one was read, so the answer is not wrong, it is partial.
 
 ## Simulated or approximated
 

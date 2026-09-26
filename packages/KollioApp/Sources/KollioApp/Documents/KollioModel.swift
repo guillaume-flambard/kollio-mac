@@ -496,6 +496,7 @@ public final class KollioModel {
         case stanceDraft
         case citation
         case readingSource
+        case impactReview
         case preview
         case selection
 
@@ -508,6 +509,10 @@ public final class KollioModel {
             if model.stanceDraft != nil { return .stanceDraft }
             if model.openCitationClaim != nil { return .citation }
             if model.readingSourceID != nil { return .readingSource }
+            // The impact review sits above the selection, and below the citations it
+            // is read from: it is a card about a claim, so it closes before the
+            // claim's own evidence list does.
+            if model.impactAssessment != nil { return .impactReview }
             if model.preview != nil { return .preview }
             if !model.selection.isEmpty { return .selection }
             return nil
@@ -536,6 +541,13 @@ public final class KollioModel {
         case .readingSource:
             readingSourceID = nil
             return .readingSource
+        case .impactReview:
+            // Closing the review applies nothing and forgets nothing: the
+            // assessment was never in the document, and the citation that prompted
+            // it is still marked.
+            impactAssessment = nil
+            impactReviewAnchor = nil
+            return .impactReview
         case .preview:
             // Closing a proposal hides it. It is not a rejection and not a
             // deletion: nothing was applied and nothing is forgotten.
@@ -555,6 +567,8 @@ public final class KollioModel {
         selection = []
         preview = nil
         composer = nil
+        impactAssessment = nil
+        impactReviewAnchor = nil
     }
 
     /// The actions offered for a selected object: at most three shown, the rest
@@ -569,9 +583,98 @@ public final class KollioModel {
             kind: object?.kind ?? .need,
             canReopen: canReopen(id),
             canAttachSource: object != nil,
-            canAssertClaim: object != nil
+            canAssertClaim: object != nil,
+            canReviewImpact: document.needsImpactReview(id)
         )
     }
+
+    // MARK: Impact of new information
+
+    /// The assessment being read, if one is open.
+    ///
+    /// Transient, like the composer and the citations: it appears where the person
+    /// is working and goes away when they move on. It is never in the document,
+    /// because an assessment is a reading of the document rather than a change to
+    /// it. What is in the document is what applying it records.
+    public var impactAssessment: ImpactAssessment?
+
+    /// The object the review was opened from, so the card sits beside the claim the
+    /// person was looking at rather than beside whatever happened to be first in
+    /// the list.
+    public var impactReviewAnchor: ObjectID?
+
+    /// Whether a person should be offered the review for this object.
+    public func needsImpactReview(_ id: ObjectID) -> Bool {
+        document.needsImpactReview(id)
+    }
+
+    /// Works out what new information touched, and opens the answer beside the
+    /// object.
+    ///
+    /// Local, synchronous and immediate. No intelligence is consulted, and that is
+    /// not a shortcut: the assessment is built from the document's own citations
+    /// and links, and the specification asks for propagation that "does not depend
+    /// on the provider". A model is allowed to *interpret* the result afterwards
+    /// and is refused the command that would apply it.
+    ///
+    /// Returns false and says why when there is nothing to assess, rather than
+    /// opening an empty card: a review of nothing is a dead end.
+    @discardableResult
+    public func reviewImpact(of objectID: ObjectID) -> Bool {
+        let moved = document.sources.citations(supporting: objectID)
+            .first { citation in
+                switch citation.status {
+                case .needsReview, .sourceMissing: return true
+                case .unverified, .verified: return false
+                }
+            }
+        guard let assessment = moved.flatMap({ document.impactAssessment(for: $0) }) else {
+            status = L10n.impactNothingMoved
+            return false
+        }
+        impactAssessment = assessment
+        impactReviewAnchor = objectID
+        // One card under one object. The citations card would otherwise open at the
+        // same point as this one, which is two overlapping cards and neither of them
+        // readable. The citations are still on the object, one click away.
+        openCitationClaim = nil
+        readingSourceID = nil
+        // Reading an assessment is not a commitment, so it leaves the selection
+        // alone: the person is still working on the same object.
+        return true
+    }
+
+    /// Records the objects the assessment marks, as one transaction and one undo.
+    ///
+    /// The decision identifiers are minted here rather than in the store, because
+    /// the model is the actor that owns this document and identifiers are not
+    /// something a value type should invent while applying a patch.
+    @discardableResult
+    public func applyImpactReview() -> Bool {
+        guard let assessment = impactAssessment, assessment.isEmpty == false else {
+            status = L10n.impactNothingMoved
+            return false
+        }
+        let decisionIDs = assessment.proposedChanges.map { _ in
+            DecisionID("decision:" + UUID().uuidString)
+        }
+        guard perform([.applyImpact(.init(
+            assessment: assessment, decisionIDs: decisionIDs, provenance: .human("local-user")
+        ))], label: L10n.undoApplyImpact) else { return false }
+        // The marks are in the document now, so the reading of it is spent. What
+        // was marked is still on the canvas, still active, and still readable.
+        impactAssessment = nil
+        impactReviewAnchor = nil
+        status = L10n.impactMarked(assessment.proposedChanges.count)
+        return true
+    }
+
+    /// Closes the assessment without recording anything.
+    public func dismissImpactReview() {
+        impactAssessment = nil
+        impactReviewAnchor = nil
+    }
+
 
     // MARK: Direct manipulation
 
@@ -2289,3 +2392,4 @@ public struct ClaimSummary: Identifiable, Hashable, Sendable {
         self.criterion = criterion
     }
 }
+
