@@ -738,6 +738,123 @@ public final class KollioModel {
         }
     }
 
+    // MARK: Adding information at a precise place
+
+    /// Writes the sentence down, linked to the thing it is about.
+    ///
+    /// CTX-01: "The sentence becomes an authored note linked to the target" and
+    /// "`CreateObject` plus `associatedWith` in one transaction." The whole point is
+    /// that this is *local*. What the person typed is already theirs and already
+    /// true, so it is stored before anything is asked of a model, and asking is a
+    /// separate later action. If that later action fails, this is still here.
+    ///
+    /// A note rather than a hypothesis on purpose: the person has not decided what
+    /// this sentence *is*, only that it belongs next to that object. "No ontology
+    /// knowledge required" is the requirement, and requiring a kind here would put
+    /// the burden back on the person.
+    @discardableResult
+    public func addNote(_ sentence: String, to anchor: ObjectID) -> ObjectID? {
+        guard document.object(anchor) != nil else { return nil }
+        // What is stored is what was typed, minus the whitespace at the ends and
+        // nothing else. The folded form exists only to compare two submissions, and
+        // storing it would quietly rewrite the person's sentence, which is the one
+        // thing this project never does.
+        let authored = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let folded = normalise(authored) else { return nil }
+
+        // A double submission is deduplicated. Pressing the key twice is a fact
+        // about the person, not two pieces of information, and two identical notes
+        // would read as corroboration that nobody provided.
+        if let existing = existingNote(matching: folded, at: anchor) {
+            select(existing)
+            return existing
+        }
+
+        let noteID = ObjectID("object:" + UUID().uuidString)
+        let commands: [Command] = [
+            .createObject(CreateObject(
+                id: noteID,
+                kind: .note,
+                text: LocalizedText(authored),
+                position: document.presentation.instance(for: anchor)?.position
+                    .offset(dx: 0, dy: 180),
+                provenance: .human("local-user")
+            )),
+            .addRelationship(AddRelationship(
+                id: RelationshipID("relationship:" + UUID().uuidString),
+                from: noteID,
+                to: anchor,
+                kind: .associatedWith,
+                provenance: .human("local-user")
+            ))
+        ]
+        // One transaction: a note with no link, or a link to a note that was never
+        // written, are both states nobody asked for.
+        guard perform(commands, label: L10n.undoAddNote) else { return nil }
+        select(noteID)
+        return noteID
+    }
+
+    /// The note already at this anchor with these words, if there is one.
+    private func existingNote(matching sentence: String, at anchor: ObjectID) -> ObjectID? {
+        let linked = document.relationships.values
+            .filter { $0.kind == .associatedWith && $0.to == anchor }
+            .map(\.from)
+        return linked.first { id in
+            guard let object = document.object(id), object.kind == .note else { return false }
+            return normalise(object.text.text) == sentence
+        }
+    }
+
+    /// Trims, and folds runs of whitespace, so that the same sentence typed with a
+    /// stray line break is recognised as the same sentence.
+    private func normalise(_ sentence: String) -> String? {
+        let folded = sentence
+            .split(whereSeparator: { $0.isWhitespace })
+            .joined(separator: " ")
+        return folded.isEmpty ? nil : folded
+    }
+
+    /// Asks what this note would change, which is a different question from having
+    /// written it down.
+    ///
+    /// Kept apart from `addNote` so the two failures are separate: this one can time
+    /// out, be refused, or find no intelligence, and none of that is a reason the
+    /// sentence stops existing.
+    public func revealConsequences(of note: ObjectID) async {
+        await explore(note, intent: .explore)
+    }
+
+    /// The kinds intelligence may not choose on its own.
+    ///
+    /// CTX-01: "A type proposed by intelligence asks for confirmation when it
+    /// changes the reasoning." A note states something; a hypothesis, a constraint or
+    /// a piece of evidence each *argue* something, and the difference is the whole
+    /// content of the document. So a proposal that would create anything other than a
+    /// note is held until a person says yes.
+    public static func kindNeedsConfirmation(_ kind: ContentObject.Kind) -> Bool {
+        switch kind {
+        case .note, .unclear:
+            return false
+        case .context, .need, .method, .technicalBlock, .product, .hypothesis,
+             .constraint, .question, .evidence, .scenario, .decision, .contribution:
+            return true
+        }
+    }
+
+    /// A proposal waiting for a person to agree with the kind intelligence chose.
+    public var pendingKindConfirmation: Proposal?
+
+    /// Whether a proposal would change the reasoning rather than add a note, and so
+    /// has to be confirmed before it is applied.
+    public func kindConfirmation(for proposal: Proposal) -> [ObjectID] {
+        proposal.operations.compactMap { operation in
+            guard case .createObject(let create) = operation,
+                  Self.kindNeedsConfirmation(create.kind) else { return nil }
+            return create.id
+        }
+    }
+
     // MARK: Sources
     // MARK: Claims
 
@@ -1396,10 +1513,11 @@ public final class KollioModel {
         switch composer.intent {
         case .add:
             guard !text.isEmpty else { return }
-            // The draft is only cleared once the source has actually answered.
-            // A failed call leaves the sentence in place, ready to retry.
-            let sent = await explore(composer.anchorID, intent: .add, instruction: text)
-            if sent { self.composer = nil }
+            // CTX-01: Add is not a call that spends the sentence. It writes the note,
+            // linked to the target, in one local transaction. Nothing is asked of a
+            // model here, so there is nothing that can fail here, and the note is
+            // already findable before the person asks to see the consequences.
+            if addNote(text, to: composer.anchorID) != nil { self.composer = nil }
         case .setAside:
             self.composer = nil
             setAside(composer.anchorID, reason: text.isEmpty ? nil : text)

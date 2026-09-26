@@ -154,6 +154,7 @@ public enum L10n {
     public static var actionRemoveObject: String { callAsFunction("action.removeObject") }
     public static var actionKeepOccurrence: String { callAsFunction("action.keepOccurrence") }
     public static var actionLoseIdea: String { callAsFunction("action.loseIdea") }
+    public static var undoAddNote: String { callAsFunction("undo.addNote") }
     public static var undoCreate: String { callAsFunction("undo.create") }
     public static var undoDuplicateOccurrence: String { callAsFunction("undo.duplicateOccurrence") }
     public static var undoDuplicateVariant: String { callAsFunction("undo.duplicateVariant") }

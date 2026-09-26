@@ -115,10 +115,11 @@
       "features": 7,
       "acceptanceCriteria": 21,
       "byStatus": {
-        "automatedVerified": 5,
-        "specified": 2
+        "automatedVerified": 6,
+        "specified": 1
       },
       "proved": [
+        "CTX-01",
         "CTX-02",
         "CTX-03",
         "CTX-04",
@@ -126,7 +127,6 @@
         "CTX-07"
       ],
       "writtenOnly": [
-        "CTX-01",
         "CTX-05"
       ]
     },
@@ -289,9 +289,9 @@
     "features": 71,
     "acceptanceCriteria": 213,
     "byStatus": {
-      "automatedVerified": 20,
+      "automatedVerified": 21,
       "humanVerified": 1,
-      "specified": 50
+      "specified": 49
     }
   }
 }

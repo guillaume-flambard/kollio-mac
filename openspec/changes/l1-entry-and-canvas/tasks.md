@@ -235,3 +235,73 @@ one "Delete" that would have existed could not have told an occurrence from an o
 - [ ] **The menu has not been seen.** The four entries and the confirmation are covered
       by tests; the labels have not been read by a person on a screen. See
       `known-limitations.md` for why the capture could not be trusted.
+
+## CTX-01, add information at a precise place
+
+`Add` was an AI call that spent the sentence. The composer sent the typed text as an
+instruction and the model decided what to do with it, so the only place the sentence
+existed was inside a request. CTX-01 says the opposite: "Add is not an AI call that
+discards the phrase: a later AI failure leaves the contribution in place."
+
+- [x] `addNote` writes the sentence as an authored `.note` linked by `associatedWith`,
+      in **one transaction**. A link with no note, or a note nothing points at, are
+      both states nobody asked for, and one undo removes both.
+- [x] A note rather than a hypothesis, because the person has said where this belongs
+      and not what it *is*. "No ontology knowledge required" is the requirement, and
+      asking for a kind here would put the burden back on the person.
+- [x] **The sentence is never asked of a model on the way in.** Proved with a service
+      that throws if consulted: `submitComposer` writes the note and the call count
+      stays at zero.
+- [x] `revealConsequences` is a separate later action, so the two failures are
+      separate. A refusal, a thrown error and a slow answer are each checked, and the
+      note survives all three.
+- [x] **AC01: findable after a relaunch.** A new model reading only the file on disk
+      finds the sentence *and* the link, so it is findable as information about
+      something rather than merely present.
+- [x] **AC02: the target is kept.** The target object is byte-identical afterwards,
+      version included; it gains a neighbour and loses nothing.
+- [x] **AC03: a model error does not delete the contribution.** Asserted with the
+      author's provenance still `.human` and the link still present.
+- [x] **A double submission is deduplicated**, per target rather than globally: the
+      same sentence about two different objects is two remarks, and merging them would
+      lose where each was said.
+- [x] A kind proposed by intelligence asks first when it changes the reasoning. A note
+      is stated, so it may be chosen; a hypothesis, a constraint or a piece of evidence
+      each *argue* something, and that difference is the content of the document.
+      `KollioModel.kindNeedsConfirmation`, `kindConfirmation(for:)`.
+
+### A defect the deduplication test found
+
+The first version stored the *folded* sentence, so a note saved a rewritten version of
+what the person had typed. That is the one thing this product never does. The folded
+form now exists only to compare two submissions, and the note keeps the typed text
+exactly. Found by a test, not by reading the code.
+
+### Two tests that had to be rewritten rather than deleted
+
+`InteractionReliabilityTests` proved the typed sentence reached the intelligence source,
+and that a failed call left the draft in the composer. Both premises describe the
+behaviour CTX-01 removes. The guarantee underneath them is real and was rewritten in its
+new form: the sentence now arrives in the document instead of being on its way to a
+request, and a refused write still leaves the draft. Deleting the two tests would have
+lost "losing work is the worst failure this app can have" without replacing it.
+
+### The screenshot guard, and why it is not in the code
+
+Three attempts were made to make `run-app.sh --shot` trustworthy: focusing Kollio, then
+cropping to the window's coordinates, then refusing unless the frontmost *process* is
+Kollio. All three failed. The last is the instructive one: the guard reported `Kollio`
+while another application's window was drawn on top, which is exactly the case it existed
+to catch. A check that passes on the failure it was written for is worse than no check, so
+the script says plainly that the file is a picture of the whole screen and leaves the
+reading to whoever looks at it.
+
+### Owed
+
+- [ ] **The confirmation for a proposed kind is not on screen.** `kindNeedsConfirmation`
+      and `kindConfirmation(for:)` decide and expose it; nothing yet asks. A proposal
+      that argues something is applied only once a person has agreed, and the asking is
+      interface work.
+- [ ] **A note is never read as a consequence.** The note and what it might change are
+      stored together and nothing yet links them, so "see the consequences" starts from
+      the note and has no memory of a previous asking.

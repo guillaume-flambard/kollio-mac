@@ -650,6 +650,30 @@
         }
       }
     },
+    "undo.addNote": {
+      "comment": "Undo label: write down a sentence next to an object.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Undo add" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Annuler l'ajout" } }
+      }
+    },
+    "action.revealConsequences": {
+      "comment": "Ask what this note would change. The note stays either way.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "See the consequences" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Voir les cons\u00e9quences" } }
+      }
+    },
+    "confirm.kind": {
+      "comment": "Intelligence chose a type that argues something rather than stating it. Ask before applying.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This type argues something. Apply it?" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Ce type affirme quelque chose. L'appliquer ?" } }
+      }
+    },
     "undo.create": {
       "comment": "Undo label: create an idea.",
       "extractionState": "manual",

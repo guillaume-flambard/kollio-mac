@@ -347,6 +347,55 @@ coordinates captured that application instead. The four entries and the confirma
 on the twenty tests alone. The script should capture by window id and fail when the
 frontmost process is not Kollio.
 
+## Latest batch: CTX-01, add information at a precise place
+
+`Add` was an AI call that spent the sentence. The composer sent the typed text as an
+instruction and the model decided what to do with it, so the only place the sentence
+existed was inside a request. CTX-01 says the opposite, and the sentence is the whole
+argument of the chapter: **Add is not a call that spends the sentence.**
+
+`addNote` now writes the sentence as an authored `.note`, linked by `associatedWith`, in
+**one transaction**, locally. It is a note and not a hypothesis because the person has
+said where this belongs and not what it *is*; requiring a kind there would put the burden
+back on the person. `revealConsequences` is a separate later action, so a refusal, a
+thrown error and a slow answer are three separate failures and none of them touches the
+note. Proved with a service that throws if consulted: the call count stays at zero.
+
+**AC01** findable after a relaunch, link included, so it is findable as information
+about something rather than merely present. **AC02** the target is byte-identical
+afterwards, version included. **AC03** a model error leaves the contribution with the
+author's provenance intact. A double submission is deduplicated **per target**: the same
+sentence about two different objects is two remarks, and merging them would lose where
+each was said.
+
+### A defect a test found
+
+The first version stored the *folded* sentence, so a note saved a rewritten version of
+what the person typed. That is the one thing this product never does. The folded form
+now only compares two submissions; the note keeps the typed text exactly.
+
+### Two tests rewritten rather than deleted
+
+`InteractionReliabilityTests` proved the typed sentence reached the intelligence source,
+and that a failed call left the draft in the composer. Both describe the behaviour this
+chapter removes. The guarantee underneath is real, so it was rewritten in its new form:
+the sentence arrives in the document instead of being on its way to a request, and a
+refused write still leaves the draft. Deleting them would have lost "losing work is the
+worst failure this app can have" without replacing it.
+
+Fifteen tests in `AddingAtAPlaceTests`. `verify.sh`: 87 KollioCore, 199 KollioApp,
+29 server, exit 0.
+
+### The screenshot guard, and why it is not in the code
+
+Three repairs to `run-app.sh --shot` were attempted and all three failed. Focusing Kollio
+does not hold, cropping to the window's coordinates captures whatever is drawn there, and
+guarding on the frontmost *process* is worse than useless: the guard reported `Kollio`
+while another application's window was on top, which is the exact case it existed to
+catch. A check that passes on its own failure mode is worse than none, so the script says
+plainly that the file is a picture of the whole screen. **The visual evidence for CAN-04,
+CAN-05 and CTX-01 rests on the test suites, not on that picture.**
+
 ## The next things worth doing, in this order
 
 1. A human pass. Three things only a human can settle: **type a sentence into the entry point and

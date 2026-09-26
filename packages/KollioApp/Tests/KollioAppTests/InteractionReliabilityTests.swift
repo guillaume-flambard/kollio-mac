@@ -44,37 +44,60 @@ struct InteractionReliabilityTests {
 
     // MARK: A. The typed sentence
 
-    @Test("What the user typed in the composer reaches the intelligence source")
-    func composerTextReachesTheService() async {
+    /// CTX-01 changed where this sentence lives, not whether it survives.
+    ///
+    /// It used to reach the intelligence source, and this test proved it could not be
+    /// dropped on the way there. It is now written into the document first and the
+    /// source is asked separately, so the guarantee is stronger rather than different:
+    /// the sentence is not on its way to anywhere, it has arrived.
+    @Test("What the user typed reaches the document, not only a request")
+    func composerTextIsNotDropped() async {
         let service = CapturingSuggestionService()
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
         let model = KollioModel(document: SarahFixture.document(), service: service, fileStore: store)
+        let typed = "Et si on Demand exportait aussi les étiquettes ?"
 
         model.startComposer(anchor: KollioID.object("sarah-csv"), intent: .add)
-        model.composer?.text = "Et si on Demand exportait aussi les étiquettes ?"
+        model.composer?.text = typed
         await model.submitComposer()
 
-        let request = try? #require(service.requests.last)
-        #expect(request?.intent == .add)
         // The sentence is the whole point of the composer. It cannot be dropped.
-        #expect(request?.instruction == "Et si on Demand exportait aussi les étiquettes ?")
+        #expect(model.document.content.values.contains { $0.text.text == typed })
+        // And nothing was spent asking for it: that is a separate, later action.
+        #expect(service.requests.isEmpty)
     }
 
-    @Test("A composer draft survives a service failure")
-    func draftSurvivesFailure() async {
-        let service = CapturingSuggestionService(failingWith: ServiceUnavailable())
+    /// Losing work is the worst failure this app can have. Where the draft now goes
+    /// depends on the intent, and both destinations are checked: a note that was
+    /// written, and a draft that is still there when the write was refused.
+    @Test("Typed work survives every failure on the way")
+    func typedWorkSurvives() async {
         let (store, directory) = isolatedStore()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = KollioModel(document: SarahFixture.document(), service: service, fileStore: store)
+        let typed = "Une phrase que je ne veux pas perdre"
+        let anchor = KollioID.object("sarah-csv")
 
-        model.startComposer(anchor: KollioID.object("sarah-csv"), intent: .add)
-        model.composer?.text = "Une phrase que je ne veux pas perdre"
-        await model.submitComposer()
+        // Add writes locally, so there is no service that can take the sentence away.
+        let failing = CapturingSuggestionService(failingWith: ServiceUnavailable())
+        let adding = KollioModel(document: SarahFixture.document(), service: failing, fileStore: store)
+        adding.startComposer(anchor: anchor, intent: .add)
+        adding.composer?.text = typed
+        await adding.submitComposer()
+        #expect(adding.document.content.values.contains { $0.text.text == typed })
 
-        // Losing work is the worst failure this app can have. A failed call must
-        // leave the sentence in the composer, ready to retry.
-        #expect(model.composer?.text == "Une phrase que je ne veux pas perdre")
+        // Edit goes through the command system, and a refused write leaves the draft
+        // in the composer, ready to retry.
+        let editing = KollioModel(document: SarahFixture.document(),
+                                  service: CapturingSuggestionService(), fileStore: store)
+        editing.startComposer(anchor: anchor, intent: .edit)
+        editing.composer?.text = typed
+        // Pretend the object moved on while the draft was open, which is the honest
+        // way to make the write be refused rather than forcing a failure.
+        editing.composer?.baseVersion = 99
+        await editing.submitComposer()
+        #expect(editing.composer?.text == typed)
+        #expect(editing.object(anchor)?.text.text != typed)
     }
 
     @Test("An empty composer adds nothing and asks nothing")

@@ -13,7 +13,7 @@ A view, not a source of truth. Status meanings:
 | `blockedExternal` | Blocked on a capability or authorisation. |
 | `notInCurrentRelease` | Deliberately out of this product. |
 
-Counts: 20 automatedVerified, 1 humanVerified, 50 specified. 71 features, 213 acceptance criteria.
+Counts: 21 automatedVerified, 1 humanVerified, 49 specified. 71 features, 213 acceptance criteria.
 
 ## L1 — 10 features
 
@@ -27,7 +27,8 @@ Counts: 20 automatedVerified, 1 humanVerified, 50 specified. 71 features, 213 ac
       EditingContentTests: the exact characters typed are stored, an edit is one transaction, the document's undo cannot reach an open draft, and changing the interface language leaves authored text byte-identical. A conflict is refused as staleObjectText and keeps both the draft and the current text. DocumentFormatTests proves a file written before objectVersion existed still opens. Still owed: the two versions side by side, and Cmd+Z inside the field, which is an interaction between two undo systems this repository does not own.
 - [x] **CAN-05** Create, duplicate, remove · `automatedVerified` · 3 AC
       CreatingAndRemovingTests: an idea is written down before its kind is known, and locally, proved with a service that throws if consulted. Duplicate and delete each exist twice, once for an occurrence and once for an object, and the two are never the same gesture. AC01 duplicating does not double royalties, because a copy carries a reference to a contribution rather than a second one. AC02 undo restores links and positions exactly, and undoing a variant removes the link as well as the object. Intelligence is refused both removals. Owed: no command registers a contribution, so AC01 is proved against a seeded ledger; nothing moves an object out of .unclear; and the menu has not been seen by a person on a screen.
-- [ ] **CTX-01** Add information at a precise place · `specified` · 3 AC
+- [x] **CTX-01** Add information at a precise place · `automatedVerified` · 3 AC
+      AddingAtAPlaceTests: the sentence is written as an authored note linked by associatedWith in one transaction, and it is never asked of a model on the way in, proved with a service that throws if consulted. AC01 findable after a relaunch, link included; AC02 the target is byte-identical, version included; AC03 a thrown error, a refusal and a slow answer all leave the contribution with its author. A double submission is deduplicated per target. A kind proposed by intelligence asks first when it changes the reasoning. Owed: nothing on screen asks that question yet, and a note is not read as a consequence of anything.
 - [x] **DOC-01** First launch and restoration · `automatedVerified` · 3 AC
       Covered by InitialContextTests: fresh launch, restore, unreadable reported.
 - [x] **DOC-02** Enter a context and begin · `automatedVerified` · 3 AC
