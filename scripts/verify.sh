@@ -9,6 +9,12 @@ echo "=== Spec views are current"
 python3 "$ROOT/scripts/generate-spec-index.py" --check
 python3 "$ROOT/scripts/generate-spec-status.py" --check
 
+# The capability specs are an accumulation. A requirement that arrived without a
+# change delta behind it cannot be traced, cannot be reviewed, and will not be
+# noticed when it is wrong.
+echo "=== Every requirement descends from a change"
+python3 "$ROOT/scripts/check-spec-deltas.py"
+
 echo "=== KollioCore"
 (cd "$ROOT/packages/KollioCore" && swift test)
 echo "=== KollioApp"

@@ -19,6 +19,16 @@ STATUS = ROOT / "openspec" / "implementation-status.json"
 # Capability -> the lot that delivers it, its spec file, and the change that owns
 # the work. Adding a capability means adding a line here, not editing JSON.
 CAPABILITIES = {
+    # interaction carries no V2 feature: the product specified 71 features and no
+    # interaction contract. It is registered anyway, so the gap has a status
+    # rather than being invisible. Its spec file appears when L0 is applied.
+    "interaction": ("L0", "specs/interaction.md", "changes/l0-design-contract"),
+    # backend carries no V2 feature either. The specification treats the server as
+    # infrastructure, which is right for Vapor and PostgreSQL and wrong for the
+    # shared transaction contract, so that contract lives in the collaboration
+    # delta of L6. This entry exists so the remaining 49 routes and 11 service
+    # modules are counted as undelivered rather than as absent.
+    "backend": ("L6", "specs/backend.md", "changes/l6-contribute-and-sync"),
     "documents": ("L1", "specs/documents.md", "changes/l1-entry-and-canvas"),
     "canvas": ("L1", "specs/canvas.md", "changes/l1-entry-and-canvas"),
     "context": ("L1", "specs/context.md", "changes/l3-sources-and-provenance"),
@@ -33,6 +43,8 @@ CAPABILITIES = {
 # The status a capability is *delivered* at, judged by its weakest unproved part
 # rather than its best. A capability with one unproved feature is not delivered.
 DELIVERED = {
+    "interaction": "specified",
+    "backend": "specified",
     "documents": "implemented",
     "canvas": "automatedVerified",
     "context": "specified",
@@ -65,7 +77,20 @@ OWED = {
     "decisions": [
         "A real proposal kept, set aside and reopened by hand.",
     ],
+    "interaction": [
+        "A person reads a proposal as a proposal rather than as content that "
+        "already exists. No test can decide that; it is owed to a session.",
+        "A person with reduced motion enabled still understands a state change.",
+        "A person using only the keyboard reaches every contextual action.",
+    ],
     "collaboration": [],
+    "backend": [
+        "Two independent client sessions against one server process and one "
+        "database. A shared in-memory fixture between tests does not "
+        "demonstrate concurrency between clients.",
+        "A lost acknowledgement followed by an identical replay, against the "
+        "real server rather than a stub.",
+    ],
     "studio": [],
     "commerce": [],
     "ecosystem": [],
@@ -73,6 +98,11 @@ OWED = {
 
 # What blocks a capability, stated as a fact rather than a feeling.
 BLOCKED_ON = {
+    "backend": [
+        "The identity decision the collaboration capability is already waiting "
+        "on. The transaction contract above is written and testable without "
+        "it; the identity, workspaces and ACL routes are not.",
+    ],
     "collaboration": [
         "An identity decision the user has not made. It changes the format of every "
         "shared document, so coding first would be guessing at the schema.",

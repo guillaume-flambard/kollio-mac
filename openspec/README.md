@@ -15,11 +15,30 @@ openspec/
 │   ├── studio.md           presentable objects and composition
 │   ├── commerce.md         a target, not a plan
 │   ├── ecosystem.md        a target, not a plan
+│   ├── interaction.md      not yet written; its delta is in changes/l0
+│   ├── backend.md          not yet written; its delta is in changes/l6
 │   ├── evidence.md         what is proved, what is owed, what is wrong
 │   ├── feature-catalog.json   generated view of all 71 features
 │   └── implementation-status.json  generated view per capability
 ├── todo.md                 generated, one line per feature
+```
+
+Two capabilities are registered in `implementation-status.json` and have **no
+accumulated spec file yet**, because their deltas are not applied:
+
+- **`interaction`** (L0) — the 44 interaction contracts. The product specified 71
+  features and no interface contract; this is where that gap lives.
+- **`backend`** (L6) — the shared transaction contract. The specification treats
+  the server as infrastructure, which is right for Vapor and PostgreSQL and wrong
+  for idempotence, `baseSequence` and the sequence, so those live in the L6
+  collaboration delta.
+
+Both are registered so their absence is counted rather than invisible. Their spec
+files appear when their change is applied.
+
+```
 └── changes/                one directory per lot, in implementation order
+    ├── l0-design-contract/   gestures, proposals, status, motion, contrast
     ├── l1-entry-and-canvas/      real entry point, canvas, saving, scroll
     ├── l2-living-document/       on-device intelligence, keep and set aside
     ├── l3-sources-and-provenance/  sources, quotes, retrieval, budget
@@ -74,15 +93,25 @@ generated from the specification by two scripts:
 ```bash
 python3 scripts/generate-spec-index.py     # the catalog and the todo list
 python3 scripts/generate-spec-status.py    # the per-capability status map
+python3 scripts/check-spec-deltas.py      # every requirement traces to a change
 ```
 
 They are views, never a second source of truth. If they disagree with
 `docs/specs/SPECIFICATIONS.md`, the specification wins and the view is
 regenerated. Both scripts accept `--check`, and `./scripts/verify.sh` runs both,
 so a stale view fails verification instead of quietly misleading the next
-reader. The 71 features and their 169 acceptance criteria are parsed from the
+reader. The 71 features and their 213 acceptance criteria are parsed from the
 prose, which is why a feature can never exist in the todo list without existing
 in the specification.
+
+`check-spec-deltas.py` checks a different thing. The capability specs are an
+accumulation, so a requirement can be added to the present tense without anyone
+being able to say which change introduced it or what it replaced. Six had
+drifted in that way. The script fails when a requirement has no delta behind it,
+when a delta targets a capability nothing knows about, or when a delta's own
+status line no longer matches reality. It does not require a scenario per
+requirement: scenario coverage is a review question, and a linter would only
+push prose into scenarios to satisfy it.
 
 ## Where the truth lives
 

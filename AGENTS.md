@@ -6,8 +6,12 @@ right now. [docs/PRODUCT_BLUEPRINT.md](docs/PRODUCT_BLUEPRINT.md) is the
 direction; it is not injected into every small task.
 
 [docs/specs/SPECIFICATIONS.md](docs/specs/SPECIFICATIONS.md) is the normative
-specification: 71 features, 169 acceptance criteria. [openspec/README.md](openspec/README.md)
+specification: 71 features, 213 acceptance criteria. [openspec/README.md](openspec/README.md)
 decomposes it into capabilities and lots.
+
+[docs/AGENT-LOOP.md](docs/AGENT-LOOP.md) is the implementation and review loop
+for a session that is allowed to build: batch order, the review levels, the
+onboarding rules, and the two decisions that belong to the owner.
 
 ## Verify
 

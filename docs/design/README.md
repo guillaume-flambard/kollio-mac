@@ -1,9 +1,15 @@
 # Kollio — Direction design et recherche Apple/Canvas
 
 Spécifications de conception extraites du livre de recherche
-*KOLLIO — Recherche Design Apple & Canvas V1* (26 septembre 2026). Companion
-du cahier des charges fonctionnel V2. Aucun fichier n'a été modifié dans le
-code : ces documents décrivent une direction à tester.
+*KOLLIO — Recherche Design Apple & Canvas V1* (26 septembre 2026). Compagnon
+du cahier des charges fonctionnel V2. Aucun fichier de code n'a été modifié :
+ces documents décrivent une direction à tester.
+
+Le livre
+[*Patterns UX, onboarding & interactivité V1*](./onboarding/README.md) est
+découpé dans le même format, un fichier plus bas. Il couvre l'arrivée, la
+découverte, l'aide au bon moment et la reprise. Le document 14 de ce dossier
+dit précisément ce qu'il ajoute et ce qu'il ne fait que reformuler.
 
 ## Ordre de lecture
 
@@ -18,13 +24,18 @@ code : ces documents décrivent une direction à tester.
 | [07-storyboards-and-validation.md](07-storyboards-and-validation.md) | 8 storyboards SB-01 à SB-08, plan de recherche UX-01 à UX-12 | 22, 24 |
 | [08-feature-mapping.md](08-feature-mapping.md) | Correspondance des 71 fonctionnalités V2 avec chapitres et interactions | 26 |
 | [09-sources.md](09-sources.md) | Registre de preuve, 60 sources avec limites explicites | 27 |
+| [10-openspec-crosswalk.md](10-openspec-crosswalk.md) | Les 71 fonctions V2 face à openspec et au design : où la couverture existe, où elle est mince | synthèse |
 
 ## Portée et limites
 
 Le livre est un compagnon de recherche, pas une spécification exécutable. Les
 protocoles de recette commencent à `notRun` : les critères humains restent en
 attente tant que la séance n'a pas eu lieu. Les durées, tailles et contrasts
-sont des valeurs de départ propositions, pas des résultats mesurés.
+sont des valeurs de départ proposées, pas des résultats mesurés.
+
+Le document 10 est le seul écrit à partir d'une comparaison, pas d'une
+transcription : il confronte `docs/design/*` à `openspec/specs/*.md` et à la vue
+générée `openspec/specs/feature-catalog.json`.
 
 Les statuts d'information sont distincts : exigence V2, source de plateforme,
 observation documentaire, résultat de recherche, proposition Kollio.

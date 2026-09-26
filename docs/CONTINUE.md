@@ -89,7 +89,7 @@ kollio/
 ├── services/KollioServer         Vapor API
 ├── contracts/                    JSON schemas + the reference .kollio fixture
 ├── docs/                         architecture, format, action protocol, backend, limitations
-│   └── specs/SPECIFICATIONS.md   the normative specification: 71 features, 169 criteria
+│   └── specs/SPECIFICATIONS.md   the normative specification: 71 features, 213 criteria
 ├── openspec/                     the decomposition, in capabilities and lots
 └── scripts/                      run-app.sh, verify.sh, sync-xcodeproj.py,
                                  generate-spec-index.py, generate-spec-status.py
@@ -118,7 +118,7 @@ screen rather than the Kollio window. Check the file exists and shows the app be
 
 ## The specification is decomposed, and the views are generated
 
-`docs/specs/SPECIFICATIONS.md` is the normative source: 71 features, 169 acceptance criteria.
+`docs/specs/SPECIFICATIONS.md` is the normative source: 71 features, 213 acceptance criteria.
 `openspec/` decomposes it twice, and both decompositions are generated from that prose so they cannot
 drift out of sync with it:
 
@@ -219,6 +219,90 @@ Read `docs/known-limitations.md` before promising anything. The short version:
    verified, what is simulated, what is configured but not called live, and what is future work. Never
    claim production readiness.
 10. **All code, identifiers, comments and logs in English.** The interface is FR and EN.
+
+## Latest batch: CAN-02, selection and the actions it reaches
+
+Escape used to clear the selection, the proposal and the composer in one press.
+It now closes one level at a time, and the selection is the last thing it takes,
+which is what `CAN-02` AC03 asks for. The order lives in one place,
+`KollioModel.dismissOneLevel()`, and the five per-surface `onExitCommand` handlers
+that used to mutate model state directly are gone, so one Escape cannot close two
+levels. `pruneSelection()` is now the single place that drops a vanished object
+from the selection, used by undo and redo.
+
+Verified by `SelectionAndActionsTests` (7 tests): no selection, drag or clear
+reaches the intelligence seam; a multiple selection hides a proposal without
+applying or refusing it; the Escape order; Escape during a drag drops the offset
+instead of committing it; the contextual surface follows the selection and not the
+hover. `./scripts/verify.sh` passes: 85 KollioCore, 141 KollioApp, 29 server.
+
+Then the owner settled the open question: **three primary actions is right**, and
+`SPECIFICATIONS.md` §U02 already fixed which three. `ContextualActionSet` is now a
+model fact with `maximumPrimary` as a `precondition`, so a fourth primary action
+is a refused programming error rather than a silently demoted button. An ordinary
+idea shows Explore, Add, Set aside; Edit, Add a source and the claim prompt moved
+behind one named native `Menu` (new catalog key `canvas.moreActions`). Link,
+Comment and Duplicate are not offered at all until they exist.
+
+`CAN-02` stays `specified`, not `automatedVerified`, for one reason: reaching the
+bar with a slow pointer is a human observation, and there is no screenshot of the
+bar because the application launches with nothing selected and driving a selection
+needs the accessibility access this environment refuses.
+
+`./scripts/run-app.sh --shot` was run twice. Both captures were discarded. The
+first contained unrelated private windows, because the script captures the whole
+screen rather than the Kollio window. The second showed a **stale build**: an
+earlier instance was still running and `open` only reactivated it. Quit the app
+before capturing, or the evidence is of the previous build. `verify.sh` passes:
+85 KollioCore, 144 KollioApp, 29 server.
+
+## Latest batch: CAN-03, moving one instance or a group
+
+The domain accepted a list of moves all along; the application only ever passed
+one, so **AC02 was not implemented** and neither was "moving an occurrence does
+not move its other occurrences". The fix was addressing, not animation:
+`Presentation` gained `instances(of:)`, and the drag state now holds
+`InstanceID` instead of `ObjectID`. `Presentation.instance(for:)` still answers
+with the first instance, which is right for drawing and wrong for moving.
+
+A group drag is now one `MoveNodeInstances` transaction. An unselected object
+dragged while something else is selected moves alone, because "move what I picked"
+and "move what I happened to touch" are different intents.
+
+Nine tests in `MovingInstancesTests`. AC01 is asserted with the zoom division
+*and* with the three results differing, so the test cannot pass on a constant.
+`verify.sh`: 85 KollioCore, 153 KollioApp, 29 server.
+
+## Latest batch: CAN-04, editing content in place
+
+`UpdateObjectText` carried no version and `ContentObject` had none. Two people
+editing one title both succeeded and the second silently won. So this was a
+**format** change, not a view change: `ContentObject.objectVersion`,
+`UpdateObjectText.expectedVersion`, and `DocumentError.staleObjectText`.
+
+`expectedVersion` is optional on purpose. `nil` means "I did not look" and
+overwrites; a number means "I saw this version" and a mismatch is refused. The
+version advances only when the text actually changes, so re-submitting the same
+words cannot make every other writer look stale.
+
+`submitComposer` no longer clears the composer before writing. It could not
+afford to: a refusal has to leave the person their text, and clearing first throws
+it away on the way to finding out it failed.
+
+### The finding that only the running app produced
+
+Adding a non-optional `Int` made every document written before it **unreadable**:
+`keyNotFound: objectVersion`, shown as a red banner over the entry screen. Every
+unit test was green at that moment, because every fixture encoded its own version.
+Reproduced as a failing test on a legacy payload, then fixed with the idiom already
+in `KollioDocument` for `sources` and `claims`: `decodeIfPresent ?? 0`. A default
+in an *initializer* is not a migration.
+
+Eleven tests in `EditingContentTests`, two more in `DocumentFormatTests`.
+`verify.sh`: 87 KollioCore, 164 KollioApp, 29 server, exit 0.
+
+Owed: the two versions side by side in the conflict surface, and Cmd+Z inside the
+field, which is an interaction between two undo systems this repository does not own.
 
 ## The next things worth doing, in this order
 

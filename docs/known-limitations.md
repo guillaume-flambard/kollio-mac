@@ -165,6 +165,10 @@ Everything in the non-goals, and also, honestly:
   `ScrollDeliveryTests` proves three things: a scroll reaches the canvas, a click does not, and a
   text field outranks both. **Still owed:** a real trackpad scroll and its feel, which no test
   substitutes for.
+- **A file can now be attached, but almost nothing about it can be done with it.**
+  There is a chooser, a reader and a chip. There is no way to open a citation at its
+  passage, no way to record a verification from the interface, no reader for a long
+  PDF and no CSV preview, so a table is read correctly and then shown as raw text.
 - **L3 has a chip but no way to fill it.** `SourceLedger` is part of the document, its
   commands are transactional, and a claim now shows a chip saying what state its sources
   are in. But there is still no way to choose a file, read it, or import its text, so in
@@ -180,7 +184,7 @@ Everything in the non-goals, and also, honestly:
   model's tokenizer, so the conversion is a documented estimate, clamped so the budget can
   never exceed the model's real window. It is honest about being an estimate, and a
   truncation is reported, but it is not a token count.
-- **The specification is written down; most of it is not built.** 71 features and 169 acceptance
+- **The specification is written down; most of it is not built.** 71 features and 213 acceptance
   criteria exist in [specs/SPECIFICATIONS.md](specs/SPECIFICATIONS.md). 15 are `automatedVerified`,
   1 is `humanVerified`, 55 are `specified`, which means written down and nothing more. Read
   [../openspec/specs/evidence.md](../openspec/specs/evidence.md) for the proved, the owed and the
