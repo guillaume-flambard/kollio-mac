@@ -35,6 +35,15 @@ measures contention instead of latency.
 file exists and shows the app. Protect the user's documents before any demo
 launch.
 
+## Apple workflow
+
+- Use `xcodebuildmcp` CLI for build, test, run and logs; Xcode remains the source of truth.
+- Load the relevant Swift or Apple skill on demand.
+- For visual changes, run `./scripts/run-app.sh --shot` and inspect the produced file.
+- Use focused tests for a small change and `./scripts/verify.sh` for an integration batch.
+- Do not hand-edit `apps/macos/Kollio.xcodeproj`; use `scripts/sync-xcodeproj.py`.
+- Keep routine fixes sequential; do not create an agent team or worktree automatically.
+
 ## Invariants
 
 1. `packages/KollioCore` imports no SwiftUI, no AppKit, **no FoundationModels**,
