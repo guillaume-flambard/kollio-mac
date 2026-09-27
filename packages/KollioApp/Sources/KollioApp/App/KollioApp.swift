@@ -74,6 +74,13 @@ struct KollioCommands: Commands {
             }
             .keyboardShortcut("1", modifiers: .command)
         }
+        // Find is a system command, so it lives in the Edit menu where macOS puts
+        // Cmd+F and not in a bar on the canvas. It asks no model: it is a search
+        // over what is already in the document.
+        CommandGroup(after: .textEditing) {
+            Button(L10n.search) { model.openSearch() }
+                .keyboardShortcut("f", modifiers: .command)
+        }
     }
 }
 

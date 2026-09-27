@@ -37,6 +37,10 @@ was probed directly, not inferred from the SDK being installed.
 | Sources attach, cite and verify as atomic commands | Done, tested, and refused to intelligence |
 | A claim shows a chip for the state of its sources | Done, tested |
 | Context budget measured, required items never dropped | Done, on the real request path |
+| **A limit does not lose text: the payload is the projection** | **Done, tested, and it corrected a real lie** |
+| **A required item that does not fit asks for framing** | **Done, tested on both routes** |
+| **The answer states its scope** | **Done, tested; the row is still unseen** |
+| **A rejection reason is findable, and finding it decides nothing** | **Done, tested, seen in the app in FR and EN** |
 | **Network-disabled run after system resources exist** | **Not done**: it needs the firewall changed, which is the owner's call |
 
 The deterministic suite never touches a real model, and stays under two seconds. Reproduce the
@@ -62,6 +66,77 @@ KOLLIO_REAL_MODEL=1 swift test --package-path packages/KollioApp \
 
 What survives the correction is the conclusion rather than the figure: 2.3 s is still too slow to
 feel interactive on its own. The wait is now filled, though, because the answer streams.
+
+## AI-12 is in, and it corrected the thing before it
+
+The context budget existed, was measured, counted and logged. It was also ignored:
+`ApplePromptBuilder` built the prompt from the whole request, so every item the log
+called a drop was sent anyway. The count and the payload were two answers to one
+question and only the count was false. A required item that did not fit was neither
+dropped nor refused: it was sent, the model answered about less than it was asked,
+and a log line said the answer would be narrower. `AppleModelError.contextTooLarge`
+existed and was never thrown.
+
+What is there now:
+
+- **One preparation step** for both routes, which projects, refuses or narrows, and
+  builds the prompt from the projection. A truncation cannot be counted in one route
+  and ignored in the other.
+- **A required item that does not fit refuses.** The app can only offer a narrower
+  question, and that is the person's call, so the request never reaches the model.
+- **`ProposalContextScope`** on the proposal: what was read, what was left out, and
+  a count declared as characters rather than tokens. "What was read" is filtered by
+  that scope instead of read off the request, so the panel no longer claims credit
+  for material the model never saw.
+- **The scope is on the status line**, not only behind the attribution panel, because
+  the scope of an answer is part of the answer. A refusal is never overwritten by the
+  notice, and a complete answer records no scope at all.
+- **The on-device refusal and availability messages are localized.** They were
+  English literals on the status line under a comment that called them localized.
+
+Thirty-two features are `automatedVerified` now. The real-model suite also produced
+two findings worth keeping: the streaming test is not deterministic (one run in four
+refused with the framework's own "may contain sensitive or unsafe content" after
+313 s, and passes on the clean tree and the changed one), and today's warm series
+was 5.57 s, 6.65 s and 7.33 s, worse than the 2.50 / 2.68 / 2.29 s on record. The
+conclusion is unchanged, the figure is not stable, and no cause is claimed for
+either.
+
+## CAN-09 is in, and looking at it found two things
+
+Search exists as a pure function of the document, `DocumentSearch`, and as a
+transient card summoned with Cmd+F from the Edit menu. Four properties are
+structural rather than documentary:
+
+- **A reason somebody wrote is findable by its own words.** A search that read only
+  bodies would find nothing in a decision, and "no budget" is exactly the kind of
+  thing a person looks for later.
+- **A result says what it is**: on the canvas, set aside, or history. The state is
+  a property of the *match*, so a reason whose decision no longer stands is offered
+  as history rather than as the reason that applies today.
+- **Rights are applied before the search**, not filtered out of its results, and
+  source content is not read to look for words. Both are named in `notSearched`: a
+  result set that looks complete while part of the document was out of scope is a
+  lie with a count on it.
+- **Revealing is not reversing.** Choosing a result opens its branch in the view
+  only, in `revealedBySearch`, and the test asserts the document is byte-identical,
+  the revision has not moved and the direction is still set aside.
+
+No intelligence is involved. The interface test searches with a service that
+records an issue when asked, so a search that reached it would fail rather than
+quietly cost time and content.
+
+**The capture found two defects that every test had passed.** One row per object
+meant a reason belonging to a branch appeared once for every member of it: the
+domain test asserted that the whole branch was findable, which is true, and read as
+a feature. And the card sat in the middle of the view, which is where the object it
+reveals is, so it covered its own result. Both are fixed, one row per decision
+filed under the root of the decided direction, and the card moved to the corner.
+That is the second time in two batches that only looking caught what asserting
+could not, and it is the argument for keeping the debt to a human pass.
+
+Still owed: the "not searched" line has never been seen, because Sarah holds no
+source and a local search is unfiltered.
 
 ## The answer streams, and a progress is never a proposal
 
@@ -89,7 +164,7 @@ kollio/
 ├── services/KollioServer         Vapor API
 ├── contracts/                    JSON schemas + the reference .kollio fixture
 ├── docs/                         architecture, format, action protocol, backend, limitations
-│   └── specs/SPECIFICATIONS.md   the normative specification: 71 features, 213 criteria
+│   └── specs/SPECIFICATIONS.md   the normative specification: 72 features, 217 criteria
 ├── openspec/                     the decomposition, in capabilities and lots
 └── scripts/                      run-app.sh, verify.sh, sync-xcodeproj.py,
                                  generate-spec-index.py, generate-spec-status.py
@@ -105,7 +180,7 @@ After adding or removing a file under `packages/KollioApp/Sources`, run:
 ## Verify before believing anything
 
 ```bash
-./scripts/verify.sh     # the spec views, 3 test suites (415 tests), the Xcode app target
+./scripts/verify.sh     # the spec views, 3 test suites (641 tests), the Xcode app target
 ./scripts/run-app.sh --shot   # builds, launches, screenshots into build/
 ```
 
@@ -121,7 +196,7 @@ captures made that way and inspected.
 
 ## The specification is decomposed, and the views are generated
 
-`docs/specs/SPECIFICATIONS.md` is the normative source: 71 features, 213 acceptance criteria.
+`docs/specs/SPECIFICATIONS.md` is the normative source: 72 features, 217 acceptance criteria.
 `openspec/` decomposes it twice, and both decompositions are generated from that prose so they cannot
 drift out of sync with it:
 
@@ -225,7 +300,7 @@ Read `docs/known-limitations.md` before promising anything. The short version:
 
 ## Verified batches, in order
 
-CAN-02, CAN-03, CAN-04, CAN-05, CTX-01, AI-03, CTX-05, CAN-07, AI-05, the
+CAN-02, CAN-03, CAN-04, CAN-05, CTX-01, AI-03, CTX-05, CAN-07, AI-05, AI-12, the
 Apple 27 measurement batch, and the earlier DOC-01..04, CAN-01, AI-01, AI-02,
 AI-04, CTX-02..04, CTX-06, CTX-07, DEC-01..03 and CAN-06. What each one found is
 in [batch-log.md](batch-log.md); the current state and the exact next task are
@@ -280,10 +355,18 @@ The one implemented item is measurement of the intelligence that already existed
    camera's visible rectangle to cull. Connector routing samples its curve, so this is where the
    cost will show.
 6. Keyboard traversal between objects, so the canvas is usable without a pointer.
-7. **AI-12, manage a large context**, then CAN-09 and CAN-10. Those are the
-   remaining L3 lots, and each one now has the layer it
+7. **AI-12, manage a large context**: done, and described above. What it still owes
+   is a person: the scope row has never been seen, and the count is characters
+   rather than tokens. **CAN-09, search and navigate**, is also done and described
+   above: it is the one batch where the capture caught two defects the tests had
+   passed. The last L3 lot is **CAN-10, presentation and accessible reading**:
+   follow a chosen path of points, exit to the previous camera, hide editing
+   commands while presenting, skip a deleted point with an indication, and reach
+   all of it from the keyboard. It depends on CAN-09, which is why it comes next.
+   Each one now has the layer it
    needs: a comparison is a reading, a synthesis is a derivative that must never
-    replace its sources. **AI-06 is verified.** The model, the commands,
+     replace its sources. **AI-06 is
+   verified.** The model, the commands,
     the refusals, the file format, the export, the composer and the card are in:
     `SummaryArtifact` and a
     `SummaryLedger` on the document at schema version 6, and five commands, with

@@ -48,8 +48,12 @@ struct ObjectNodeView: View {
                 // Small, quiet, and not a control: it says the ground under this
                 // moved, and the control that reads it is the action beside the
                 // object, not the badge.
+                //
+                // This is the one place in the application allowed a heavier
+                // weight. It earns it by being the only thing that means "look
+                // here", and it loses it the moment a second thing wears it.
                 Text(L10n.impactNeedsReview)
-                    .font(TypeScale.metadata)
+                    .font(TypeScale.needsAttention)
                     .foregroundStyle(theme.attention)
                     .padding(.horizontal, Space.xs)
                     .padding(.vertical, 2)
@@ -69,6 +73,9 @@ struct ObjectNodeView: View {
         .gesture(dragGesture)
         .simultaneousGesture(TapGesture(count: 2).onEnded { onDoubleClick() })
         .accessibilityElement(children: .combine)
+        // Named by what it is, so a UI test can find this object rather than a
+        // coordinate on one particular screen.
+        .accessibilityIdentifier(AXID.node(object.id))
         .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
         .accessibilityLabel(text)
         .accessibilityHint(L10n.explore)
@@ -124,14 +131,21 @@ struct ObjectNodeView: View {
         .padding(.horizontal, Space.m)
         .padding(.vertical, Space.s)
         .background(
-            RoundedRectangle(cornerRadius: Radius.reference, style: .continuous)
+            RoundedRectangle(cornerRadius: referenceAppearance.radius, style: .continuous)
                 .fill(theme.surfacePrimary)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: Radius.reference, style: .continuous)
+            RoundedRectangle(cornerRadius: referenceAppearance.radius, style: .continuous)
                 .strokeBorder(theme.decorativeBorder, lineWidth: 1)
         )
-        .shadow(color: .black.opacity(theme.isDark ? 0.35 : 0.10), radius: 5, y: 2)
+        // No shadow. A source is part of the document, not a card resting on it,
+        // and the design is explicit that a persistent object carries little or
+        // no elevation. The outline is what says it exists.
+    }
+
+    /// Read from the table so a change of silhouette is one edit in one place.
+    private var referenceAppearance: NodeAppearance {
+        NodeAppearanceTable.appearance(for: .reference)
     }
 
     private var richResult: some View {
@@ -150,13 +164,34 @@ struct ObjectNodeView: View {
         }
         .padding(Space.l)
         .background(
-            RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
+            RoundedRectangle(cornerRadius: richResultAppearance.radius, style: .continuous)
                 .fill(theme.surfacePrimary)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
+            RoundedRectangle(cornerRadius: richResultAppearance.radius, style: .continuous)
                 .strokeBorder(theme.decorativeBorder, lineWidth: 1)
         )
+        .overlay(alignment: .leading) {
+            // The rule that says this is a section of the document rather than an
+            // object sitting on it. A source gets a hairline and no rule; this is
+            // the difference in silhouette, and it costs one thin rectangle rather
+            // than a second colour or a new radius.
+            Rectangle()
+                .fill(theme.decorativeBorder)
+                .frame(width: 2)
+                .padding(.vertical, Space.s)
+                .clipShape(
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: richResultAppearance.radius,
+                        bottomLeadingRadius: richResultAppearance.radius,
+                        style: .continuous
+                    )
+                )
+        }
+    }
+
+    private var richResultAppearance: NodeAppearance {
+        NodeAppearanceTable.appearance(for: .richResult)
     }
 
     /// A thought has no visible container at rest. Selection and hover are
