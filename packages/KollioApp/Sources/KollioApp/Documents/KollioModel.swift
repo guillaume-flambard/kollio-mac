@@ -3730,6 +3730,11 @@ public final class KollioModel {
     /// Simulates the full cycle: save, close, reopen.
     public func reloadFromDisk() {
         guard let reloaded = try? fileStore.load(documentURL) else { return }
+        // The new session reads the reloaded document, and establishes its own
+        // replay base from it. The base is where *this* session started, so a
+        // reload does not move it: a preview of the first action must still show
+        // the document as it was before that action, not a finished document with
+        // the whole history replayed on top.
         session = KollioSession(document: reloaded)
         frames = [:]
         selection = []

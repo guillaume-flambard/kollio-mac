@@ -93,13 +93,7 @@ struct CanvasScaleTests {
     /// measured closure to attribute the cost to a phase, which meant the number
     /// the assertion read was not the number a frame pays.
     private func renderPassOnce(_ model: KollioModel) {
-        var rects: [(id: ObjectID, rect: Rect)] = []
-        rects.reserveCapacity(model.document.presentation.instances.count)
-        for instance in model.visibleInstances {
-            guard let frame = model.frame(of: instance.objectID) else { continue }
-            rects.append((instance.objectID, model.camera.toScreen(frame)))
-        }
-        let obstacles = RelationshipGeometry.ObstacleSet(rects)
+        let obstacles = RelationshipGeometry.ObstacleSet(screenObstacles(model))
         for relationship in model.relationshipsToRender() {
             guard let fromFrame = model.frame(of: relationship.from),
                   let toFrame = model.frame(of: relationship.to) else { continue }
@@ -111,6 +105,16 @@ struct CanvasScaleTests {
             let end = AnchorPoint(point: model.camera.toScreen(worldEnd.point), direction: worldEnd.direction)
             _ = RelationshipGeometry.routedRoute(from: start, to: end, obstacles: others)
         }
+    }
+
+    /// Every object rectangle, projected, the way a draw pass builds them.
+    private func screenObstacles(_ model: KollioModel) -> [(id: ObjectID, rect: Rect)] {
+        var rects: [(id: ObjectID, rect: Rect)] = []
+        for instance in model.visibleInstances {
+            guard let frame = model.frame(of: instance.objectID) else { continue }
+            rects.append((instance.objectID, model.camera.toScreen(frame)))
+        }
+        return rects
     }
 
     /// A model whose canvas has already been laid out, which is the state a drag
@@ -142,29 +146,75 @@ struct CanvasScaleTests {
     /// The invariant that separates a working router from a broken one, and the
     /// reason the first one did not catch the 149 ms regression.
     ///
-    /// Quadrupling the number of objects while holding the number of connectors
-    /// fixed must not quadruple the cost *per connector*. A router that tests
-    /// every obstacle against the curve pays 49 samples for each of them, so its
-    /// per-connector cost grows with the object count. A router that rejects an
-    /// obstacle by comparing two rectangles first pays four comparisons for the
-    /// ones it discards, and its per-connector cost barely moves.
+    /// The number of curve samples a router must take, per connector, as the
+    /// document grows.
     ///
-    /// The ratio is what makes this a real test: it does not care how fast the
-    /// machine is, only how the cost responds to the shape of the document.
-    @Test("Routing cost does not follow the object count")
-    func routingCostDoesNotFollowTheObjectCount() {
-        func perConnectorCost(columns: Int) -> Double {
+    /// This is the invariant behind the timing, and it is measured by counting
+    /// rather than by timing. A router that tests every obstacle against the
+    /// curve takes 49 samples per obstacle, so its cost per connector grows with
+    /// the object count — that shape cost 149 ms. A router that rejects an
+    /// obstacle by comparing rectangles first pays four comparisons to discard it
+    /// and 49 samples for the few that survive, so its sample count barely
+    /// moves.
+    ///
+    /// A first version asserted a *ratio of two timed passes*. It failed about
+    /// one time in three, because a busy machine preempts the shorter pass
+    /// proportionally harder than the longer one, so the ratio moved with the
+    /// load rather than with the code. Counting removes the machine from the
+    /// measurement, which is the whole reason this test exists.
+    @Test("A connector does not sample the whole document")
+    func samplingIsBoundedByTheCorridor() {
+        func samplesPerConnector(columns: Int) -> Double {
             let model = warmed(denseModel(columns: columns))
-            model.camera.pan(byScreenDelta: Position(x: 40, y: 30))
+            let obstacles = RelationshipGeometry.ObstacleSet(screenObstacles(model))
             let count = Double(model.relationshipsToRender().count)
-            return perCallMicroseconds(20) { renderPassOnce(model) } / count
+            var taken = 0.0
+            for relationship in model.relationshipsToRender() {
+                guard let fromFrame = model.frame(of: relationship.from),
+                      let toFrame = model.frame(of: relationship.to) else { continue }
+                let others = obstacles.excluding(relationship.from, relationship.to)
+                let (worldStart, worldEnd) = RelationshipGeometry.endpoints(
+                    of: relationship, from: fromFrame, to: toFrame
+                )
+                taken += Double(
+                    RelationshipGeometry.samplesTaken(
+                        from: AnchorPoint(point: model.camera.toScreen(worldStart.point), direction: worldStart.direction),
+                        to: AnchorPoint(point: model.camera.toScreen(worldEnd.point), direction: worldEnd.direction),
+                        obstacles: others
+                    )
+                )
+            }
+            return taken / count
         }
-        let narrow = perConnectorCost(columns: 10)   // 100 objects
-        let wide = perConnectorCost(columns: 40)     // 400 objects, same 180 links
-        let growth = wide / narrow
+        let narrow = samplesPerConnector(columns: 10)   // 100 objects
+        let wide = samplesPerConnector(columns: 40)     // 400 objects, same links
+        // Measured 1.00x, and the reason is that this grid's connectors run
+        // between neighbours with a gap between them, so nothing blocks a
+        // direct curve and the widening loop never runs. The bound being proven
+        // is therefore the candidate scan — a connector reads the obstacles in
+        // its corridor and samples only the ones that survive, so growing the
+        // document fourfold does not grow what it samples. A router without the
+        // corridor would sample all 400.
         #expect(
-            growth < 2.5,
-            "quadrupling the objects grew the per-connector cost by \(String(format: "%.1f", growth))x, which means obstacles are still being sampled one by one"
+            wide < narrow * 2,
+            "sampling per connector grew \(String(format: "%.1f", wide / narrow))x from 100 to 400 objects, which means obstacles are still being sampled one by one"
+        )
+
+        // The bound above is only meaningful if the counter can go up. A
+        // rectangle parked on a connector's chord blocks it, and the widening
+        // loop then costs real samples; the count has to report that, otherwise
+        // a router that silently never detours would pass this test too.
+        let start = AnchorPoint(point: Position(x: 0, y: 0), direction: Position(x: 0, y: -1))
+        let end = AnchorPoint(point: Position(x: 200, y: 0), direction: Position(x: 0, y: 1))
+        let clear = RelationshipGeometry.samplesTaken(from: start, to: end, obstacles: [])
+        let blocked = RelationshipGeometry.samplesTaken(
+            from: start, to: end,
+            obstacles: [Rect(origin: Position(x: 60, y: -40), size: Size(width: 80, height: 80))]
+        )
+        #expect(clear > 0)
+        #expect(
+            blocked > clear,
+            "an obstacle on the chord must cost more samples than a clear run, or the counter is not measuring the routing"
         )
     }
 

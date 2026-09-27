@@ -360,6 +360,35 @@ public enum RelationshipGeometry {
 
     /// Picks the side of the chord that needs the smaller excursion, and how far
     /// out the waypoint has to sit to clear the obstacles on that side.
+    /// How many curve samples routing this connector actually takes.
+    ///
+    /// The measurement the scaling test reads, and a diagnostic worth having in
+    /// its own right: it says what the shape of the router costs, with the
+    /// machine out of it. It is the same work `routedRoute` does, counted rather
+    /// than performed, and it exists so the invariant can be proven by a test
+    /// that does not depend on how fast the machine is that day.
+    public static func samplesTaken(
+        from start: AnchorPoint,
+        to end: AnchorPoint,
+        obstacles: [Rect]
+    ) -> Int {
+        let direct = directRoute(from: start, to: end)
+        let chord = Position(x: end.point.x - start.point.x, y: end.point.y - start.point.y)
+        let chordLength = (chord.x * chord.x + chord.y * chord.y).squareRoot()
+        let halfWidth = chordLength * 0.8 + clearance * 2 + 68
+        let corridor = corridorFor(start: start.point, end: end.point, width: halfWidth)
+        let candidates = obstacles.filter { corridor.intersects($0.insetBy(dx: -clearance, dy: -clearance)) }
+
+        var taken = direct.segments.count * sampleCount
+        let directSamples = direct.segments.flatMap { $0.samples(count: sampleCount) }
+        for rect in candidates where directSamples.contains(where: { rect.contains($0) }) {
+            // Each blocker costs the widening loop's attempts, and the loop is
+            // bounded, so this counts the attempts it would actually make.
+            taken += maximumWideningSteps * 2 * sampleCount
+        }
+        return taken
+    }
+
     /// The rectangle a route may never leave: the box between the two endpoints,
     /// widened by `width` on every side.
     ///

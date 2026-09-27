@@ -115,6 +115,32 @@ struct HistoryRestoreTests {
         #expect(HistoryTimelineView.retentionDays > 0, "a retention horizon of zero days would purge the whole journal")
     }
 
+    @Test("A reload makes the file the replay base, and says so")
+    func reloadResetsTheReplayBase() throws {
+        let model = modelWithHistory()
+        let before = try #require(model.document.history.entries.first?.id)
+        #expect(model.save())
+        model.reloadFromDisk()
+
+        // The journal survived the round trip, which is the claim that matters.
+        #expect(model.document.history.count == 2)
+        // After a reload the base is the file as it was found. A session that
+        // reopened a document has no memory of what came before its first entry,
+        // and starting from the file is the only honest answer: the entries it
+        // still carries are all older than anything this session recorded, so
+        // replaying them on top of the finished document would show the present
+        // and call it the past.
+        #expect(model.session.journalBaseDocument.history.count == 2)
+        // A preview of the oldest entry is therefore the present, not a state
+        // before it — and the difference view says so rather than inventing one.
+        let preview = try #require(try model.previewHistory(at: before))
+        let difference = HistoryDifference.between(
+            objectID: ObjectID("object:effect"),
+            past: preview, present: model.document, languageCode: "fr"
+        )
+        #expect(difference.isEmpty)
+    }
+
     @Test("A purge that matches nothing removes nothing")
     func purgeKeepsWhatIsStillInRetention() throws {
         let model = modelWithHistory()

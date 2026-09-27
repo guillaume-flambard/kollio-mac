@@ -69,6 +69,28 @@ public struct AppleLocalSuggestionService: StreamingSuggestionService {
     public static let streamingBudget: TimeInterval = 120
     public static let streamingStall: TimeInterval = 30
 
+    /// What an ended stream means, before anything is reported.
+    ///
+    /// A cancelled run that produced no answer is a cancellation, never a
+    /// failure. This is the one rule the streaming path cannot get right by
+    /// accident, because a cancelled stream *ends* rather than throwing: without
+    /// asking, the run a person stopped looks exactly like a model that
+    /// returned nothing, and it gets reported as a fault they did not cause.
+    /// The real evaluation found it as case j13.
+    enum StreamEnding: Equatable {
+        /// Something came back.
+        case answered
+        /// The person stopped it. Their decision, reported as theirs.
+        case cancelled
+        /// It ended with nothing, and nobody stopped it. A real failure.
+        case producedNothing
+    }
+
+    static func ending(cancelled: Bool, producedAnswer: Bool) -> StreamEnding {
+        if cancelled { return .cancelled }
+        return producedAnswer ? .answered : .producedNothing
+    }
+
     public var capabilities: SuggestionCapabilities {
         SuggestionCapabilities(
             intents: [.explore, .add, .clarify],
@@ -267,6 +289,10 @@ public struct AppleLocalSuggestionService: StreamingSuggestionService {
         } catch is CancellationError {
             throw CancellationError()
         } catch {
+            // A cancellation that arrives wrapped, rather than as the error the
+            // task throws, is still the person stopping the work. Flattening it
+            // into a failure is how a deliberate act gets reported as a fault.
+            if Task.isCancelled { throw CancellationError() }
             throw AppleModelError.generationFailed(String(describing: error))
         }
     }
@@ -313,11 +339,22 @@ public struct AppleLocalSuggestionService: StreamingSuggestionService {
             }
         }
 
-        guard let lastRaw else {
-            // The stream ended without producing anything. That is a failure, not
-            // an empty proposal: saying nothing came back is the honest report.
+        // A cancelled stream *ends* rather than throwing, so the run a person
+        // stopped arrives here with nothing to show and looks exactly like a
+        // model that returned nothing. The rule is in one place, and the path
+        // below asks it rather than deciding again.
+        switch Self.ending(cancelled: Task.isCancelled, producedAnswer: lastRaw != nil) {
+        case .cancelled:
+            throw CancellationError()
+        case .producedNothing:
+            // Nothing came back, and nobody stopped it. A failure, not an empty
+            // proposal: saying so is the honest report.
             throw AppleModelError.generationFailed("no answer produced")
+        case .answered:
+            break
         }
+        // `.answered` means `lastRaw` was set; the guard only narrows the type.
+        guard let lastRaw else { throw AppleModelError.generationFailed("no answer produced") }
         do {
             let candidate = try AppleCandidate(lastRaw)
             return converter.convert(candidate, request: request, document: document)

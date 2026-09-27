@@ -258,24 +258,9 @@ public struct DocumentStore: Sendable {
         document = newDocument
     }
 
-    /// A serialisable snapshot of the current document state.
-    public func snapshot() throws -> Data {
-        try JSONEncoder().encode(document)
-    }
-
-    /// Returns a new DocumentStore initialised from a snapshot.
-    ///
-    /// The snapshot is decoded but not yet committed; the caller decides
-    /// whether to replace the current store with it. This is the primitive
-    /// that DEC-06 preview/restore builds on.
-    public static func store(from snapshot: Data) throws -> DocumentStore {
-        let document = try JSONDecoder().decode(KollioDocument.self, from: snapshot)
-        return DocumentStore(document: document)
-    }
-
     // MARK: - Command application
 
-    public static func applyCommand(_ command: Command, to document: inout KollioDocument, at date: Date) throws {
+    private static func applyCommand(_ command: Command, to document: inout KollioDocument, at date: Date) throws {
         switch command {
         case .createObject(let create):
             try createObject(create, in: &document)

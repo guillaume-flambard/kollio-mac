@@ -492,9 +492,10 @@ Everything in the non-goals, and also, honestly:
   the tests existed: a replay no longer applies a reversal (which carries the payload of what
   it undid, and would have resurrected it), and a restore no longer empties the journal (it
   would have deleted the very timeline the person was reading).
-  What is still missing: the preview shows the past document, not *what differs* between it
-  and the present; the purge horizon is fixed at thirty days rather than chosen; and the
-  preview sheet has never been seen by a person.
+  What is still missing: the purge horizon is a fixed thirty days rather than a choice, and
+  neither the timeline nor the preview sheet has ever been seen by a person.
+  The differences themselves are built and tested: the preview shows what changed about this
+  object, not the past document in full, because that was the question the timeline was asking.
   A replay starts from the document as this session opened it, held on the session rather than
   in the document: the journal records what happened since, so replaying from an empty
   document would rebuild only the edits and lose the content they were applied to. A file
@@ -547,11 +548,13 @@ Everything in the non-goals, and also, honestly:
   133 ms to 2.9 ms. The 149 ms was a router testing every obstacle against every curve, 49
   samples at a time; a corridor around each chord rejects the obstacles that cannot matter for
   four comparisons, and a curve is sampled once instead of once per obstacle.
-  `CanvasScaleTests` holds both: a ceiling for the pass, and a *ratio* — quadrupling the objects
-  while holding the links fixed must not quadruple the cost per connector. The ratio is the part
-  that means something: it does not care how fast the machine is, only how the cost answers the
-  shape of the document. That ratio is 1.9x for a fourfold increase, the residue being the one
-  unavoidable pass over the obstacles.
+  `CanvasScaleTests` holds the pass against a ceiling, and holds the shape by *counting samples
+  instead of timing them*: a connector samples the obstacles in its corridor and only those, so
+  growing the document fourfold does not grow what it samples. Measured 1.00x.
+  An earlier version of that test asserted a ratio of two timed passes and failed about one run in
+  three, because a busy machine preempts the shorter pass proportionally harder than the longer
+  one. The machine had to come out of the measurement, not be tolerated in it — the counting test
+  runs in 0.17 s against the timing one's 1.1 s, and passes on a loaded machine.
   What is not measured: SwiftUI's own draw time, which needs Instruments on the running app, and
   every number here is from a `swift test` process, not from a person dragging.
 - **The deployment floor is macOS 26, decided rather than derived.** It was 14, written in four
