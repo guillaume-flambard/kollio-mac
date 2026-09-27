@@ -212,6 +212,18 @@ public struct ProposalValidator: Sendable {
                 // record a verification could award itself a badge. Both are a
                 // person's to do.
                 throw DocumentError.forbiddenOperation("sources and citations are the user's to manage")
+            case .createExperiment, .editExperiment:
+                // Building and editing a validation experiment is a person's to do.
+                // A model that could write the criterion a thing will be judged
+                // against would be grading its own homework, and DEC-04 puts the
+                // question and the criterion on the person's side of the line.
+                throw DocumentError.forbiddenOperation("experiments are the user's to build")
+            case .recordExperimentResult, .proposeLearning, .acceptLearning:
+                // DEC-05 AC03, enforced rather than hoped for: the result is what
+                // a person saw when they ran something, and a model that could
+                // record, propose or accept it could manufacture the whole
+                // outcome. The observation is on the person's side of the line.
+                throw DocumentError.forbiddenOperation("results and learnings are the user's to record")
             }
         }
 

@@ -44,6 +44,15 @@ struct RelationshipLayer: View {
                         dash: model.preview?.relationshipIDs.contains(relationship.id) == true ? [6, 5] : []
                     )
                 )
+                // The kind of reasoning this connector carries, where the stroke
+                // itself can say it. Nothing is drawn for the plain kinds, which
+                // is the whole point of a small vocabulary.
+                drawMarker(
+                    treatment: RelationshipAppearance.treatment(for: relationship.kind),
+                    on: route,
+                    with: color.opacity(isSelected ? 0.95 : 0.8),
+                    in: &context
+                )
                 drawLabel(for: relationship, at: route.midpoint, in: &context, emphasis: isSelected)
             }
 
@@ -169,6 +178,86 @@ struct RelationshipLayer: View {
     }
 
     // MARK: Labels
+
+    /// The kind of reasoning, drawn where a reader looks without thinking about it.
+    ///
+    /// A support is one bar across the stroke, a contradiction is two. They read
+    /// as a pair because they are one — one of them negates the other — and two
+    /// bars was chosen over a different shape because a *pair* is the meaning,
+    /// while a novel shape would be a second thing to learn. Plain kinds draw
+    /// nothing: a connector that wears no marker is telling the truth about
+    /// carrying no assertion.
+    private func drawMarker(
+        treatment: RelationshipAppearance.Treatment,
+        on route: ConnectorRoute,
+        with color: Color,
+        in context: inout GraphicsContext
+    ) {
+        guard treatment != .plain else { return }
+        let mid: Position = route.midpoint
+        // Cross the stroke where it actually travels. The route's own midpoint is
+        // a point on the curve, and the direction under it comes from the two
+        // samples either side, so the marker stays square to the stroke wherever
+        // the route bends.
+        let along = direction(at: mid, on: route) ?? CGPoint(x: 1, y: 0)
+        let across = CGPoint(x: -along.y, y: along.x)
+        let offset = CGFloat(RelationshipAppearance.markerSpan)
+        let centre = CGPoint(x: mid.x, y: mid.y)
+
+        // One bar sits on the mid-point. The second sits just past it, so the two
+        // read as a sign rather than as a tick.
+        drawBar(through: centre, across: across, with: color, in: &context)
+        if treatment == .contradiction {
+            drawBar(
+                through: CGPoint(x: centre.x - along.x * offset, y: centre.y - along.y * offset),
+                across: across,
+                with: color,
+                in: &context
+            )
+        }
+    }
+
+    private func drawBar(
+        through point: CGPoint,
+        across: CGPoint,
+        with color: Color,
+        in context: inout GraphicsContext
+    ) {
+        // The arm is the marker's width. It is not a variable of the connector:
+        // marker and connector are drawn at the same width, so a marker is
+        // readable as a mark on the stroke instead of as a decoration.
+        let arm = 4.5
+        var bar = Path()
+        bar.move(to: CGPoint(x: point.x + across.x * arm, y: point.y + across.y * arm))
+        bar.addLine(to: CGPoint(x: point.x - across.x * arm, y: point.y - across.y * arm))
+        context.stroke(
+            bar,
+            with: .color(color),
+            style: StrokeStyle(lineWidth: 1.6, lineCap: .round)
+        )
+    }
+
+    /// The direction the stroke travels through a point, from the samples with
+    /// the smallest distance to the route.	nil only when the route has no
+    /// samples at all, which cannot happen for a drawn connector.
+    private func direction(at target: Position, on route: ConnectorRoute) -> CGPoint? {
+        let samples = route.samples(count: 64).map { CGPoint(x: $0.x, y: $0.y) }
+        guard samples.count > 1 else { return nil }
+        var closest = (distance: Double.greatestFiniteMagnitude, along: CGPoint(x: 1, y: 0))
+        for (a, b) in zip(samples, samples.dropFirst()) {
+            let dx = (b.x - a.x) * (b.x - a.x)
+            let dy = (b.y - a.y) * (b.y - a.y)
+            let length = (dx + dy).squareRoot()
+            guard length > 0 else { continue }
+            let mx = (a.x + b.x) / 2
+            let my = (a.y + b.y) / 2
+            let d = (mx - target.x) * (mx - target.x) + (my - target.y) * (my - target.y)
+            if d < closest.0 {
+                closest = (d, CGPoint(x: Double(b.x - a.x) / length, y: Double(b.y - a.y) / length))
+            }
+        }
+        return closest.1
+    }
 
     private func drawLabel(for relationship: Relationship, at point: Position, in context: inout GraphicsContext, emphasis: Bool) {
         guard let label = model.label(of: relationship.id), !label.isEmpty else { return }
