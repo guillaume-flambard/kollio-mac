@@ -130,6 +130,42 @@ public enum L10n {
     public static var historyRestore: String { callAsFunction("history.restore") }
     public static var historyRestoreLabel: String { callAsFunction("history.restoreLabel") }
     public static var historyPurge: String { callAsFunction("history.purge") }
+    public static var historyPurgeTitle: String { callAsFunction("history.purgeTitle") }
+    /// %1$@ days, %2$@ actions. The count is in the button, not only in the
+    /// message, so the decision is taken with the number in front of it.
+    public static func historyPurgeConfirm(_ days: Int, _ count: Int) -> String {
+        String(format: callAsFunction("history.purgeConfirm"), days, count)
+    }
+    public static var historyPurgeWarning: String { callAsFunction("history.purgeWarning") }
+    public static var historyPreviewNothingChanged: String { callAsFunction("history.previewNothingChanged") }
+    /// %1$@ was the text, %2$@ is the text. Both readings, because "changed"
+    /// without "to what" says nothing.
+    public static func historyDiffText(_ from: String, _ to: String) -> String {
+        String(format: callAsFunction("history.diffText"), from, to)
+    }
+    public static func historyDiffAdded(_ now: String) -> String {
+        String(format: callAsFunction("history.diffAdded"), now)
+    }
+    public static func historyDiffRemoved(_ then: String) -> String {
+        String(format: callAsFunction("history.diffRemoved"), then)
+    }
+    /// %1$@ is the kind's verb in the interface's language, %2$@ the other end's
+    /// identifier. An identifier rather than a title: the other object may be one
+    /// this person cannot read, and naming it by what it says would be inventing.
+    public static func historyDiffLinkAdded(_ verb: String, _ other: String) -> String {
+        String(format: callAsFunction("history.diffLinkAdded"), verb, other)
+    }
+    public static func historyDiffLinkRemoved(_ verb: String, _ other: String) -> String {
+        String(format: callAsFunction("history.diffLinkRemoved"), verb, other)
+    }
+    /// %1$@ objects, %2$@ relations, revision %3$@. Counts, never a sentence
+    /// about what the document contains: this is a position, not a summary.
+    public static func historyPreviewSummary(_ objects: Int, _ relations: Int, _ revision: Int) -> String {
+        String(
+            format: callAsFunction("history.previewSummary"),
+            objects, relations, revision
+        )
+    }
     public static var resultObservationPlaceholder: String { callAsFunction("result.observationPlaceholder") }
     public static var resultMeasurementPlaceholder: String { callAsFunction("result.measurementPlaceholder") }
     public static var resultUnitPlaceholder: String { callAsFunction("result.unitPlaceholder") }

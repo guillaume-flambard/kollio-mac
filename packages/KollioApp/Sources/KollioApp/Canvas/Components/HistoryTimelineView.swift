@@ -21,9 +21,16 @@ struct HistoryTimelineView: View {
 
     @Environment(\.kollioTheme) private var theme
     @State private var previewDocument: KollioDocument?
+    @State private var previewDifference: HistoryDifference?
     @State private var showPreview = false
+    @State private var confirmingPurge = false
 
     private var items: [HistoryNarrativeItem] { model.history(of: anchor) }
+
+    /// How many recorded actions the retention horizon would remove.
+    private var purgeableCount: Int {
+        model.document.history.entries.filter { $0.at < retentionCutoff }.count
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.s) {
@@ -59,7 +66,7 @@ struct HistoryTimelineView: View {
             }
 
             HStack {
-                Button(L10n.historyPurge) { purge() }
+                Button(L10n.historyPurge) { confirmingPurge = true }
                     .font(TypeScale.caption)
                     .foregroundStyle(theme.textSecondary)
                 Spacer(minLength: 0)
@@ -80,15 +87,43 @@ struct HistoryTimelineView: View {
                 .strokeBorder(theme.accent.opacity(0.35), lineWidth: 1)
         )
         .accessibilityElement(children: .contain)
+        .confirmationDialog(
+            L10n.historyPurgeTitle,
+            isPresented: $confirmingPurge,
+            titleVisibility: .visible
+        ) {
+            // Says what goes, and that it does not come back: a purge is not an
+            // edit, and an edit is the one thing in this application that can be
+            // taken back.
+            Button(L10n.historyPurgeConfirm(Self.retentionDays, purgeableCount), role: .destructive) {
+                purge()
+            }
+            Button(L10n.historyClose, role: .cancel) {}
+        } message: {
+            Text(L10n.historyPurgeWarning)
+        }
         .sheet(isPresented: $showPreview) {
             if let doc = previewDocument {
-                HistoryPreviewView(document: doc, onClose: { showPreview = false })
+                HistoryPreviewView(
+                    document: doc,
+                    difference: previewDifference,
+                    languageCode: model.languageCode,
+                    onClose: { showPreview = false }
+                )
             }
         }
     }
 
     private func preview(at entryID: HistoryEntryID) {
         previewDocument = try? model.previewHistory(at: entryID)
+        // The difference is about this object, because the timeline is: a diff
+        // of the whole document would bury the one thing being read in
+        // everything else that moved.
+        previewDifference = previewDocument.map {
+            HistoryDifference.between(
+                objectID: anchor, past: $0, present: model.document, languageCode: model.languageCode
+            )
+        }
         showPreview = true
     }
 
@@ -96,19 +131,81 @@ struct HistoryTimelineView: View {
         _ = model.restoreHistory(to: entryID, label: L10n.historyRestoreLabel)
     }
 
+    /// The retention offered, in days. A number the person can see, because
+    /// "explicit retention" means the horizon is stated rather than implied.
+    static let retentionDays = 30
+
+    private var retentionCutoff: Date {
+        Calendar.current.date(byAdding: .day, value: -Self.retentionDays, to: Date()) ?? Date()
+    }
+
     private func purge() {
-        // Keep the last 50 entries; the spec allows explicit retention.
-        let cutoff = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
-        _ = model.purgeHistory(olderThan: cutoff)
+        _ = model.purgeHistory(olderThan: retentionCutoff)
     }
 }
 
 /// A read-only preview of the document at a past revision.
 struct HistoryPreviewView: View {
     let document: KollioDocument
+    let difference: HistoryDifference?
+    let languageCode: String
     let onClose: () -> Void
 
     @Environment(\.kollioTheme) private var theme
+
+    /// The difference as lines a person reads: what the text was, what it is,
+    /// and what joined or left. The wording is the interface's, from the
+    /// catalogue, so the same change says the same thing in French and English.
+    private struct Line: Identifiable {
+        var id: String
+        var symbol: String
+        var isAddition: Bool
+        var text: String
+    }
+
+    private var lines: [Line] {
+        guard let difference else { return [] }
+        var made: [Line] = []
+
+        switch difference.text {
+        case .unchanged:
+            break
+        case .changed(let from, let to):
+            made.append(Line(
+                id: "text", symbol: "pencil", isAddition: false,
+                text: L10n.historyDiffText(from, to)
+            ))
+        case .added(let now):
+            made.append(Line(
+                id: "text", symbol: "plus", isAddition: true,
+                text: L10n.historyDiffAdded(now)
+            ))
+        case .removed(let then):
+            made.append(Line(
+                id: "text", symbol: "minus", isAddition: false,
+                text: L10n.historyDiffRemoved(then)
+            ))
+        }
+
+        for other in difference.connections.keys.sorted(by: { $0.rawValue < $1.rawValue }) {
+            guard let change = difference.connections[other] else { continue }
+            switch change {
+            case .unchanged:
+                continue
+            case .added(let kind):
+                made.append(Line(
+                    id: "link-\(other.rawValue)", symbol: "link.badge.plus", isAddition: true,
+                    text: L10n.historyDiffLinkAdded(kind.verb(languageCode: languageCode), other.rawValue)
+                ))
+            case .removed(let kind):
+                made.append(Line(
+                    id: "link-\(other.rawValue)", symbol: "link.badge.minus", isAddition: false,
+                    text: L10n.historyDiffLinkRemoved(kind.verb(languageCode: languageCode), other.rawValue)
+                ))
+            }
+        }
+        return made
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.m) {
@@ -116,16 +213,33 @@ struct HistoryPreviewView: View {
                 .font(TypeScale.metadata.weight(.semibold))
                 .foregroundStyle(theme.textSecondary)
 
-            Text("\(document.objects.count) objects, \(document.relationships.count) relations, revision \(document.revision)")
+            Text(L10n.historyPreviewSummary(
+                document.objects.count,
+                document.relationships.count,
+                document.revision
+            ))
                 .font(TypeScale.metadata)
                 .foregroundStyle(theme.textSecondary)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.xs) {
-                    ForEach(document.objects.sorted { $0.id.rawValue < $1.id.rawValue }) { object in
-                        Text(object.text.resolve(languageCode: "fr"))
+                    // What changed, not what the document was. A past document
+                    // shown in full answers a question nobody asked while the
+                    // one on the timeline is "what has happened since".
+                    if let difference, difference.isEmpty == false {
+                        ForEach(lines, id: \.id) { line in
+                            HStack(alignment: .firstTextBaseline, spacing: Space.xs) {
+                                Image(systemName: line.symbol)
+                                    .foregroundStyle(line.isAddition ? theme.connector : theme.attention)
+                                Text(line.text)
+                                    .font(TypeScale.caption)
+                                    .foregroundStyle(theme.textPrimary)
+                            }
+                        }
+                    } else {
+                        Text(L10n.historyPreviewNothingChanged)
                             .font(TypeScale.caption)
-                            .foregroundStyle(theme.textPrimary)
+                            .foregroundStyle(theme.textSecondary)
                     }
                 }
             }

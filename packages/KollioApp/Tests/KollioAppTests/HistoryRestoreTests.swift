@@ -107,6 +107,14 @@ struct HistoryRestoreTests {
         #expect(model.document.history.count == 0)
     }
 
+    @Test("The retention the card offers is a number the person can read")
+    func retentionIsStated() {
+        // "Explicit retention" means the horizon is shown, not implied. The
+        // dialog carries the days and the count, so the decision is taken with
+        // the number in front of it.
+        #expect(HistoryTimelineView.retentionDays > 0, "a retention horizon of zero days would purge the whole journal")
+    }
+
     @Test("A purge that matches nothing removes nothing")
     func purgeKeepsWhatIsStillInRetention() throws {
         let model = modelWithHistory()

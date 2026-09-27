@@ -6020,6 +6020,186 @@
           }
         }
       }
+    },
+    "history.previewSummary": {
+      "comment": "What a past document held, in counts. %1$@ objects, %2$@ relations, revision %3$@. Positions, not a description of the work.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ objects, %2$@ relations, revision %3$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ objets, %2$@ relations, révision %3$@"
+          }
+        }
+      }
+    },
+    "history.purgeTitle": {
+      "comment": "Asking before a purge. A purge is not an edit and cannot be taken back, so the question is asked first.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove older actions?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer les actions anciennes ?"
+          }
+        }
+      }
+    },
+    "history.purgeConfirm": {
+      "comment": "The destructive choice, carrying the horizon and the count. %1$@ days, %2$@ actions.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove %2$@ actions older than %1$@ days"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer %2$@ actions de plus de %1$@ jours"
+          }
+        }
+      }
+    },
+    "history.purgeWarning": {
+      "comment": "What a purge cannot offer. This is the one action in the application with no undo behind it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A purge cannot be taken back. Everything it removes is gone from this document."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une purge ne peut pas être annulée. Tout ce qu'elle retire disparaît de ce document."
+          }
+        }
+      }
+    },
+    "history.previewNothingChanged": {
+      "comment": "A preview with nothing to report says so, rather than rendering an empty list that could read as a failure.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing about this has changed since."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien de cela n'a changé depuis."
+          }
+        }
+      }
+    },
+    "history.diffText": {
+      "comment": "A rewritten text, both readings. %1$@ was written, %2$@ is written now.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” became “%2$@”"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "« %1$@ » est devenu « %2$@ »"
+          }
+        }
+      }
+    },
+    "history.diffAdded": {
+      "comment": "Something that did not exist at that point. %@ is its text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouté : %@"
+          }
+        }
+      }
+    },
+    "history.diffRemoved": {
+      "comment": "Something that existed then and does not now. %@ is what it said.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimé : %@"
+          }
+        }
+      }
+    },
+    "history.diffLinkAdded": {
+      "comment": "A relation that joined. %1$@ is the kind's verb in the interface's language, %2$@ the other object.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Now %1$@ %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apporte maintenant : %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "history.diffLinkRemoved": {
+      "comment": "A relation that left. %1$@ is the kind's verb in the interface's language, %2$@ the other object.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No longer %1$@ %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne %1$@ plus %2$@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
