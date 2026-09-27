@@ -167,7 +167,7 @@ public struct AppleLocalSuggestionService: StreamingSuggestionService {
         let session = LanguageModelSession(instructions: ApplePromptBuilder.instructions)
         // No tools at all: no shell, no browser, no filesystem.
         let response = try await session.respond(to: prompt, generating: AppleCandidate.self)
-        return converter.convert(response.content, request: request, document: document, scope: scope)
+        return converter.convert(response.content, request: request, document: document)
     }
     #endif
 
@@ -320,7 +320,7 @@ public struct AppleLocalSuggestionService: StreamingSuggestionService {
         }
         do {
             let candidate = try AppleCandidate(lastRaw)
-            return converter.convert(candidate, request: request, document: document, scope: scope)
+            return converter.convert(candidate, request: request, document: document)
         } catch {
             // The answer arrived but does not satisfy the shape. Reported as a
             // failure, never shown as an empty branch the user must dismiss.

@@ -10,18 +10,18 @@ import SwiftUI
 /// already folded into the action it cancels, so a person does not have to do
 /// the arithmetic between "added a branch" and "undid it".
 ///
-/// What this card deliberately does not do: preview, restore, or purge. The
-/// specification's preview-with-differences and restore-as-a-new-action are
-/// written and not built, and a timeline that showed a restore button it
-/// cannot honour would be an invitation to find out. What it does guarantee
-/// is the half the tests can hold: it is a reading. Opening it writes
-/// nothing, closing it writes nothing, and the present is exactly where the
-/// person left it.
+/// Each row offers preview (read-only view of the document at that revision),
+/// restore (a new transaction that brings the document to that state, DEC-06
+/// AC03), and the card as a whole offers purge (removes old entries by a
+/// retention horizon). Opening the card writes nothing; closing it writes
+/// nothing; the present is exactly where the person left it.
 struct HistoryTimelineView: View {
     let model: KollioModel
     let anchor: ObjectID
 
     @Environment(\.kollioTheme) private var theme
+    @State private var previewDocument: KollioDocument?
+    @State private var showPreview = false
 
     private var items: [HistoryNarrativeItem] { model.history(of: anchor) }
 
@@ -46,11 +46,22 @@ struct HistoryTimelineView: View {
                                 .font(TypeScale.metadata)
                                 .foregroundStyle(theme.textSecondary)
                         }
+                        HStack(spacing: Space.xs) {
+                            Button(L10n.historyPreview) { preview(at: item.entryID) }
+                                .font(TypeScale.caption)
+                                .foregroundStyle(theme.accent)
+                            Button(L10n.historyRestore) { restore(to: item.entryID) }
+                                .font(TypeScale.caption)
+                                .foregroundStyle(theme.attention)
+                        }
                     }
                 }
             }
 
             HStack {
+                Button(L10n.historyPurge) { purge() }
+                    .font(TypeScale.caption)
+                    .foregroundStyle(theme.textSecondary)
                 Spacer(minLength: 0)
                 ActionButton(title: L10n.historyClose, isDefault: false) {
                     model.openHistoryID = nil
@@ -69,5 +80,66 @@ struct HistoryTimelineView: View {
                 .strokeBorder(theme.accent.opacity(0.35), lineWidth: 1)
         )
         .accessibilityElement(children: .contain)
+        .sheet(isPresented: $showPreview) {
+            if let doc = previewDocument {
+                HistoryPreviewView(document: doc, onClose: { showPreview = false })
+            }
+        }
+    }
+
+    private func preview(at entryID: HistoryEntryID) {
+        previewDocument = try? model.previewHistory(at: entryID)
+        showPreview = true
+    }
+
+    private func restore(to entryID: HistoryEntryID) {
+        _ = model.restoreHistory(to: entryID, label: L10n.historyRestoreLabel)
+    }
+
+    private func purge() {
+        // Keep the last 50 entries; the spec allows explicit retention.
+        let cutoff = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+        _ = model.purgeHistory(olderThan: cutoff)
+    }
+}
+
+/// A read-only preview of the document at a past revision.
+struct HistoryPreviewView: View {
+    let document: KollioDocument
+    let onClose: () -> Void
+
+    @Environment(\.kollioTheme) private var theme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.m) {
+            Text(L10n.historyPreviewTitle)
+                .font(TypeScale.metadata.weight(.semibold))
+                .foregroundStyle(theme.textSecondary)
+
+            Text("\(document.objects.count) objects, \(document.relationships.count) relations, revision \(document.revision)")
+                .font(TypeScale.metadata)
+                .foregroundStyle(theme.textSecondary)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: Space.xs) {
+                    ForEach(document.objects.sorted { $0.id.rawValue < $1.id.rawValue }) { object in
+                        Text(object.text.resolve(languageCode: "fr"))
+                            .font(TypeScale.caption)
+                            .foregroundStyle(theme.textPrimary)
+                    }
+                }
+            }
+
+            HStack {
+                Spacer(minLength: 0)
+                ActionButton(title: L10n.historyClose, isDefault: true, action: onClose)
+            }
+        }
+        .padding(Space.l)
+        .frame(width: 420, height: 320)
+        .background(
+            RoundedRectangle(cornerRadius: Radius.richBlock, style: .continuous)
+                .fill(theme.surfacePrimary)
+        )
     }
 }

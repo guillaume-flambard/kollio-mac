@@ -14,8 +14,8 @@ import Testing
 /// whole family.
 @Suite("A result is recorded, not concluded")
 struct ExperimentResultTests {
-    private func buildExperiment(_ store: inout KollioSession, id: ExperimentID = KollioID.experiment("exp-1")) throws {
-        try store.apply([.createExperiment(CreateExperiment(
+    private func buildExperiment(_ store: inout KollioSession, id: ExperimentID = KollioID.experiment("exp-1")) {
+        store.apply([.createExperiment(CreateExperiment(
             id: id,
             targetObjectID: KollioID.object("sarah-csv"),
             question: LocalizedText("L'export tient-il avec les tags ?"),
@@ -318,9 +318,9 @@ struct ExperimentResultTests {
     @Test("Recording a result is meaning, and undo removes exactly that")
     func semanticAndUndoable() throws {
         var session = KollioSession(document: Fixture.sarah())
-        try buildExperiment(&session)
+        buildExperiment(&session)
         let semanticBefore = session.semanticRevision
-        try session.apply([recordCommand()], label: "record result")
+        session.apply([recordCommand()], label: "record result")
         #expect(session.semanticRevision == semanticBefore + 1)
 
         let undone = session.undo()
@@ -328,8 +328,8 @@ struct ExperimentResultTests {
         #expect(session.document.experiments.experiment(KollioID.experiment("exp-1"))?.results.isEmpty == true)
 
         // And it survives a save and a reload.
-        try session.apply([recordCommand()], label: "record result")
-        let reloaded = try DocumentCodec.decode(try DocumentCodec.encode(session.document))
+        session.apply([recordCommand()], label: "record result")
+        let reloaded = try DocumentCodec.decode(DocumentCodec.encode(session.document))
         #expect(reloaded.experiments.experiment(KollioID.experiment("exp-1"))?.results.count == 1)
     }
 }

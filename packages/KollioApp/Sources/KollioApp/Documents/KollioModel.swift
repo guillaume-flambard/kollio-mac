@@ -399,12 +399,29 @@ public final class KollioModel {
     /// is catchable is what is visible.
     public func relationship(near point: Position) -> RelationshipID? {
         let zoom = camera.zoom
-        let obstacles = hitTestObstacles()
+        let obstacles = RelationshipGeometry.ObstacleSet(hitTestObstacles())
         var best: (RelationshipID, Double)?
         for relationship in relationshipsToRender() {
-            guard let route = routedRoute(for: relationship, obstacles: obstacles) else { continue }
-            let distance = route.distance(to: point)
+            guard let anchors = screenAnchors(for: relationship) else { continue }
             let tolerance = relationship.hitArea(zoom: zoom) / 2
+            // Every route, direct or detoured, stays inside the corridor
+            // routedRoute draws around the chord, so a point outside that
+            // corridor (grown by the tolerance) cannot be within tolerance of
+            // any route. The check is four comparisons; the routing it skips is
+            // what cost 10 ms per click at 200 relationships, because it used to
+            // run for every link on every click, including the ones nowhere
+            // near the pointer.
+            let dx = anchors.end.point.x - anchors.start.point.x
+            let dy = anchors.end.point.y - anchors.start.point.y
+            let chordLength = (dx * dx + dy * dy).squareRoot()
+            let corridor = RelationshipGeometry.corridorFor(
+                start: anchors.start.point,
+                end: anchors.end.point,
+                width: chordLength * 0.8 + RelationshipGeometry.clearance * 2 + 68 + tolerance
+            )
+            guard corridor.contains(point) else { continue }
+            guard let route = route(for: relationship, anchors: anchors, in: obstacles) else { continue }
+            let distance = route.distance(to: point)
             guard distance <= tolerance else { continue }
             // Two links crossing: the nearer one wins, so the answer does not depend
             // on the order the document happens to store them in.
@@ -415,28 +432,39 @@ public final class KollioModel {
         return best?.0
     }
 
-    private func hitTestObstacles() -> [ObjectID: Rect] {
-        var rects: [ObjectID: Rect] = [:]
+    private func hitTestObstacles() -> [(id: ObjectID, rect: Rect)] {
+        var rects: [(id: ObjectID, rect: Rect)] = []
+        rects.reserveCapacity(document.presentation.instances.count)
         for instance in visibleInstances {
             guard let frame = frame(of: instance.objectID) else { continue }
-            rects[instance.objectID] = camera.toScreen(frame)
+            rects.append((instance.objectID, camera.toScreen(frame)))
         }
         return rects
     }
 
-    private func routedRoute(for relationship: Relationship, obstacles: [ObjectID: Rect]) -> ConnectorRoute? {
+    /// The two screen anchors of one relationship, drag offset folded in, before
+    /// any routing decision.
+    private func screenAnchors(for relationship: Relationship) -> (start: AnchorPoint, end: AnchorPoint)? {
         guard let fromFrame = frame(of: relationship.from),
               let toFrame = frame(of: relationship.to) else { return nil }
         let fromRect = offsetRect(fromFrame, by: relationship.from)
         let toRect = offsetRect(toFrame, by: relationship.to)
         let (start, end) = RelationshipGeometry.endpoints(of: relationship, from: fromRect, to: toRect)
-        let others = obstacles.compactMap { id, rect in
-            id == relationship.from || id == relationship.to ? nil : rect
-        }
-        return RelationshipGeometry.routedRoute(
-            from: AnchorPoint(point: camera.toScreen(start.point), direction: start.direction),
-            to: AnchorPoint(point: camera.toScreen(end.point), direction: end.direction),
-            obstacles: others
+        return (
+            AnchorPoint(point: camera.toScreen(start.point), direction: start.direction),
+            AnchorPoint(point: camera.toScreen(end.point), direction: end.direction)
+        )
+    }
+
+    private func route(
+        for relationship: Relationship,
+        anchors: (start: AnchorPoint, end: AnchorPoint),
+        in obstacles: RelationshipGeometry.ObstacleSet
+    ) -> ConnectorRoute? {
+        RelationshipGeometry.routedRoute(
+            from: anchors.start,
+            to: anchors.end,
+            obstacles: obstacles.excluding(relationship.from, relationship.to)
         )
     }
 
@@ -2265,6 +2293,77 @@ public final class KollioModel {
         guard history(of: objectID).isEmpty == false else { return false }
         openHistoryID = objectID
         return true
+    }
+
+    // MARK: History preview / restore / purge (DEC-06)
+
+    /// A read-only view of the document as it stood at a history entry.
+    ///
+    /// Rebuilt by replaying the commands of the entries before it. Two things
+    /// the replay must not do, and did:
+    ///
+    /// - **It must not replay a reversal.** A reversal entry carries the payload
+    ///   of the action it undid, and applying it would resurrect exactly what the
+    ///   person took back. Only `.applied` entries are replayed.
+    /// - **It must not empty the journal.** The history is the record of what
+    ///   happened, not part of the state being looked at. A restore built from
+    ///   this would otherwise delete the very timeline the person is reading.
+    ///
+    /// The revision of the rebuilt document counts the batches replayed rather
+    /// than reproducing the original number, so it is a position, not an identity.
+    public func previewHistory(at entryID: HistoryEntryID) throws -> KollioDocument? {
+        guard document.history.entry(entryID) != nil else { return nil }
+        var store = DocumentStore(document: session.journalBaseDocument)
+        for entry in document.history.entries {
+            if entry.id == entryID { break }
+            guard case .applied = entry.kind, entry.commands.isEmpty == false else { continue }
+            try store.apply(entry.commands, at: entry.at)
+        }
+        var target = store.document
+        target.history = document.history
+        return target
+    }
+
+    /// Restores the document to the state at a history entry by applying
+    /// a new transaction (DEC-06 AC03). The current state is not rolled back;
+    /// a fresh batch of commands is recorded with its own label.
+    @discardableResult
+    public func restoreHistory(to entryID: HistoryEntryID, label: String) -> Bool {
+        guard let target = try? previewHistory(at: entryID) else { return false }
+        // Replace the current document with the target state, then record
+        /// the restore as a new history entry with the provided label.
+        /// This is a new action, not an invisible rollback (DEC-06 AC03).
+        let before = session.document
+        session.replaceDocument(with: target)
+        let restoreEntry = HistoryEntry(
+            id: HistoryEntryID(rawValue: UUID().uuidString),
+            kind: .applied,
+            at: Date(),
+            label: label,
+            commands: [], // the replace is the effect; no commands to replay
+            revisionBefore: before.revision,
+            revisionAfter: target.revision,
+            semanticRevisionBefore: before.semanticRevision,
+            semanticRevisionAfter: target.semanticRevision
+        )
+        session.recordHistoryEntry(restoreEntry)
+        return true
+    }
+
+    /// Removes history entries older than a retention horizon.
+    ///
+    /// Returns the number of entries purged. A purged entry leaves a
+    /// trace (its label and date) so the timeline shows what was removed
+    /// without inventing content.
+    @discardableResult
+    public func purgeHistory(olderThan date: Date) -> Int {
+        let before = document.history.entries.count
+        var updated = session.document
+        var ledger = updated.history
+        ledger.removeAll { $0.at < date }
+        updated.history = ledger
+        session.replaceDocument(with: updated)
+        return before - updated.history.entries.count
     }
 
     // MARK: Results (DEC-05)

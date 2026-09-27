@@ -133,6 +133,7 @@ public extension Color {
 
 /// The spacing scale. Nothing else is allowed.
 public enum Space {
+    public static let xxs: Double = 2
     public static let xs: Double = 4
     public static let s: Double = 8
     public static let m: Double = 12
@@ -185,6 +186,8 @@ public enum TypeRole: String, CaseIterable, Sendable {
     case metadata
     /// The single exception: something that needs to be looked at.
     case attention
+    /// Small supporting text.
+    case caption
 }
 
 /// A size and a weight, as numbers, so the scale can be checked rather than read.
@@ -237,6 +240,7 @@ public enum TypeScale {
         // length, so medium is honest here.
         .action: TypeSpec(size: 13, weightRank: 1),
         .metadata: TypeSpec(size: 12, weightRank: 0),
+        .caption: TypeSpec(size: 11, weightRank: 0),
         // The one exception the rule allows: the single marker that says the
         // ground moved. Semibold is what makes it findable in a scan, and it is
         // used in one place.
@@ -256,6 +260,7 @@ public enum TypeScale {
     public static var action: Font { font(for: .action) }
     public static var metadata: Font { font(for: .metadata) }
     public static var needsAttention: Font { font(for: .attention) }
+    public static var caption: Font { font(for: .caption) }
 }
 
 /// Depth: three levels, and no more.

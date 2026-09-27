@@ -76,10 +76,53 @@ public struct KollioSession: Sendable {
     public init(document: KollioDocument = KollioDocument()) {
         self.store = DocumentStore(document: document)
         self.history = UndoHistory()
+        journalBase = try? DocumentCodec.encode(document)
+    }
+
+    /// The document as it stood when this session opened it, encoded.
+    ///
+    /// A replay needs somewhere to start, and "an empty document" is the wrong
+    /// answer for every document that was opened rather than built here: the
+    /// journal records what happened *since*, so replaying from nothing rebuilds
+    /// only the edits and loses the content they were applied to. It is session
+    /// state rather than a fact about the document, which is why it is not in the
+    /// document and not in its schema: a file written last week and reopened
+    /// today replays from the file's own content.
+    public private(set) var journalBase: Data?
+
+    /// Replaces the base a replay starts from, after loading a document.
+    public mutating func setJournalBase(to document: KollioDocument) {
+        journalBase = try? DocumentCodec.encode(document)
+    }
+
+    /// The document a journal replay starts from.
+    public var journalBaseDocument: KollioDocument {
+        guard let journalBase else { return KollioDocument() }
+        return (try? DocumentCodec.decode(journalBase)) ?? KollioDocument()
     }
 
     public var document: KollioDocument { store.document }
     public var semanticRevision: Int { store.semanticRevision }
+
+    /// Replaces the underlying document entirely. Used for history restore (DEC-06).
+    public mutating func replaceDocument(with document: KollioDocument) {
+        store.replace(with: document)
+    }
+
+    /// Records an entry against the document as it stands, without applying
+    /// commands.
+    ///
+    /// For an action that is not a command batch — a restore, which replaces the
+    /// document wholesale. It appends to the *current* document on purpose: an
+    /// earlier version took the pre-action document as a parameter and wrote it
+    /// back, which silently undid the very restore that had just been recorded.
+    public mutating func recordHistoryEntry(_ entry: HistoryEntry) {
+        var updated = store.document
+        var ledger = updated.history
+        ledger.append(entry)
+        updated.history = ledger
+        store.replace(with: updated)
+    }
 
     /// The history ids of the applied actions, aligned with `history.entries`.
     ///

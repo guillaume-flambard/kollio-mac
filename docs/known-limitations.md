@@ -484,11 +484,22 @@ Everything in the non-goals, and also, honestly:
   `ResultInterfaceTests`), but no person has recorded one yet, and the acceptance flow that
   follows — taking the decision the learning points at — runs through DEC-01's own composer,
   untested as a combined loop.
-- **The history timeline reads and does not restore.** `reviewHistory` shows what happened to
-  an object, newest first, with the labels the person acted under, and closing it changes
-  nothing. What is written and not built: the read-only preview with differences, restoring as
-  a new action through a new transaction, and explicit retention with purge. The card offers
-  none of them rather than offering a button that cannot work.
+- **The history timeline previews, restores and purges, but the preview is not a diff.**
+  `reviewHistory` shows what happened to an object, newest first, with the labels the person
+  acted under, and closing it changes nothing. Each row now offers a read-only preview of the
+  document at that action and a restore; the card offers a purge against a retention horizon.
+  `HistoryRestoreTests` (6) covers the three acts, including the two that were wrong before
+  the tests existed: a replay no longer applies a reversal (which carries the payload of what
+  it undid, and would have resurrected it), and a restore no longer empties the journal (it
+  would have deleted the very timeline the person was reading).
+  What is still missing: the preview shows the past document, not *what differs* between it
+  and the present; the purge horizon is fixed at thirty days rather than chosen; and the
+  preview sheet has never been seen by a person.
+  A replay starts from the document as this session opened it, held on the session rather than
+  in the document: the journal records what happened since, so replaying from an empty
+  document would rebuild only the edits and lose the content they were applied to. A file
+  written last week and reopened today therefore replays from its own content — but only
+  across one session, because that base is not written to the file.
 - **DEC-04's experiments exist in the document and nowhere else.** The domain holds a
   validation experiment as a ledger: question, method, success criterion, the evidence it will
   be judged against, owner, due date, the simulation flag, and an append-only revision list so
@@ -531,6 +542,18 @@ Everything in the non-goals, and also, honestly:
   by a capture the machine took of itself. Whether the local bar is pleasant to reach with a slow
   pointer, whether the glass reads as an instrument rather than as a row of pills, and whether the
   type is right are all still owed to somebody's eyes.
+- **The canvas is measured, and one measurement is not a frame.** A 100-object, 180-relationship
+  document on a 10x10 grid went from 149 ms to 5.6 ms per render pass, and a click went from
+  133 ms to 2.9 ms. The 149 ms was a router testing every obstacle against every curve, 49
+  samples at a time; a corridor around each chord rejects the obstacles that cannot matter for
+  four comparisons, and a curve is sampled once instead of once per obstacle.
+  `CanvasScaleTests` holds both: a ceiling for the pass, and a *ratio* — quadrupling the objects
+  while holding the links fixed must not quadruple the cost per connector. The ratio is the part
+  that means something: it does not care how fast the machine is, only how the cost answers the
+  shape of the document. That ratio is 1.9x for a fourfold increase, the residue being the one
+  unavoidable pass over the obstacles.
+  What is not measured: SwiftUI's own draw time, which needs Instruments on the running app, and
+  every number here is from a `swift test` process, not from a person dragging.
 - **The deployment floor is macOS 26, decided rather than derived.** It was 14, written in four
   places at once, and one of them was `services/KollioServer`, which is not in the Xcode project
   but is in the package graph, so raising the app alone failed with an error naming the wrong

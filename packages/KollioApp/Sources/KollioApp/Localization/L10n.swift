@@ -125,6 +125,11 @@ public enum L10n {
     public static var historyReviewAction: String { callAsFunction("history.reviewAction") }
     public static var historyLaterReverted: String { callAsFunction("history.laterReverted") }
     public static var historyClose: String { callAsFunction("history.close") }
+    public static var historyPreview: String { callAsFunction("history.preview") }
+    public static var historyPreviewTitle: String { callAsFunction("history.previewTitle") }
+    public static var historyRestore: String { callAsFunction("history.restore") }
+    public static var historyRestoreLabel: String { callAsFunction("history.restoreLabel") }
+    public static var historyPurge: String { callAsFunction("history.purge") }
     public static var resultObservationPlaceholder: String { callAsFunction("result.observationPlaceholder") }
     public static var resultMeasurementPlaceholder: String { callAsFunction("result.measurementPlaceholder") }
     public static var resultUnitPlaceholder: String { callAsFunction("result.unitPlaceholder") }
