@@ -83,6 +83,26 @@ struct CameraTests {
         #expect(abs(centre.y - viewport.height / 2) < 0.001)
     }
 
+    @Test("Framing a small document does not magnify it")
+    func framingNeverMagnifies() {
+        // The case the first version got wrong, and the one a launch hits every
+        // time: a document holding one short object. Framing took the largest zoom
+        // the numbers allowed, so the sentence opened at 300% and filled the
+        // screen. Showing everything means not being moved closer to your own work.
+        let content = Rect(x: 0, y: 0, width: 420, height: 90)
+        let viewport = Size(width: 1200, height: 800)
+        let camera = Camera.fitting(content: content, viewport: viewport, padding: 100)
+        #expect(camera.zoom == 1, "a document smaller than the view is shown at its own size")
+        // Centred all the same, which is the other half of what framing is for.
+        let centre = camera.toScreen(content.center)
+        #expect(abs(centre.x - viewport.width / 2) < 0.001)
+        #expect(abs(centre.y - viewport.height / 2) < 0.001)
+        // And a document larger than the view is still shrunk to fit.
+        let big = Camera.fitting(content: Rect(x: 0, y: 0, width: 4_000, height: 3_000), viewport: viewport)
+        #expect(big.zoom < 1)
+        #expect(big.zoom >= Camera.minimumZoom)
+    }
+
     @Test("The visible world rectangle follows the camera")
     func cullingRect() {
         let camera = Camera(zoom: 2, translation: Position(x: -200, y: -100))

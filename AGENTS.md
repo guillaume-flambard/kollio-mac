@@ -1,4 +1,12 @@
-# Kollio — invariants and commands
+# Kollio: invariants and commands
+
+## Product position
+
+Kollio is a private visual decision workspace for Mac. Its first users are independent product builders, consultants, researchers, strategists, and founders who need to turn scattered research into a decision they can inspect and resume.
+
+Use `.agents/product-marketing.md` as the source for audience, positioning, objections, language, and product goals. Before adding a feature, state which part of the solo beta gate it improves: starting from the user's own context, exploring a real question, understanding an AI proposal, keeping or setting it aside, saving, returning, and understanding what changed.
+
+If a task does not improve that loop, defer it unless the owner explicitly changes scope. Team collaboration, enterprise services, Kollio Web, App Intents dogfooding, and new backend work do not lead the current milestone.
 
 Read [docs/CONTINUE.md](docs/CONTINUE.md) for the active milestone and
 [docs/known-limitations.md](docs/known-limitations.md) for what is actually true
@@ -12,6 +20,9 @@ decomposes it into capabilities and lots.
 [docs/AGENT-LOOP.md](docs/AGENT-LOOP.md) is the implementation and review loop
 for a session that is allowed to build: batch order, the review levels, the
 onboarding rules, and the two decisions that belong to the owner.
+
+For product, copy, onboarding, or scope decisions, also read
+[.agents/product-marketing.md](.agents/product-marketing.md).
 
 ## Verify
 

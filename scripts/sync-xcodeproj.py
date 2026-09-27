@@ -18,16 +18,31 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_SOURCES = os.path.join(ROOT, "packages/KollioApp/Sources/KollioApp")
+# The UI test target is generated here for the same reason the app target is: a
+# file list edited by hand is a file list that will be wrong. It is a separate
+# package because a UI test bundle links nothing and imports no app code: it drives
+# the application from outside, which is the only way its evidence is worth
+# anything.
+UITEST_SOURCES = os.path.join(ROOT, "packages/KollioUITests")
+UITEST_NAME = "KollioUITests"
 APP_RESOURCES = os.path.join(APP_SOURCES, "Resources")
 PROJECT_DIR = os.path.join(ROOT, "apps/macos")
 PROJECT_NAME = "Kollio"
+# One floor, written once. The project, both targets and the two package
+# manifests all have to agree, and a deployment target that disagrees with a
+# package product is a build failure that names a product rather than a cause.
+DEPLOYMENT_TARGET = "26.0"
 INFO_PLIST = os.path.join(PROJECT_DIR, "Info.plist")
 PACKAGE_DIR = os.path.join(PROJECT_DIR, "Kollio.xcodeproj")
 RELATIVE_APP_SOURCES = "packages/KollioApp/Sources/KollioApp"
+RELATIVE_UITEST_SOURCES = "packages/KollioUITests"
 # File references are resolved from the project directory, not from the
 # repository root.
 APP_SOURCE_PREFIX = os.path.relpath(
     os.path.join(ROOT, RELATIVE_APP_SOURCES), PROJECT_DIR
+)
+UITEST_SOURCE_PREFIX = os.path.relpath(
+    os.path.join(ROOT, RELATIVE_UITEST_SOURCES), PROJECT_DIR
 )
 
 
@@ -200,6 +215,19 @@ def main():
     project_config_list = uid("configlist", "project")
     target_config_list = uid("configlist", "target")
 
+    uitests = collect(UITEST_SOURCES, {".swift"}) if os.path.isdir(UITEST_SOURCES) else []
+    uitest_target_id = uid("target", UITEST_NAME)
+    uitest_product_id = uid("product", UITEST_NAME)
+    uitest_sources_phase = uid("phase", "sources", UITEST_NAME)
+    uitest_frameworks_phase = uid("phase", "frameworks", UITEST_NAME)
+    uitest_resources_phase = uid("phase", "resources", UITEST_NAME)
+    uitest_config_list = uid("configlist", "target", UITEST_NAME)
+    uitest_group_id = uid("group", UITEST_NAME)
+    # The test bundle is launched by the runner and needs the app, so the target
+    # depends on it rather than merely being listed next to it.
+    target_dependency = uid("dependency", UITEST_NAME)
+    container_proxy = uid("proxy", UITEST_NAME)
+
     out = []
     add = out.append
     add("// !$*UTF8*$!")
@@ -215,6 +243,12 @@ def main():
         add(build_file(path))
     for path in resources:
         add(build_resource(path))
+    for path in uitests:
+        add("\t\t%s /* %s in Sources */ = {isa = PBXBuildFile; fileRef = %s /* %s */; };" % (
+            uid("build", "uitest", path), os.path.basename(path),
+            uid("file", os.path.join(RELATIVE_UITEST_SOURCES, path)),
+            os.path.basename(path),
+        ))
     add("\t\t%s /* KollioCore in Frameworks */ = {isa = PBXBuildFile; productRef = %s /* KollioCore */; };" % (core_build, core_product_dep))
     add("\t\t%s /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = %s /* Info.plist */; };" % (info_build, info_ref))
     add("/* End PBXBuildFile section */")
@@ -223,7 +257,14 @@ def main():
     for path in all_files:
         add(emit_file_ref(path))
     add('\t\t%s /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };' % info_ref)
+    for path in uitests:
+        add("\t\t%s /* %s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = %s; path = %s; sourceTree = SOURCE_ROOT; };" % (
+            uid("file", os.path.join(RELATIVE_UITEST_SOURCES, path)),
+            os.path.basename(path), os.path.basename(path),
+            os.path.join(UITEST_SOURCE_PREFIX, path),
+        ))
     add('\t\t%s /* Kollio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kollio.app; sourceTree = BUILT_PRODUCTS_DIR; };' % product_id)
+    add('\t\t%s /* %s.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = %s.xctest; sourceTree = BUILT_PRODUCTS_DIR; };' % (uitest_product_id, UITEST_NAME, UITEST_NAME))
     add("/* End PBXFileReference section */")
 
     add("\n/* Begin PBXFrameworksBuildPhase section */")
@@ -232,6 +273,13 @@ def main():
     add("\t\t\tbuildActionMask = 2147483647;")
     add("\t\t\tfiles = (")
     add("\t\t\t\t%s /* KollioCore in Frameworks */," % core_build)
+    add("\t\t\t);")
+    add("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
+    add("\t\t};")
+    add("\t\t%s /* Frameworks */ = {" % uitest_frameworks_phase)
+    add("\t\t\tisa = PBXFrameworksBuildPhase;")
+    add("\t\t\tbuildActionMask = 2147483647;")
+    add("\t\t\tfiles = (")
     add("\t\t\t);")
     add("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
     add("\t\t};")
@@ -258,6 +306,19 @@ def main():
     add("\t\t};")
     for line in emit_group_defs(tree, path_prefix=RELATIVE_APP_SOURCES):
         add(line)
+    if uitests:
+        add("\t\t%s /* %s */ = {" % (uitest_group_id, UITEST_NAME))
+        add("\t\t\tisa = PBXGroup;")
+        add("\t\t\tchildren = (")
+        for path in uitests:
+            add("\t\t\t\t%s /* %s */," % (
+                uid("file", os.path.join(RELATIVE_UITEST_SOURCES, path)),
+                os.path.basename(path),
+            ))
+        add("\t\t\t);")
+        add("\t\t\tname = %s;" % UITEST_NAME)
+        add("\t\t\tsourceTree = \"<group>\";")
+        add("\t\t};")
     add("/* End PBXGroup section */")
 
     add("\n/* Begin PBXNativeTarget section */")
@@ -281,6 +342,27 @@ def main():
     add("\t\t\tproductReference = %s /* Kollio.app */;" % product_id)
     add("\t\t\tproductType = \"com.apple.product-type.application\";")
     add("\t\t};")
+    if uitests:
+        add("\t\t%s /* %s */ = {" % (uitest_target_id, UITEST_NAME))
+        add("\t\t\tisa = PBXNativeTarget;")
+        add("\t\t\tbuildConfigurationList = %s;" % uitest_config_list)
+        add("\t\t\tbuildPhases = (")
+        add("\t\t\t\t%s /* Sources */," % uitest_sources_phase)
+        add("\t\t\t\t%s /* Frameworks */," % uitest_frameworks_phase)
+        add("\t\t\t\t%s /* Resources */," % uitest_resources_phase)
+        add("\t\t\t);")
+        add("\t\t\tbuildRules = (")
+        add("\t\t\t);")
+        add("\t\t\tdependencies = (")
+        add("\t\t\t\t%s /* PBXTargetDependency */," % target_dependency)
+        add("\t\t\t);")
+        add("\t\t\tname = %s;" % UITEST_NAME)
+        add("\t\t\tpackageProductDependencies = (")
+        add("\t\t\t);")
+        add("\t\t\tproductName = %s;" % UITEST_NAME)
+        add("\t\t\tproductReference = %s /* %s.xctest */;" % (uitest_product_id, UITEST_NAME))
+        add("\t\t\tproductType = \"com.apple.product-type.bundle.ui-testing\";")
+        add("\t\t};")
     add("/* End PBXNativeTarget section */")
 
     add("\n/* Begin PBXProject section */")
@@ -311,6 +393,8 @@ def main():
     add("\t\t\tprojectRoot = \"\";")
     add("\t\t\ttargets = (")
     add("\t\t\t\t%s /* Kollio */," % target_id)
+    if uitests:
+        add("\t\t\t\t%s /* %s */," % (uitest_target_id, UITEST_NAME))
     add("\t\t\t);")
     add("\t\t};")
     add("/* End PBXProject section */")
@@ -325,6 +409,14 @@ def main():
     add("\t\t\t);")
     add("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
     add("\t\t};")
+    if uitests:
+        add("\t\t%s /* Resources */ = {" % uitest_resources_phase)
+        add("\t\t\tisa = PBXResourcesBuildPhase;")
+        add("\t\t\tbuildActionMask = 2147483647;")
+        add("\t\t\tfiles = (")
+        add("\t\t\t);")
+        add("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
+        add("\t\t};")
     add("/* End PBXResourcesBuildPhase section */")
 
     add("\n/* Begin PBXSourcesBuildPhase section */")
@@ -337,6 +429,17 @@ def main():
     add("\t\t\t);")
     add("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
     add("\t\t};")
+    if uitests:
+        add("\t\t%s /* Sources */ = {" % uitest_sources_phase)
+        add("\t\t\tisa = PBXSourcesBuildPhase;")
+        add("\t\t\tbuildActionMask = 2147483647;")
+        add("\t\t\tfiles = (")
+        for path in uitests:
+            add("\t\t\t\t%s /* %s in Sources */," % (
+                uid("build", "uitest", path), os.path.basename(path)))
+        add("\t\t\t);")
+        add("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
+        add("\t\t};")
     add("/* End PBXSourcesBuildPhase section */")
 
     add("\n/* Begin XCBuildConfiguration section */")
@@ -364,7 +467,7 @@ def main():
             add("\t\t\t\tDEBUG_INFORMATION_FORMAT = \"dwarf-with-dsym\";")
             add("\t\t\t\tENABLE_NS_ASSERTIONS = NO;")
             add("\t\t\t\tSWIFT_COMPILATION_MODE = wholemodule;")
-        add("\t\t\t\tMACOSX_DEPLOYMENT_TARGET = 14.0;")
+        add("\t\t\t\tMACOSX_DEPLOYMENT_TARGET = %s;" % DEPLOYMENT_TARGET)
         add("\t\t\t\tSDKROOT = macosx;")
         add("\t\t\t\tSWIFT_VERSION = 6.0;")
         add("\t\t\t};")
@@ -384,12 +487,35 @@ def main():
         add("\t\t\t\tINFOPLIST_FILE = Info.plist;")
         add("\t\t\t\tLD_RUNPATH_SEARCH_PATHS = (\"$(inherited)\", \"@executable_path/../Frameworks\");")
         add("\t\t\t\tMARKETING_VERSION = 0.1.0;")
+        add("\t\t\t\tMACOSX_DEPLOYMENT_TARGET = %s;" % DEPLOYMENT_TARGET)
         add("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = dev.kollio.app;")
         add("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
         add("\t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;")
         add("\t\t\t};")
         add("\t\t\tname = %s;" % name)
         add("\t\t};")
+    if uitests:
+        for name in ("Debug", "Release"):
+            config_id = uid("config", "target", UITEST_NAME, name)
+            add("\t\t%s /* %s */ = {" % (config_id, name))
+            add("\t\t\tisa = XCBuildConfiguration;")
+            add("\t\t\tbuildSettings = {")
+            add("\t\t\t\tCODE_SIGN_IDENTITY = \"-\";")
+            add("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
+            # A UI test bundle is not the application, so it must not claim the
+            # application's bundle identifier: two targets with one identifier is a
+            # launch race that shows up as the wrong app opening.
+            add("\t\t\t\tGENERATE_INFOPLIST_FILE = YES;")
+            add("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = dev.kollio.app.uitests;")
+            add("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
+            add("\t\t\t\tLD_RUNPATH_SEARCH_PATHS = (\"$(inherited)\", \"@executable_path/../Frameworks\", \"@loader_path/../Frameworks\");")
+            add("\t\t\t\tMACOSX_DEPLOYMENT_TARGET = %s;" % DEPLOYMENT_TARGET)
+            # The test bundle is driven against this application. Without it the
+            # runner has nothing to launch and the suite passes with zero tests.
+            add("\t\t\t\tTEST_TARGET_NAME = %s;" % PROJECT_NAME)
+            add("\t\t\t};")
+            add("\t\t\tname = %s;" % name)
+            add("\t\t};")
     add("/* End XCBuildConfiguration section */")
 
     add("\n/* Begin XCConfigurationList section */")
@@ -403,7 +529,35 @@ def main():
         add("\t\t\tdefaultConfigurationIsVisible = 0;")
         add("\t\t\tdefaultConfigurationName = Release;")
         add("\t\t};")
+    if uitests:
+        add("\t\t%s /* Build configuration list for PBXNativeTarget \"%s\" */ = {" % (uitest_config_list, UITEST_NAME))
+        add("\t\t\tisa = XCConfigurationList;")
+        add("\t\t\tbuildConfigurations = (")
+        for name in ("Debug", "Release"):
+            add("\t\t\t\t%s /* %s */," % (uid("config", "target", UITEST_NAME, name), name))
+        add("\t\t\t);")
+        add("\t\t\tdefaultConfigurationIsVisible = 0;")
+        add("\t\t\tdefaultConfigurationName = Release;")
+        add("\t\t};")
     add("/* End XCConfigurationList section */")
+
+    if uitests:
+        add("\n/* Begin PBXTargetDependency section */")
+        add("\t\t%s /* PBXTargetDependency */ = {" % target_dependency)
+        add("\t\t\tisa = PBXTargetDependency;")
+        add("\t\t\ttarget = %s /* Kollio */;" % target_id)
+        add("\t\t\ttargetProxy = %s /* PBXContainerItemProxy */;" % container_proxy)
+        add("\t\t};")
+        add("/* End PBXTargetDependency section */")
+        add("\n/* Begin PBXContainerItemProxy section */")
+        add("\t\t%s /* PBXContainerItemProxy */ = {" % container_proxy)
+        add("\t\t\tisa = PBXContainerItemProxy;")
+        add("\t\t\tcontainerPortal = %s /* Project object */;" % project_id)
+        add("\t\t\tproxyType = 1;")
+        add("\t\t\tremoteGlobalIDString = %s;" % target_id)
+        add("\t\t\tremoteInfo = %s;" % PROJECT_NAME)
+        add("\t\t};")
+        add("/* End PBXContainerItemProxy section */")
 
     add("\n/* Begin XCLocalSwiftPackageReference section */")
     add('\t\t%s /* XCLocalSwiftPackageReference "../packages/KollioCore" */ = {' % core_package)
@@ -432,11 +586,23 @@ def main():
         "target": target_id,
         "name": PROJECT_NAME,
         "bundle": "dev.kollio.app",
+        "testables": ("<TestableReference skipped = \"NO\">\n"
+                      "            <BuildableReference\n"
+                      "               BuildableIdentifier = \"primary\"\n"
+                      "               BlueprintIdentifier = \"%s\"\n"
+                      "               BuildableName = \"%s.xctest\"\n"
+                      "               BlueprintName = \"%s\"\n"
+                      "               ReferencedContainer = \"container:%s.xcodeproj\">\n"
+                      "            </BuildableReference>\n"
+                      "         </TestableReference>") % (
+                          uitest_target_id, UITEST_NAME, UITEST_NAME, PROJECT_NAME)
+        if uitests else "",
     }
     with open(os.path.join(PACKAGE_DIR, "xcshareddata/xcschemes/%s.xcscheme" % PROJECT_NAME), "w") as handle:
         handle.write(scheme)
 
-    print("Generated %s with %d sources and %d resources" % (PACKAGE_DIR, len(sources), len(resources)))
+    print("Generated %s with %d sources, %d resources and %d UI test file(s)" % (
+        PACKAGE_DIR, len(sources), len(resources), len(uitests)))
 
 
 SCHEME = """<?xml version="1.0" encoding="UTF-8"?>
@@ -456,6 +622,7 @@ SCHEME = """<?xml version="1.0" encoding="UTF-8"?>
    </BuildAction>
    <TestAction buildConfiguration = "Debug" selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
+         %(testables)s
       </Testables>
    </TestAction>
    <LaunchAction buildConfiguration = "Debug" selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB" launchStyle = "0" useCustomWorkingDirectory = "NO" ignoresPersistentStateOnLaunch = "NO" debugDocumentVersioning = "YES" debugServiceExtension = "internal" allowLocationSimulation = "YES">

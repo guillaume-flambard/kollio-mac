@@ -373,6 +373,121 @@ struct AppleAdapterTests {
         #expect(final?.hasOutcome == true)
     }
 
+    @Test("The prompt carries what was measured, and not what did not fit")
+    func promptMatchesTheProjection() throws {
+        // The bug this is written against: the adapter measured the context,
+        // counted the truncation, logged it, and then sent the whole context
+        // anyway. The count and the payload were two answers to one question and
+        // only one of them was true.
+        let probe = StubAppleModelProbe(availability: .available, contextSize: 400)
+        let document = self.document()
+        var request = self.request(document: document)
+        request.context = [
+            .init(objectID: "object:ctx", kind: .context, text: "Raccourcir l'inscription", lifecycle: .active),
+            .init(objectID: "object:existing", kind: .hypothesis,
+                  text: String(repeating: "une piste ", count: 200), lifecycle: .active),
+        ]
+        let prepared = try AppleLocalSuggestionService.prepare(
+            request: request, document: document, probe: probe
+        )
+        // The target fits and is required. The large optional item cannot, so it is
+        // left out of the prompt and named in the scope.
+        #expect(prepared.prompt.contains("Raccourcir l'inscription"))
+        #expect(prepared.prompt.contains("object:existing") == false)
+        // The text of the dropped item is absent too, not just its identifier.
+        #expect(prepared.prompt.contains("une piste") == false)
+        let scope = try #require(prepared.scope)
+        #expect(scope.readObjectIDs == ["object:ctx"])
+        #expect(scope.omittedObjectIDs == ["object:existing"])
+    }
+
+    @Test("A required item that does not fit is refused, not answered around")
+    func requiredOverflowIsRefused() throws {
+        // AI-12: "A mandatory constraint that does not fit asks for framing rather
+        // than being dropped." The app can only offer a narrower question, and that
+        // is the person's call, so the request never reaches the model.
+        let probe = StubAppleModelProbe(availability: .available, contextSize: 200)
+        let document = self.document()
+        var request = self.request(document: document)
+        request.context = [
+            .init(objectID: "object:ctx", kind: .constraint,
+                  text: String(repeating: "contrainte ", count: 500), lifecycle: .active)
+        ]
+        #expect(throws: AppleModelError.contextTooLarge) {
+            try AppleLocalSuggestionService.prepare(request: request, document: document, probe: probe)
+        }
+    }
+
+    @Test("Both routes refuse the same request, streaming included")
+    func bothRoutesRefuseTheSameOverflow() async throws {
+        // A truncation counted in one route and ignored in the other would make the
+        // streaming path a way around the rule.
+        let probe = StubAppleModelProbe(availability: .available, contextSize: 200)
+        let service = AppleLocalSuggestionService(probe: probe)
+        let document = self.document()
+        var request = self.request(document: document)
+        request.context = [
+            .init(objectID: "object:ctx", kind: .constraint,
+                  text: String(repeating: "contrainte ", count: 500), lifecycle: .active)
+        ]
+        do {
+            _ = try await service.respond(to: request, document: document)
+            Issue.record("the plain route answered a request that cannot fit")
+        } catch let error as AppleModelError {
+            #expect(error == .contextTooLarge)
+        }
+        do {
+            _ = try await service.stream(to: request, document: document) { _ in }
+            Issue.record("the streaming route answered a request that cannot fit")
+        } catch let error as AppleModelError {
+            #expect(error == .contextTooLarge)
+        }
+    }
+
+    @Test("A complete context records no scope at all")
+    func completeContextRecordsNothing() throws {
+        // A row that is always present is a badge that means nothing, so a request
+        // that was not narrowed leaves no record of a narrowing.
+        let probe = StubAppleModelProbe(availability: .available, contextSize: 8_192)
+        let document = self.document()
+        var request = self.request(document: document)
+        request.context = [
+            .init(objectID: "object:ctx", kind: .context, text: "Raccourcir l'inscription", lifecycle: .active)
+        ]
+        let prepared = try AppleLocalSuggestionService.prepare(
+            request: request, document: document, probe: probe
+        )
+        #expect(prepared.scope == nil)
+        #expect(prepared.prompt.contains("Raccourcir l'inscription"))
+    }
+
+    @available(macOS 26.0, *)
+    @Test("The proposal carries the scope of the answer it was built from")
+    func proposalCarriesTheScope() throws {
+        let document = self.document()
+        let candidate = AppleCandidate(
+            outcome: "proposal", rationale: "Une piste.",
+            ideas: [.init(title: "Un seul écran", summary: "Regrouper les neuf étapes.", kind: "hypothesis")]
+        )
+        let scope = ProposalContextScope(
+            readObjectIDs: ["object:ctx"], omittedObjectIDs: ["object:existing"],
+            measuredCharacters: 400, budgetCharacters: 400
+        )
+        let converted = AppleCandidateConverter().convert(
+            candidate, request: request(document: document), document: document, scope: scope
+        )
+        guard case .proposal(let proposal) = converted.result else {
+            Issue.record("expected a proposal")
+            return
+        }
+        #expect(proposal.contextScope == scope)
+        // And it is still an ordinary proposal: the scope is a record, not a
+        // restriction on what may be kept.
+        #expect(throws: Never.self) {
+            try ProposalValidator().validate(proposal, against: document, scope: request(document: document).scope)
+        }
+    }
+
     @Test("The context budget is measured, and truncation is reported not hidden")
     func contextBudgetIsAppliedAndVisible() {
         // A small model on purpose: the point is what happens when the real context

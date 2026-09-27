@@ -74,6 +74,29 @@ struct KollioCommands: Commands {
             }
             .keyboardShortcut("1", modifiers: .command)
         }
+        // Find is a system command, so it lives in the Edit menu where macOS puts
+        // Cmd+F and not in a bar on the canvas. It asks no model: it is a search
+        // over what is already in the document.
+        CommandGroup(after: .textEditing) {
+            Button(L10n.search) { model.openSearch() }
+                .keyboardShortcut("f", modifiers: .command)
+        }
+        // The tour is reachable and leavable without a pointer, which is AC01 rather
+        // than a convenience: the arrow keys move between points and Escape leaves,
+        // so a person who never touches the canvas can still read the document
+        // through it.
+        CommandGroup(after: .pasteboard) {
+            Button(model.isPresenting ? L10n.presentationExit : L10n.presentationStart) {
+                if model.isPresenting { model.exitPresentation() } else { model.beginPresentation() }
+            }
+            .keyboardShortcut(.return, modifiers: .command)
+            Button(L10n.presentationPrevious) { model.rewindPresentation() }
+                .keyboardShortcut(.leftArrow, modifiers: [])
+                .disabled(model.presentation?.index ?? 0 == 0)
+            Button(L10n.presentationNext) { model.advancePresentation() }
+                .keyboardShortcut(.rightArrow, modifiers: [])
+                .disabled(model.presentation == nil)
+        }
     }
 }
 

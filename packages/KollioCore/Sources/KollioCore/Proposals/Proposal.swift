@@ -20,6 +20,12 @@ public struct Proposal: Codable, Hashable, Sendable, Identifiable {
     /// a person is entitled to see, and it is derived from the generator rather
     /// than declared independently, so the two cannot disagree.
     public var attribution: GeneratorAttribution?
+    /// What this answer could see, when the source had to narrow the request.
+    ///
+    /// AI-12 AC03: "the output states its scope". Nil means the source sent
+    /// everything it was given, which is the ordinary case and is deliberately not
+    /// recorded: a record that is always present is a badge that means nothing.
+    public var contextScope: ProposalContextScope?
 
     public struct Generator: Codable, Hashable, Sendable {
         public var name: String
@@ -60,7 +66,8 @@ public struct Proposal: Codable, Hashable, Sendable, Identifiable {
         placementHints: [PlacementHint] = [],
         limitations: [LocalizedText] = [],
         generator: Generator,
-        attribution: GeneratorAttribution? = nil
+        attribution: GeneratorAttribution? = nil,
+        contextScope: ProposalContextScope? = nil
     ) {
         self.proposalId = proposalId
         self.requestId = requestId
@@ -73,6 +80,7 @@ public struct Proposal: Codable, Hashable, Sendable, Identifiable {
         self.limitations = limitations
         self.generator = generator
         self.attribution = attribution
+        self.contextScope = contextScope
     }
 
     /// Object ids the proposal depends on. A document that changed any of them

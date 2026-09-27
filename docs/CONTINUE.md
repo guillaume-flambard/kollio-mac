@@ -37,6 +37,11 @@ was probed directly, not inferred from the SDK being installed.
 | Sources attach, cite and verify as atomic commands | Done, tested, and refused to intelligence |
 | A claim shows a chip for the state of its sources | Done, tested |
 | Context budget measured, required items never dropped | Done, on the real request path |
+| **A limit does not lose text: the payload is the projection** | **Done, tested, and it corrected a real lie** |
+| **A required item that does not fit asks for framing** | **Done, tested on both routes** |
+| **The answer states its scope** | **Done, tested; the row is still unseen** |
+| **A rejection reason is findable, and finding it decides nothing** | **Done, tested, seen in the app in FR and EN** |
+| **A document can be read along a path, and read only** | **Done, tested, seen in the app** |
 | **Network-disabled run after system resources exist** | **Not done**: it needs the firewall changed, which is the owner's call |
 
 The deterministic suite never touches a real model, and stays under two seconds. Reproduce the
@@ -62,6 +67,107 @@ KOLLIO_REAL_MODEL=1 swift test --package-path packages/KollioApp \
 
 What survives the correction is the conclusion rather than the figure: 2.3 s is still too slow to
 feel interactive on its own. The wait is now filled, though, because the answer streams.
+
+## AI-12 is in, and it corrected the thing before it
+
+The context budget existed, was measured, counted and logged. It was also ignored:
+`ApplePromptBuilder` built the prompt from the whole request, so every item the log
+called a drop was sent anyway. The count and the payload were two answers to one
+question and only the count was false. A required item that did not fit was neither
+dropped nor refused: it was sent, the model answered about less than it was asked,
+and a log line said the answer would be narrower. `AppleModelError.contextTooLarge`
+existed and was never thrown.
+
+What is there now:
+
+- **One preparation step** for both routes, which projects, refuses or narrows, and
+  builds the prompt from the projection. A truncation cannot be counted in one route
+  and ignored in the other.
+- **A required item that does not fit refuses.** The app can only offer a narrower
+  question, and that is the person's call, so the request never reaches the model.
+- **`ProposalContextScope`** on the proposal: what was read, what was left out, and
+  a count declared as characters rather than tokens. "What was read" is filtered by
+  that scope instead of read off the request, so the panel no longer claims credit
+  for material the model never saw.
+- **The scope is on the status line**, not only behind the attribution panel, because
+  the scope of an answer is part of the answer. A refusal is never overwritten by the
+  notice, and a complete answer records no scope at all.
+- **The on-device refusal and availability messages are localized.** They were
+  English literals on the status line under a comment that called them localized.
+
+Thirty-two features are `automatedVerified` now. The real-model suite also produced
+two findings worth keeping: the streaming test is not deterministic (one run in four
+refused with the framework's own "may contain sensitive or unsafe content" after
+313 s, and passes on the clean tree and the changed one), and today's warm series
+was 5.57 s, 6.65 s and 7.33 s, worse than the 2.50 / 2.68 / 2.29 s on record. The
+conclusion is unchanged, the figure is not stable, and no cause is claimed for
+either.
+
+## CAN-10 is in, and the L3 lot is closed
+
+A tour is `ReadingPath`, a value and not document state: points keep their order,
+resolve against the document as it is, and a point that no longer resolves is
+skipped and counted, never replaced by whatever now occupies its place. A source
+and a decision are points too, each anchored where it can be read rather than where
+it was written, which is the difference between showing a decision next to the
+direction it decided and showing it next to nothing.
+
+CAN-10's middle sentence is the one that needed work. "A reader cannot trigger a
+modification by accident" is a guarantee, and a guarantee placed where it has to be
+remembered is a guard that will be missed: `perform(_:label:)` called itself the one
+way anything changes the document while five call sites went straight to
+`session.apply`. There is now one private `apply` that all six use, it refuses while
+a tour is running, and `keepPreview` no longer says "kept" whatever the command did.
+
+**The capture found the rest.** The tour card was correct and the command layer
+refused every editing action, and every test passed, because they were refused
+correctly. The picture showed a reading mode still offering explore, clarify and
+set aside. A person invited to press something during a tour is being invited to
+find out that it does nothing, so the action set is empty for the duration and the
+bar is not drawn at all.
+
+Keyboard: Cmd+Return starts and leaves, the arrows move between points, Escape
+leaves through the same stack as every other card. The walk stops at both ends
+rather than wrapping, because a tour that wraps is a carousel.
+
+Still owed: nobody has walked a tour with a keyboard, and the source step's reader
+has not been seen.
+
+## CAN-09 is in, and looking at it found two things
+
+Search exists as a pure function of the document, `DocumentSearch`, and as a
+transient card summoned with Cmd+F from the Edit menu. Four properties are
+structural rather than documentary:
+
+- **A reason somebody wrote is findable by its own words.** A search that read only
+  bodies would find nothing in a decision, and "no budget" is exactly the kind of
+  thing a person looks for later.
+- **A result says what it is**: on the canvas, set aside, or history. The state is
+  a property of the *match*, so a reason whose decision no longer stands is offered
+  as history rather than as the reason that applies today.
+- **Rights are applied before the search**, not filtered out of its results, and
+  source content is not read to look for words. Both are named in `notSearched`: a
+  result set that looks complete while part of the document was out of scope is a
+  lie with a count on it.
+- **Revealing is not reversing.** Choosing a result opens its branch in the view
+  only, in `revealedBySearch`, and the test asserts the document is byte-identical,
+  the revision has not moved and the direction is still set aside.
+
+No intelligence is involved. The interface test searches with a service that
+records an issue when asked, so a search that reached it would fail rather than
+quietly cost time and content.
+
+**The capture found two defects that every test had passed.** One row per object
+meant a reason belonging to a branch appeared once for every member of it: the
+domain test asserted that the whole branch was findable, which is true, and read as
+a feature. And the card sat in the middle of the view, which is where the object it
+reveals is, so it covered its own result. Both are fixed, one row per decision
+filed under the root of the decided direction, and the card moved to the corner.
+That is the second time in two batches that only looking caught what asserting
+could not, and it is the argument for keeping the debt to a human pass.
+
+Still owed: the "not searched" line has never been seen, because Sarah holds no
+source and a local search is unfiltered.
 
 ## The answer streams, and a progress is never a proposal
 
@@ -89,7 +195,7 @@ kollio/
 ├── services/KollioServer         Vapor API
 ├── contracts/                    JSON schemas + the reference .kollio fixture
 ├── docs/                         architecture, format, action protocol, backend, limitations
-│   └── specs/SPECIFICATIONS.md   the normative specification: 71 features, 213 criteria
+│   └── specs/SPECIFICATIONS.md   the normative specification: 72 features, 217 criteria
 ├── openspec/                     the decomposition, in capabilities and lots
 └── scripts/                      run-app.sh, verify.sh, sync-xcodeproj.py,
                                  generate-spec-index.py, generate-spec-status.py
@@ -105,11 +211,12 @@ After adding or removing a file under `packages/KollioApp/Sources`, run:
 ## Verify before believing anything
 
 ```bash
-./scripts/verify.sh     # the spec views, 3 test suites (415 tests), the Xcode app target
+./scripts/verify.sh     # the spec views, 3 test suites (703 tests), the Xcode app target
+./scripts/ui-pass.sh    # the interface pass, on the real window, with a person
 ./scripts/run-app.sh --shot   # builds, launches, screenshots into build/
 ```
 
-`KOLLIO_REVIEW=explore|kept|setaside|reopened ./scripts/run-app.sh` opens the app in a given state so
+`KOLLIO_REVIEW=explore|kept|setaside|reopened|search|searchreason|narrowed|toobig|presenting|presentingmid ./scripts/run-app.sh` opens the app in a given state so
 one step of the vertical slice can be captured in a screenshot. Use it instead of guessing what a state
 looks like.
 
@@ -121,7 +228,7 @@ captures made that way and inspected.
 
 ## The specification is decomposed, and the views are generated
 
-`docs/specs/SPECIFICATIONS.md` is the normative source: 71 features, 213 acceptance criteria.
+`docs/specs/SPECIFICATIONS.md` is the normative source: 72 features, 217 acceptance criteria.
 `openspec/` decomposes it twice, and both decompositions are generated from that prose so they cannot
 drift out of sync with it:
 
@@ -187,7 +294,59 @@ Kollio token and the Groq key are different things and live in different places.
 - FR and EN from a native String Catalog, no key ever visible. `L10n` resolves the bundle for both
   SwiftPM and Xcode.
 
-## What is not done, and what that means
+## The human pass is automated, and it found two real bugs
+
+```bash
+./scripts/ui-pass.sh      # the real window, driven as a person drives it
+```
+
+`KollioUITests` types a French sentence into the entry point with a real keyboard,
+presses the action, reads the canvas back by name, quits with no `Cmd+S` anywhere,
+and checks the document comes back. Two tests, both green. The target is generated
+by `scripts/sync-xcodeproj.py` like every other target, and the application names
+what a test looks for in `AXID`, so a test finds the field and the canvas by what
+they are rather than by where they are.
+
+What the research got wrong, and what the measurements got right, are both worth
+keeping because the second contradicts the first:
+
+- The web answer is that macOS UI automation is a **permissions** problem: XCUITest
+  needs Accessibility for `com.apple.dt.Xcode-Helper`, and granting it needs either
+  a person or a write to `TCC.db`, which SIP forbids. That is true and it is the
+  problem of a CI runner.
+- On this machine **Accessibility is granted** (`AXIsProcessTrusted()` is true, and
+  the test runner needs no permission at all: XCUITest does not post to the HID tap,
+  it talks to the application over the accessibility channel). The old note that
+  "keystroke injection needs accessibility access, which this environment refuses"
+  was half wrong, and the half that was wrong was the half that blocked the work.
+- Synthetic input driven from a shell still does not arrive, and `./scripts/
+  ui-automation-check.sh` says why in one command: the window server reports **no
+  focused application**, so a posted event has no target. That remains true, it is
+  simply not what blocks the pass. Keep the script: it is the difference between
+  "the environment refuses" and three named facts.
+
+**What it found.** On its first run, two product bugs, both of which 697 tests had
+passed:
+
+1. `mostRecentDocumentURL` returned the *default* file whenever it existed, whatever
+   its age. An empty `Kollio.kollio`, written by a launch that had nothing in it, had
+   been shadowing every real document since 12:08 that day. Documents were written
+   and never opened again. The newest by date is now the one a launch opens, with a
+   same-second tie broken on the sortable stamp in the name.
+2. A quit with an empty document wrote an empty file, which is the file that did the
+   shadowing. Nothing is written for an empty document now.
+
+Neither was visible to a test because every test used a temporary directory it
+controlled, and one of them asserted "a stored document is restored" against a
+directory with nothing stale in it. `DocumentRestoreTests` covers both halves now,
+against a directory that is really written to and really left behind.
+
+Two smaller things came with it, and both are visible in the code rather than only
+here: the UI tests get their own documents directory through `KOLLIO_DOCUMENTS`, so a
+test never writes somebody's work, and the canvas is a container rather than a merge,
+so `kollio.canvas` names one element instead of every element that absorbed it.
+
+## What is not done, and what that means## What is not done, and what that means
 
 Read `docs/known-limitations.md` before promising anything. The short version:
 
@@ -225,7 +384,8 @@ Read `docs/known-limitations.md` before promising anything. The short version:
 
 ## Verified batches, in order
 
-CAN-02, CAN-03, CAN-04, CAN-05, CTX-01, AI-03, CTX-05, CAN-07, AI-05, the
+CAN-02, CAN-03, CAN-04, CAN-05, CTX-01, AI-03, CTX-05, CAN-07, AI-05, AI-12, CAN-09,
+CAN-10, the
 Apple 27 measurement batch, and the earlier DOC-01..04, CAN-01, AI-01, AI-02,
 AI-04, CTX-02..04, CTX-06, CTX-07, DEC-01..03 and CAN-06. What each one found is
 in [batch-log.md](batch-log.md); the current state and the exact next task are
@@ -280,10 +440,17 @@ The one implemented item is measurement of the intelligence that already existed
    camera's visible rectangle to cull. Connector routing samples its curve, so this is where the
    cost will show.
 6. Keyboard traversal between objects, so the canvas is usable without a pointer.
-7. **AI-12, manage a large context**, then CAN-09 and CAN-10. Those are the
-   remaining L3 lots, and each one now has the layer it
+7. **AI-12, manage a large context**: done, and described above. What it still owes
+   is a person: the scope row has never been seen, and the count is characters
+   rather than tokens. **CAN-09, search and navigate**, is also done and described
+   above: it is one of two batches where the capture caught defects the tests had
+   passed. **CAN-10, presentation and accessible reading**, is also done and
+   described above, which closes L3. What is left in L3 is nothing; the next lots
+   are the ones the specification puts after it.
+   Each one now has the layer it
    needs: a comparison is a reading, a synthesis is a derivative that must never
-    replace its sources. **AI-06 is verified.** The model, the commands,
+     replace its sources. **AI-06 is
+   verified.** The model, the commands,
     the refusals, the file format, the export, the composer and the card are in:
     `SummaryArtifact` and a
     `SummaryLedger` on the document at schema version 6, and five commands, with

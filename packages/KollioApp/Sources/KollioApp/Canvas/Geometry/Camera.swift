@@ -75,6 +75,17 @@ public struct Camera: Equatable, Sendable {
     // MARK: - Framing
 
     /// Frames `content` in `viewport`, centred, with breathing room.
+    /// Shows everything, and **never magnifies**.
+    ///
+    /// The lower clamp is the important half and it was missing. `fitting` used to
+    /// take the largest zoom the numbers allowed, up to the maximum, so a document
+    /// smaller than the window was framed at 300%: a launch whose document held one
+    /// sentence opened on that one sentence blown up to fill the screen, which is
+    /// not "show me everything" in any direction a reader wants. Nothing states that
+    /// magnification was ever wanted here; `Cmd+1` is the command for that, and a
+    /// person who pressed `Cmd+0` did not ask to be moved closer to their own work.
+    ///
+    /// Content larger than the view is still shrunk to fit, down to `minimumZoom`.
     public static func fitting(content: Rect, viewport: Size, padding: Double = 96) -> Camera {
         guard content.size.width > 0, content.size.height > 0, viewport.width > 0, viewport.height > 0 else {
             return Camera()
@@ -83,10 +94,11 @@ public struct Camera: Equatable, Sendable {
             width: max(viewport.width - padding * 2, 1),
             height: max(viewport.height - padding * 2, 1)
         )
+        // 1 is the cap, not `maximumZoom`: framing shrinks and centres, and stops.
         let zoom = min(
             available.width / content.size.width,
             available.height / content.size.height,
-            Self.maximumZoom
+            1
         )
         let clampedZoom = max(min(zoom, Self.maximumZoom), Self.minimumZoom)
         let center = content.center

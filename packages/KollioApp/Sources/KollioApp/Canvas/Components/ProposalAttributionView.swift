@@ -32,6 +32,9 @@ struct ProposalAttributionView: View {
         VStack(alignment: .leading, spacing: Space.s) {
             destinationRow
             promptRow
+            if let scope = proposal.contextScope {
+                scopeRow(scope)
+            }
             if proposal.limitations.isEmpty == false {
                 limitationsRow
             }
@@ -61,6 +64,7 @@ struct ProposalAttributionView: View {
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(destinationTint)
             Text(destinationLabel)
+                .accessibilityIdentifier(AXID.attributionPanel)
                 .font(TypeScale.metadata.weight(.medium))
                 .foregroundStyle(theme.textPrimary)
             if attribution?.destination.leftThisMachine == true {
@@ -107,6 +111,28 @@ struct ProposalAttributionView: View {
                 Text("· " + limitation.resolve(languageCode: L10n.bundle.preferredLocalizations.first ?? "en"))
                     .font(TypeScale.metadata)
                     .foregroundStyle(theme.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    /// What this answer could see, and what it could not.
+    ///
+    /// Shown only when the source had to narrow the request, because an answer
+    /// that saw everything needs no scope to declare. When it is narrowed, the
+    /// omitted part is named as a count rather than left for the person to infer
+    /// from the list below being shorter than the document.
+    private func scopeRow(_ scope: ProposalContextScope) -> some View {
+        VStack(alignment: .leading, spacing: Space.xs) {
+            Text(L10n.proposalScopeTitle)
+                .font(TypeScale.metadata.weight(.semibold))
+                .foregroundStyle(theme.textSecondary)
+            HStack(alignment: .firstTextBaseline, spacing: Space.xs) {
+                Text(scope.isNarrowed
+                     ? L10n.proposalScopeNarrowed(scope.readObjectIDs.count, scope.omittedObjectIDs.count)
+                     : L10n.proposalScopeComplete(scope.readObjectIDs.count))
+                    .font(TypeScale.metadata)
+                    .foregroundStyle(scope.isNarrowed ? theme.attention : theme.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }

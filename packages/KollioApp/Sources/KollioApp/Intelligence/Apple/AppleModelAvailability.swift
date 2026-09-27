@@ -27,22 +27,26 @@ public enum AppleModelAvailability: Equatable, Sendable {
 
     public var isUsable: Bool { self == .available }
 
-    /// An honest, localized-worded description. Never a guess: each case maps to
-    /// a reason the framework actually reported.
+    /// An honest description, in the interface's language. Never a guess: each
+    /// case maps to a reason the framework actually reported.
+    ///
+    /// These reach the status line, so they are catalog strings and not literals
+    /// in a switch. A French person reading an English refusal is not told what
+    /// happened to their question.
     public var explanation: String {
         switch self {
         case .available:
-            return "On this Mac"
+            return L10n.appleOnThisMac
         case .deviceNotEligible:
-            return "This Mac is not eligible for on-device intelligence."
+            return L10n.appleNotEligible
         case .intelligenceDisabled:
-            return "System intelligence is turned off. Turn it on in System Settings if you want on-device proposals."
+            return L10n.appleIntelligenceDisabled
         case .assetsNotReady:
-            return "The on-device model is still being prepared. Try again shortly."
+            return L10n.appleAssetsNotReady
         case .frameworkUnavailable:
-            return "This build has no on-device model support."
+            return L10n.appleFrameworkUnavailable
         case .unsupportedLanguage(let language):
-            return "The on-device model does not support \(language)."
+            return L10n.appleUnsupportedLanguage(language)
         }
     }
 }

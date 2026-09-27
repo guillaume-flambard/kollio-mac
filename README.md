@@ -1,9 +1,14 @@
 # Kollio
 
-A living visual document that humans and AI build, question and evolve together.
+Kollio is a private Mac workspace for turning messy research into traceable decisions without letting AI overwrite your thinking.
 
-The canvas is the application. A `.kollio` document is the product model. An
-intelligence source proposes a patch; it never regenerates the world.
+It is for independent product builders, consultants, researchers, strategists, and founders whose work is spread across notes, sources, browser tabs, and AI chats. Kollio keeps the original context, proposed directions, sources, accepted choices, and rejected paths in one visual document that can be saved and resumed.
+
+The canvas is the application. A `.kollio` document is the durable product model. An intelligence source proposes a bounded branch beside the existing work; it never regenerates the document or replaces human-authored text. The person keeps the proposal, sets it aside with a reason, or edits the document directly.
+
+The current goal is a focused solo beta on macOS. Kollio is not yet a team whiteboard, a general note archive, or an autonomous agent. The beta gate is simple: an external user starts from their own context, works through a real decision, saves, returns, and understands what the AI changed.
+
+See [.agents/product-marketing.md](.agents/product-marketing.md) for the audience, positioning, objections, and language, and [docs/PRODUCT_BLUEPRINT.md](docs/PRODUCT_BLUEPRINT.md) for the product contract and gates.
 
 ## What runs today
 
@@ -111,4 +116,18 @@ kollio/
 ## Visual review
 
 `KOLLIO_REVIEW=<state> ./scripts/run-app.sh` opens the app in a given state, so each step of the
-vertical slice can be captured in a screenshot: `explore`, `kept`, `setaside`, `reopened`.
+vertical slice can be captured in a screenshot: `explore`, `kept`, `setaside`, `reopened`, `search`,
+`searchreason`, `narrowed`, `toobig`, `presenting`, `presentingmid`.
+
+## The interface pass
+
+`./scripts/ui-pass.sh` runs the real window, driven as a person drives it: it types a sentence into
+the entry point with a real keyboard, presses the action, reads the canvas back by name, quits with
+no save, and checks the document comes back.
+
+It is not part of `./scripts/verify.sh` because it needs a display, and `verify.sh` must pass on a
+machine without one. It needs no permission and no accessibility grant: XCUITest talks to the
+application over the accessibility channel rather than posting to the keyboard.
+
+`./scripts/ui-automation-check.sh` answers whether synthetic input driven from a shell can arrive on
+this machine, and names the reason when it cannot.

@@ -451,7 +451,14 @@ rights before searching shared content. No intelligence for a textual search. Ze
 results keeps the query and offers to clear the filter. An unloaded source is not
 pretended to be searched.
 AC01 find a rejection reason. AC02 returning alters no status. AC03 a private result
-is absent from a shared search.
+is absent from a shared search. `DocumentSearch` is a pure function of the
+document: one result per object, one per decision for a reason, ordered by which
+part matched, and the same query always gives the same list. A result carries its
+state, which is a property of the match and not only of the object, so a reason
+whose decision no longer stands is offered as history. Rights are applied before
+the search, and source content is not read to look for words; both are reported in
+`notSearched` rather than passed over. A chosen result reveals its branch in this
+view only, recorded in `revealedBySearch`, and reopening stays a separate action.
 
 **CAN-10 — Presentation and accessible reading.** *SOLO. CAN-09.*
 Follow a chosen path of points, open sources and decisions, exit to the previous
@@ -459,7 +466,15 @@ camera. A reader cannot trigger a modification by accident. Presentation mode hi
 editing commands but keeps exit, source and navigation. Deleted points are skipped
 with an indication, never remapped to another object.
 AC01 complete keyboard path. AC02 exit returns to the previous context. AC03 no
-model call to present.
+model call to present. `ReadingPath` is a value and not document state: points keep
+their order, resolve against the document as it is, and a point that no longer
+resolves is skipped and counted, never replaced by whatever now occupies its place.
+A source and a decision are points too, each anchored where it can be read rather
+than where it was written. Every write goes through one guarded path that refuses
+while a tour is running, and the contextual action set is empty for its duration, so
+no editing command is offered rather than offered and then refused. The camera is
+remembered exactly and restored exactly, and Escape leaves through the same level
+stack as every other card.
 
 ## Context and sources
 
@@ -661,7 +676,14 @@ when the API allows, otherwise a declared estimate. A disposable session, never 
 infinite transcript. A mandatory constraint that does not fit asks for framing
 rather than being dropped. Thresholds are read from the runtime when exposed.
 AC01 a limit does not lose text. AC02 known constraints do not disappear silently.
-AC03 the output states its scope.
+AC03 the output states its scope. A payload is built from the projection that was
+measured, never from the request as it arrived, so the count and the text cannot
+disagree. A required item that does not fit refuses the request and asks for a
+narrower question rather than answering about less. A narrowed answer carries
+`ProposalContextScope`: what was read, what was left out, and a count declared as
+characters rather than tokens. "What was read" is filtered by that scope, and the
+scope is stated on the status line as well as in the attribution panel. Nothing is
+recorded when nothing was left out.
 
 
 **A27-06 — Measure the local model before changing it.** *SOLO. AI-01, AI-03.*

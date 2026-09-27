@@ -1,9 +1,9 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.4
 import PackageDescription
 
 let package = Package(
     name: "KollioServer",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v26)],
     products: [
         .library(name: "KollioServerKit", targets: ["KollioServerKit"]),
         .executable(name: "kollio-server", targets: ["KollioServer"])

@@ -324,6 +324,92 @@ STATUS_NOTES = {
                "selected object rather than the drawing under the pointer, moving a frame has no "
                "keyboard path, and the frame's rectangle is computed from estimated node sizes "
                "until SwiftUI has measured them."),
+    "AI-12": ("automatedVerified",
+              "ProposalContextScopeTests, AppleAdapterTests and "
+              "ProposalScopeInterfaceTests. AC01 a limit does not lose text: the "
+              "prompt is built from the projection that was measured rather than "
+              "from the request as it arrived, and the test asserts both the "
+              "identifier and the text of a dropped item are absent from the "
+              "payload. The first version counted a truncation in a log and then "
+              "sent the whole context anyway, so the count and the payload were "
+              "two answers to one question and only one was true. AC02 a known "
+              "constraint does not disappear silently: a required item that does "
+              "not fit refuses the request with contextTooLarge on both routes, "
+              "streaming included, and a required item can never be written down "
+              "as an omission. AC03 the output states its scope: a narrowed answer "
+              "carries what was read, what was left out and a count declared as "
+              "characters rather than tokens; 'what was read' is filtered by that "
+              "scope instead of read off the request; the status line says so "
+              "without a disclosure, and a refusal is never overwritten by the "
+              "notice. A complete answer records no scope at all, so the row is "
+              "not always lit. Reached on a real 8192-token window: the on-device "
+              "run logged one optional item dropped, a proposal arrived, and the "
+              "status line and the read list were both narrowed. Owed: the scope "
+              "row has never been seen on a screen, and the count is characters "
+              "because the app cannot know the tokenizer."),
+    "CAN-09": ("automatedVerified",
+               "DocumentSearchTests (18) and SearchInterfaceTests (13). AC01 the "
+               "reason somebody wrote is findable by its own words: a search that "
+               "only read bodies would find nothing in a decision, and the reason "
+               "is searched in the language being read, not only the source one, so "
+               "somebody who switched the interface and then searched for what they "
+               "read still finds it. A reason whose decision no longer stands is "
+               "offered as history, because presenting a superseded reason as the "
+               "one that applies today is worse than not finding it. AC02 returning "
+               "alters no status: the model asserts the document is byte-identical "
+               "after a search and after choosing a result, that semanticRevision "
+               "and revision have not moved, that the direction is still set aside, "
+               "and that the undo stack is exactly as it was. Revealing is a set of "
+               "ids in the view, not a document change, and closing the search puts "
+               "the canvas back to the same visible instances. AC03 a private "
+               "result is absent: the permitted set is applied before the search, "
+               "not filtered out of its results, and a leaked reason is called out "
+               "as the worse leak. Beyond the criteria: case- and accent-insensitive, "
+               "so a French person typing an unaccented keyboard is not told the "
+               "document does not contain what they can see; one result per object "
+               "and per decision; a title match outranks a reason outranks a body; "
+               "an excerpt is the words around the match rather than the top of a "
+               "long object; an empty field is not a search that found nothing; zero "
+               "results keeps the query and offers to clear it; Escape closes the "
+               "card without touching the selection. No intelligence is involved: a "
+               "service that records an issue when asked is the one the interface "
+               "test searches with, so a search that reached it would fail rather "
+               "than quietly cost time and content. Source content is named as not "
+               "searched, because Kollio does not read inside a file to look for "
+               "words. Seen on screen in both languages, and the first capture "
+               "exposed two real defects that are now fixed: one identical row per "
+               "member of a branch, and a card covering the object it revealed. "
+               "Owed: the 'not searched' line has not been seen on a screen, because "
+               "Sarah holds no source and a local search is unfiltered."),
+    "CAN-10": ("automatedVerified",
+               "ReadingPathTests (11) and PresentationInterfaceTests (14). AC01 a "
+               "complete keyboard path: a tour is started, walked to the end, walked "
+               "back and left, and every step of it goes through the same three "
+               "keys and Escape rather than a pointer. The walk stops at both ends "
+               "rather than wrapping, because a tour that wraps is a carousel and "
+               "the reader loses track of where they are; a step at either end is a "
+               "disabled button rather than one that ignores its press. A step says "
+               "which kind of thing it is, because a reader who cannot tell an "
+               "object from a piece of evidence is not following anything. AC02 exit "
+               "returns to the previous context: the camera is put somewhere "
+               "deliberately wrong first, so 'restored' cannot be satisfied by a "
+               "tour that never moved it, and the exact camera comes back through "
+               "Escape as well as through the button. AC03 no model call to present: "
+               "the interface test walks the whole document with a service that "
+               "records an issue when asked, and it is not called once. The reader "
+               "cannot change the document: every write goes through one guarded "
+               "path, and the test fires set aside, reopen, create, update, keep, "
+               "discard, a move and a raw recordDecision at it, then asserts the "
+               "document is byte-identical and the semantic revision unmoved, and "
+               "that writing works again afterwards. A tour clears the cards that "
+               "were open, because a reading mode with a claim editor underneath is a "
+               "trap. Seen on screen, and the first capture found the editing bar "
+               "still offered explore, clarify and set aside during a tour: the "
+               "command layer refused every one of them, and a person invited to "
+               "press something during a reading is being invited to find out. The "
+               "action set is empty for the duration and the bar is not drawn. "
+               "Owed: a tour has never been walked by a person with a keyboard, and "
+               "the source step's reader has not been seen."),
     "AI-05": ("automatedVerified",
                "ComparisonTests: AC01 a cell cannot hold a number unless its criterion carries a "
                "measure, refused in the store with criterionHasNoMeasure while words are accepted "
@@ -364,6 +450,35 @@ STATUS_NOTES = {
                "InteractionReliabilityTests: the camera is identical before and after."),
     "DEC-03": ("automatedVerified",
                "InteractionReliabilityTests and VerticalSliceTests: one Keep, one undo."),
+    # inProgress, not automatedVerified: ExperimentTests proves AC01 (criterion
+    # kept before the result) and AC02 (evidence links name real objects), and
+    # proves that editing appends a visible revision. AC03's wording is
+    # "editing *after a result* creates a visible revision", and no result can
+    # exist until DEC-05 exists, so the criterion is not fully earned yet.
+    "DEC-04": ("inProgress",
+               "ExperimentTests: criteria kept across edits, evidence links "
+               "validated against the document, revisions append. AC03 awaits "
+               "DEC-05's result."),
+    # automatedVerified, and the wording matters: AC01 holds because the
+    # observation and the outcome are different fields and nothing derives one
+    # from the other (observationIsNotTheConclusion), AC02 because an
+    # inconclusive result cannot exist without its reason and a result carries
+    # what the run could not do, AC03 by construction — there is no
+    # edit-a-result command at all, and proposals are refused the whole family
+    # (proposalsMayNotTouchResults).
+    "DEC-05": ("automatedVerified",
+               "ExperimentResultTests (13) and ResultInterfaceTests (8): "
+               "observation and outcome apart, inconclusive needs a reason, "
+               "no rewrite exists, learning proposed then accepted only by "
+               "naming a real decision."),
+    # inProgress, honestly: AC01 (the origin of a decision is readable) and
+    # AC02 (returning to the present mutates nothing) are held by named tests
+    # over the existing journal; AC03's restore-as-a-new-transaction, the
+    # read-only preview with differences, and the explicit retention purge
+    # are written and not built.
+    "DEC-06": ("inProgress",
+               "HistoryTimelineTests (6) over HistoryLedger.narrative: AC01 "
+               "and AC02 proved; preview, restore and purge not built."),
 }
 
 
