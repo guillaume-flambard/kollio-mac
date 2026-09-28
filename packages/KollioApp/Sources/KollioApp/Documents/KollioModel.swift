@@ -78,6 +78,26 @@ public struct DocumentFileStore: Sendable {
         directory.appendingPathComponent("\(name).\(DocumentCodec.fileExtension)")
     }
 
+    /// A stable, human-readable file target for a document title.
+    ///
+    /// The title remains untouched in the document. Only characters that can
+    /// change path meaning are replaced in the registry filename.
+    public func availableURL(named title: String, excluding currentURL: URL? = nil) -> URL {
+        let forbidden = CharacterSet(charactersIn: "/:\0")
+        let filename = title.unicodeScalars.map { scalar in
+            forbidden.contains(scalar) ? "-" : String(scalar)
+        }.joined().trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: ".")))
+        let base = filename.isEmpty ? "Kollio" : String(filename.prefix(120))
+        var candidate = url(named: base)
+        var suffix = 2
+        while candidate.standardizedFileURL != currentURL?.standardizedFileURL,
+              FileManager.default.fileExists(atPath: candidate.path) {
+            candidate = url(named: "\(base) \(suffix)")
+            suffix += 1
+        }
+        return candidate
+    }
+
     public func load(_ url: URL) throws -> KollioDocument {
         try DocumentCodec.read(from: url)
     }
@@ -2330,24 +2350,11 @@ public final class KollioModel {
     @discardableResult
     public func restoreHistory(to entryID: HistoryEntryID, label: String) -> Bool {
         guard let target = try? previewHistory(at: entryID) else { return false }
-        // Replace the current document with the target state, then record
-        /// the restore as a new history entry with the provided label.
-        /// This is a new action, not an invisible rollback (DEC-06 AC03).
-        let before = session.document
-        session.replaceDocument(with: target)
-        let restoreEntry = HistoryEntry(
-            id: HistoryEntryID(rawValue: UUID().uuidString),
-            kind: .applied,
-            at: Date(),
-            label: label,
-            commands: [], // the replace is the effect; no commands to replay
-            revisionBefore: before.revision,
-            revisionAfter: target.revision,
-            semanticRevisionBefore: before.semanticRevision,
-            semanticRevisionAfter: target.semanticRevision
-        )
-        session.recordHistoryEntry(restoreEntry)
-        return true
+        guard let command = try? RestoreDocument(document: target) else { return false }
+        // A restore is an ordinary validated transaction. It therefore gets one
+        // undo entry and a replayable journal command instead of replacing the
+        // live store behind the undo stack.
+        return perform([.restoreDocument(command)], label: label)
     }
 
     /// Removes history entries older than a retention horizon.
@@ -2381,13 +2388,17 @@ public final class KollioModel {
         public var measurementValue: String = ""
         public var measurementUnit: String = ""
         public var limits: String = ""
+        /// The document object that carries the observation, when the person
+        /// selected one before opening the result composer.
+        public var sourceObjectID: ObjectID?
         public var inconclusive: Bool = false
         public var inconclusiveReason: String = ""
         /// The stance on the criterion, when the person says the run concluded.
         public var criterionMet: Bool = true
 
-        public init(experimentID: ExperimentID) {
+        public init(experimentID: ExperimentID, sourceObjectID: ObjectID? = nil) {
             self.experimentID = experimentID
+            self.sourceObjectID = sourceObjectID
         }
     }
 
@@ -2424,7 +2435,12 @@ public final class KollioModel {
     /// Opens the result composer for an experiment.
     public func startRecordingResult(_ experimentID: ExperimentID) {
         experimentDraft = nil
-        resultDraft = ResultDraft(experimentID: experimentID)
+        let target = document.experiments.experiment(experimentID)?.targetObjectID
+        let source = selection
+            .filter { $0 != target && document.object($0) != nil }
+            .sorted { $0.rawValue < $1.rawValue }
+            .first
+        resultDraft = ResultDraft(experimentID: experimentID, sourceObjectID: source)
     }
 
     /// Records the drafted result.
@@ -2470,6 +2486,7 @@ public final class KollioModel {
             observation: observation,
             measurements: measurements,
             limits: limits.isEmpty ? nil : limits,
+            sourceObjectID: draft.sourceObjectID,
             outcome: outcome,
             provenance: .human("local-user")
         ))], label: L10n.undoRecordResult) else { return false }
@@ -3705,6 +3722,120 @@ public final class KollioModel {
     public func redo() {
         if session.redo() {
             pruneSelection()
+        }
+    }
+
+    /// Changes both the versioned document title and its local registry name.
+    /// The previous file is removed only after the renamed document is safely
+    /// written, so a failed save can never cost the user their document.
+    @discardableResult
+    public func renameDocument(to title: String) -> Bool {
+        let previousSession = session
+        let previousURL = documentURL
+        let targetURL = fileStore.availableURL(named: title, excluding: previousURL)
+
+        guard apply([.renameDocument(.init(
+            title: title,
+            provenance: .human("owner")
+        ))], label: L10n.undoRenameDocument) else {
+            return false
+        }
+
+        do {
+            try fileStore.save(document, to: targetURL)
+            documentURL = targetURL
+            if previousURL.standardizedFileURL != targetURL.standardizedFileURL,
+               FileManager.default.fileExists(atPath: previousURL.path) {
+                try FileManager.default.removeItem(at: previousURL)
+            }
+            status = L10n.statusSaved
+            return true
+        } catch {
+            session = previousSession
+            try? FileManager.default.removeItem(at: targetURL)
+            documentURL = previousURL
+            status = L10n.errorSaveFailed
+            return false
+        }
+    }
+
+    /// Creates a fully independent copy and makes that copy the active document.
+    /// The source file is never moved or rewritten.
+    @discardableResult
+    public func duplicateDocument(named title: String) -> Bool {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty == false else {
+            status = L10n.errorGeneric
+            return false
+        }
+
+        do {
+            let duplicate = try DocumentDuplicator.duplicate(document, title: trimmed)
+            let targetURL = fileStore.availableURL(named: trimmed)
+            try fileStore.save(duplicate, to: targetURL)
+            session = KollioSession(document: duplicate)
+            documentURL = targetURL
+            selection = []
+            preview = nil
+            composer = nil
+            status = L10n.statusSaved
+            return true
+        } catch {
+            status = L10n.errorSaveFailed
+            return false
+        }
+    }
+
+    /// The scope the export commands act on: the selection when there is one,
+    /// the whole document otherwise. Every export format takes the same scope, so
+    /// two formats can never quietly disagree about what is being handed over.
+    public func exportScope() -> DocumentExportScope {
+        selection.isEmpty ? .document : .objects(selection)
+    }
+
+    /// Freezes the scope once. Markdown, PNG and the asset archive are all
+    /// rendered from this, which is what makes the export match the preview.
+    public func exportSnapshot() -> DocumentExportSnapshot {
+        DocumentExporter.snapshot(of: document, scope: exportScope())
+    }
+
+    public func exportPortableDocument() -> KollioDocument {
+        DocumentExporter.portableDocument(from: document, scope: exportScope())
+    }
+
+    /// The assets the exported scope depends on. Whether a file is still on the
+    /// machine is checked here, because the plan is a claim about the disk and
+    /// not only about the document.
+    public func exportAssetPlan() -> [AssetArchiveEntry] {
+        let candidates = document.sources.sources.values
+            .map(\.locator)
+            .filter { $0.isEmpty == false }
+        let existing = Set(candidates.filter { FileManager.default.fileExists(atPath: $0) })
+        return DocumentExporter.assetPlan(for: document, scope: exportScope(), existingPaths: existing)
+    }
+
+    /// Writes the asset archive and says what it managed to carry.
+    @discardableResult
+    public func archiveExportAssets(into parent: URL) -> Bool {
+        let plan = exportAssetPlan()
+        guard plan.isEmpty == false else {
+            status = L10n.assetsArchiveEmpty
+            return false
+        }
+        do {
+            let result = try AssetArchiver.archive(
+                plan: plan,
+                into: parent,
+                named: document.title + " " + L10n.assetsArchiveSuffix
+            )
+            status = L10n.assetsArchived(
+                copied: result.copied.count,
+                missing: result.skipped.count
+            )
+            return true
+        } catch {
+            status = L10n.errorSaveFailed
+            return false
         }
     }
 

@@ -34,6 +34,7 @@
 		E1C1059CAE0996DA95CD8850 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4155C7B22DF3C3EC1209850 /* DesignTokens.swift */; };
 		4E7CFED6A2537C86DFCE7A66 /* InstrumentStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A15E395871E207E02B7C575A /* InstrumentStyle.swift */; };
 		00D7CB0981F9B01187718397 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C7E575628E93E7F5B7B314D /* Theme.swift */; };
+		60F9845DE518DC0546D0A054 /* ExportArtifacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61458BEAF92AFDCC1310F149 /* ExportArtifacts.swift */; };
 		BC95C2ABA26D1B42C7EE1D7A /* KollioModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273245039D6F21FD6ABF9DF4 /* KollioModel.swift */; };
 		8CD037E8A401D0323A3772E3 /* SarahFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD7D59809DEE0ABB5166D00 /* SarahFixture.swift */; };
 		3150B6416DCE9ED7639DE2C1 /* AppleCandidate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 074B2192F731A442C71DCD6C /* AppleCandidate.swift */; };
@@ -46,7 +47,6 @@
 		534AD1AD15A5AAF4241E7484 /* SourcePreviewPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8EAE57F4CA04F29987C9D5E /* SourcePreviewPanel.swift */; };
 		7D3B1C69F370518572309708 /* SourceReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6F7FA74392B6E7F0D3C7EA /* SourceReader.swift */; };
 		C48C4FF8CD106E48C1CC74F1 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 8A4724B06916EE6A9F73228F /* Localizable.xcstrings */; };
-		CCFFB54761536D8195832D01 /* EntryPointUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 897EF79B12368F99D3422844 /* EntryPointUITests.swift */; };
 		26C70343164791EB7E0D636E /* KollioCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8F00A5AE310737084590BBD6 /* KollioCore */; };
 		862E11B013B7E3490389CCC2 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B34B0507FE00BF36365A62E0 /* Info.plist */; };
 /* End PBXBuildFile section */
@@ -79,6 +79,7 @@
 		A4155C7B22DF3C3EC1209850 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DesignTokens.swift; path = ../../packages/KollioApp/Sources/KollioApp/DesignSystem/DesignTokens.swift; sourceTree = SOURCE_ROOT; };
 		A15E395871E207E02B7C575A /* InstrumentStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InstrumentStyle.swift; path = ../../packages/KollioApp/Sources/KollioApp/DesignSystem/InstrumentStyle.swift; sourceTree = SOURCE_ROOT; };
 		4C7E575628E93E7F5B7B314D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Theme.swift; path = ../../packages/KollioApp/Sources/KollioApp/DesignSystem/Theme.swift; sourceTree = SOURCE_ROOT; };
+		61458BEAF92AFDCC1310F149 /* ExportArtifacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ExportArtifacts.swift; path = ../../packages/KollioApp/Sources/KollioApp/Documents/ExportArtifacts.swift; sourceTree = SOURCE_ROOT; };
 		273245039D6F21FD6ABF9DF4 /* KollioModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = KollioModel.swift; path = ../../packages/KollioApp/Sources/KollioApp/Documents/KollioModel.swift; sourceTree = SOURCE_ROOT; };
 		8DD7D59809DEE0ABB5166D00 /* SarahFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SarahFixture.swift; path = ../../packages/KollioApp/Sources/KollioApp/Documents/SarahFixture.swift; sourceTree = SOURCE_ROOT; };
 		074B2192F731A442C71DCD6C /* AppleCandidate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppleCandidate.swift; path = ../../packages/KollioApp/Sources/KollioApp/Intelligence/Apple/AppleCandidate.swift; sourceTree = SOURCE_ROOT; };
@@ -92,9 +93,7 @@
 		4E6F7FA74392B6E7F0D3C7EA /* SourceReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SourceReader.swift; path = ../../packages/KollioApp/Sources/KollioApp/Sources/SourceReader.swift; sourceTree = SOURCE_ROOT; };
 		8A4724B06916EE6A9F73228F /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = ../../packages/KollioApp/Sources/KollioApp/Resources/Localizable.xcstrings; sourceTree = SOURCE_ROOT; };
 		B34B0507FE00BF36365A62E0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		897EF79B12368F99D3422844 /* EntryPointUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = EntryPointUITests.swift; path = ../../packages/KollioUITests/EntryPointUITests.swift; sourceTree = SOURCE_ROOT; };
 		F5BF48AA40CAD7891EB709FC /* Kollio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kollio.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		8F925F9112ACE944BBD4206D /* KollioUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KollioUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,13 +102,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				26C70343164791EB7E0D636E /* KollioCore in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1D25CEBB84ADE4A1CB592705 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -224,6 +216,7 @@
 		B837DD26924365EFAE8F8615 /* Documents */ = {
 			isa = PBXGroup;
 			children = (
+				61458BEAF92AFDCC1310F149 /* ExportArtifacts.swift */,
 				273245039D6F21FD6ABF9DF4 /* KollioModel.swift */,
 				8DD7D59809DEE0ABB5166D00 /* SarahFixture.swift */,
 			);
@@ -283,14 +276,6 @@
 			name = Sources;
 			sourceTree = "<group>";
 		};
-		B4B8408B3E0837A2FB5D83CE /* KollioUITests */ = {
-			isa = PBXGroup;
-			children = (
-				897EF79B12368F99D3422844 /* EntryPointUITests.swift */,
-			);
-			name = KollioUITests;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -313,26 +298,6 @@
 			productName = Kollio;
 			productReference = F5BF48AA40CAD7891EB709FC /* Kollio.app */;
 			productType = "com.apple.product-type.application";
-		};
-		A70504A180D4DD424DC170BA /* KollioUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = EA471AA5171C489D1241B5E6;
-			buildPhases = (
-				328DD88C4A5F5CF99A9BE55F /* Sources */,
-				1D25CEBB84ADE4A1CB592705 /* Frameworks */,
-				F8D2685CE71737C7BE3A7889 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				6EB330DC63F531FE7FADF850 /* PBXTargetDependency */,
-			);
-			name = KollioUITests;
-			packageProductDependencies = (
-			);
-			productName = KollioUITests;
-			productReference = 8F925F9112ACE944BBD4206D /* KollioUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
@@ -364,7 +329,6 @@
 			projectRoot = "";
 			targets = (
 				DE9A815229F9740C22B6C682 /* Kollio */,
-				A70504A180D4DD424DC170BA /* KollioUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -375,13 +339,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				C48C4FF8CD106E48C1CC74F1 /* Localizable.xcstrings in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		F8D2685CE71737C7BE3A7889 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -419,6 +376,7 @@
 				E1C1059CAE0996DA95CD8850 /* DesignTokens.swift in Sources */,
 				4E7CFED6A2537C86DFCE7A66 /* InstrumentStyle.swift in Sources */,
 				00D7CB0981F9B01187718397 /* Theme.swift in Sources */,
+				60F9845DE518DC0546D0A054 /* ExportArtifacts.swift in Sources */,
 				BC95C2ABA26D1B42C7EE1D7A /* KollioModel.swift in Sources */,
 				8CD037E8A401D0323A3772E3 /* SarahFixture.swift in Sources */,
 				3150B6416DCE9ED7639DE2C1 /* AppleCandidate.swift in Sources */,
@@ -430,14 +388,6 @@
 				4DAFF2352F8ECB94CC937E42 /* CSVTable.swift in Sources */,
 				534AD1AD15A5AAF4241E7484 /* SourcePreviewPanel.swift in Sources */,
 				7D3B1C69F370518572309708 /* SourceReader.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		328DD88C4A5F5CF99A9BE55F /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				CCFFB54761536D8195832D01 /* EntryPointUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -493,7 +443,6 @@
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks");
 				MARKETING_VERSION = 0.1.0;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.kollio.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -512,38 +461,9 @@
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks");
 				MARKETING_VERSION = 0.1.0;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.kollio.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-			};
-			name = Release;
-		};
-		9828B3F5F7ADC6223A9CFCCB /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Automatic;
-				GENERATE_INFOPLIST_FILE = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.kollio.app.uitests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks", "@loader_path/../Frameworks");
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				TEST_TARGET_NAME = Kollio;
-			};
-			name = Debug;
-		};
-		6F78CC9D6D0D7C86B4ED85CA /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Automatic;
-				GENERATE_INFOPLIST_FILE = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.kollio.app.uitests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks", "@loader_path/../Frameworks");
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				TEST_TARGET_NAME = Kollio;
 			};
 			name = Release;
 		};
@@ -568,34 +488,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		EA471AA5171C489D1241B5E6 /* Build configuration list for PBXNativeTarget "KollioUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				9828B3F5F7ADC6223A9CFCCB /* Debug */,
-				6F78CC9D6D0D7C86B4ED85CA /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 /* End XCConfigurationList section */
-
-/* Begin PBXTargetDependency section */
-		6EB330DC63F531FE7FADF850 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = DE9A815229F9740C22B6C682 /* Kollio */;
-			targetProxy = 5695CE95D31342A0B1E79E37 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
-/* Begin PBXContainerItemProxy section */
-		5695CE95D31342A0B1E79E37 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 46F86FAA6BBF9AC94A7E4595 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = DE9A815229F9740C22B6C682;
-			remoteInfo = Kollio;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin XCLocalSwiftPackageReference section */
 		3E810DE79F20F2FBDB55E7AA /* XCLocalSwiftPackageReference "../packages/KollioCore" */ = {

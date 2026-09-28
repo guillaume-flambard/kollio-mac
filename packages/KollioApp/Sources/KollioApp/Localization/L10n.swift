@@ -522,6 +522,7 @@ public enum L10n {
 
     // Undo labels
     public static var undoMove: String { callAsFunction("undo.move") }
+    public static var undoRenameDocument: String { callAsFunction("undo.renameDocument") }
     public static var actionDuplicateOccurrence: String { callAsFunction("action.duplicateOccurrence") }
     public static var actionDuplicateVariant: String { callAsFunction("action.duplicateVariant") }
     public static var actionRemoveOccurrence: String { callAsFunction("action.removeOccurrence") }
@@ -543,6 +544,19 @@ public enum L10n {
     public static var newDocument: String { callAsFunction("menu.newDocument") }
     public static var openDemo: String { callAsFunction("menu.openDemo") }
     public static var save: String { callAsFunction("menu.save") }
+    public static var renameDocument: String { callAsFunction("document.rename") }
+    public static var duplicateDocument: String { callAsFunction("document.duplicate") }
+    public static var documentName: String { callAsFunction("document.name") }
+    public static var exportMarkdown: String { callAsFunction("document.exportMarkdown") }
+    public static var exportKollio: String { callAsFunction("document.exportKollio") }
+    public static var exportPNG: String { callAsFunction("document.exportPNG") }
+    public static var exportAssets: String { callAsFunction("document.exportAssets") }
+    public static var assetsArchiveSuffix: String { callAsFunction("document.assetsArchiveSuffix") }
+    public static var assetsArchiveEmpty: String { callAsFunction("document.assetsArchiveEmpty") }
+    public static func assetsArchived(copied: Int, missing: Int) -> String {
+        String(format: callAsFunction("document.assetsArchived"), copied, missing)
+    }
+    public static var copySuffix: String { callAsFunction("document.copySuffix") }
     public static var fit: String { callAsFunction("menu.fit") }
     public static var actualSize: String { callAsFunction("menu.actualSize") }
     public static var undo: String { callAsFunction("menu.undo") }

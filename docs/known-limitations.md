@@ -88,6 +88,25 @@ SDK 27.0.
 
 ## Implemented and tested
 
+- **A document can be renamed, duplicated and exported, and the export is one frozen
+  scope rendered three ways.** Markdown, PNG and the asset archive all read the same
+  `DocumentExportSnapshot`, so a person cannot preview one scope and receive another.
+  The PNG is a drawing of those blocks, not a screenshot of the window, which is why
+  it is checkable: a test asserts the raster is a real PNG and that every non-blank
+  line it draws is a line the Markdown export would have written. The `.kollio` export
+  is a portable document that reopens with no dangling internal reference, and it
+  deliberately carries no history rather than a partial audit trail whose entries
+  describe objects that were not exported. The asset archive copies the files the
+  exported scope actually cites and writes a manifest that says, per source, whether
+  it was copied, is a link with no bytes to copy, or has moved: a missing file is a
+  warning, never a silent omission. Renaming changes the versioned title and the
+  registry filename together, and the previous file is removed only after the renamed
+  document is safely written. Duplicating produces a new `documentId` with internal
+  references remapped, a new file, and an untouched original. Tested in the domain and
+  at the model. **What is not proved:** the three export commands were never driven by
+  a human through their system dialogs, and a frozen scope of a real long document has
+  not been read as a picture yet.
+
 - **The document can be read along a chosen path, and read only.** `ReadingPath`
   is a value rather than document state: points keep their order, resolve against
   the document as it is, and a point that no longer resolves is skipped and counted
