@@ -493,7 +493,13 @@ Everything in the non-goals, and also, honestly:
   it undid, and would have resurrected it), and a restore no longer empties the journal (it
   would have deleted the very timeline the person was reading).
   What is still missing: the purge horizon is a fixed thirty days rather than a choice, and
-  neither the timeline nor the preview sheet has ever been seen by a person.
+  neither the timeline nor the preview sheet has been seen at all. The canvas around them has
+  been observed running — the entry screen, the demo document, its relationships, the status
+  line — and reads correctly, in the interface's language. Everything behind a contextual set
+  has not: opening the timeline, reading a preview and confirming a purge were not reached,
+  because reaching them needs UI driving and this session is under a standing instruction not
+  to build capture tooling. A green suite and an unlooked-at card are different things, and only
+  one of them is evidence.
   The differences themselves are built and tested: the preview shows what changed about this
   object, not the past document in full, because that was the question the timeline was asking.
   A replay starts from the document as this session opened it, held on the session rather than
