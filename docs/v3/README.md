@@ -47,7 +47,7 @@ Pour chaque scène (Accueil, Création, Contenu, Proposition, Décision/Historiq
 
 ## Attention — travail local plus récent que GitHub
 
-Un examen **read-only** sur le Mac a révélé que `/Users/memo/projects/kollio-mac` est à `e8d24c9` (HEAD détachée) avec des modifications en cours. Un pack produit plus récent se trouve dans `docs/product-pack/`, notamment `P13_VISUAL_LANGUAGE_V3.md`. **Ne pas écraser ni faire checkout dans cette copie.** La PR courante ne modifie que GitHub, dans une branche documentaire isolée.
+Un examen **read-only** sur le Mac a révélé que `the local Mac checkout of Kollio` est à `e8d24c9` (HEAD détachée) avec des modifications en cours. Un pack produit plus récent se trouve dans `docs/product-pack/`, notamment `P13_VISUAL_LANGUAGE_V3.md`. **Ne pas écraser ni faire checkout dans cette copie.** La PR courante ne modifie que GitHub, dans une branche documentaire isolée.
 
 Ce pack décrit le canvas comme l'application et la préférence pour un chrome très discret ; cela doit être confronté à la navigation à sections du Web. Voir [l'arbitrage A/B](https://github.com/guillaume-flambard/kollio/blob/docs/kollio-v3-reconciliation/docs/v3/05-design-arbitrations.md) avant de modifier le shell SwiftUI.
 
