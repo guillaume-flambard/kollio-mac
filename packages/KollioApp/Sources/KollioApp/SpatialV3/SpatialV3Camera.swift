@@ -8,16 +8,20 @@ struct SpatialV3Camera: Equatable {
     var y: CGFloat = 0
 
     static let world = CGSize(width: 1000, height: 640)
-    static let minZoom: CGFloat = 0.35
+    static let minZoom: CGFloat = 0.08
     static let maxZoom: CGFloat = 2.4
 
-    static func fitted(in size: CGSize) -> SpatialV3Camera {
-        guard size.width > 0, size.height > 0 else { return SpatialV3Camera() }
-        let zoom = min(max(min(size.width / world.width, size.height / world.height), minZoom), maxZoom)
+    static func fitted(
+        in size: CGSize,
+        bounds: CGRect = CGRect(origin: .zero, size: world)
+    ) -> SpatialV3Camera {
+        guard size.width > 0, size.height > 0,
+              bounds.width > 0, bounds.height > 0 else { return SpatialV3Camera() }
+        let zoom = min(max(min(size.width / bounds.width, size.height / bounds.height), minZoom), maxZoom)
         return SpatialV3Camera(
             zoom: zoom,
-            x: (size.width - world.width * zoom) / 2,
-            y: (size.height - world.height * zoom) / 2
+            x: (size.width - bounds.width * zoom) / 2 - bounds.minX * zoom,
+            y: (size.height - bounds.height * zoom) / 2 - bounds.minY * zoom
         )
     }
 

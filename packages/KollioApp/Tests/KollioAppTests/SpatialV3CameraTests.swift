@@ -23,11 +23,22 @@ struct SpatialV3CameraTests {
         #expect(abs((anchor.y - zoomed.y) / zoomed.zoom - (anchor.y - camera.y) / camera.zoom) < 0.0001)
     }
 
+    @Test("Dynamic negative-origin bounds are fitted into the viewport")
+    func dynamicBounds() {
+        let bounds = CGRect(x: -1550, y: -620, width: 4250, height: 2100)
+        let camera = SpatialV3Camera.fitted(in: CGSize(width: 1280, height: 800), bounds: bounds)
+        #expect(camera.zoom < 0.35)
+        #expect(bounds.minX * camera.zoom + camera.x >= -0.0001)
+        #expect(bounds.maxX * camera.zoom + camera.x <= 1280.0001)
+        #expect(bounds.minY * camera.zoom + camera.y >= -0.0001)
+        #expect(bounds.maxY * camera.zoom + camera.y <= 800.0001)
+    }
+
     @Test("Zoom is bounded and panning never changes its source camera")
     func safety() {
         let original = SpatialV3Camera()
         #expect(original.zoomed(by: 100, around: .zero).zoom == 2.4)
-        #expect(original.zoomed(by: 0.001, around: .zero).zoom == 0.35)
+        #expect(original.zoomed(by: 0.001, around: .zero).zoom == 0.08)
         let panned = original.panned(dx: -34, dy: 48)
         #expect(panned.x == -34)
         #expect(panned.y == 48)
