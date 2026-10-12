@@ -30,6 +30,11 @@ struct KollioApp: App {
                 .frame(minWidth: 920, minHeight: 790)
         }
         .defaultSize(width: 1250, height: 1020)
+        Window("Spatial Ink V3 — Test 100 objets", id: "spatial-v3-stress") {
+            SpatialV3WindowView(initialDepth: 2, stressMode: true)
+                .frame(minWidth: 920, minHeight: 790)
+        }
+        .defaultSize(width: 1250, height: 1020)
     }
 }
 
@@ -77,6 +82,9 @@ struct KollioCommands: Commands {
                 openWindow(id: "spatial-v3")
             }
             .keyboardShortcut("3", modifiers: [.command, .shift])
+            Button("Spatial Ink V3 — Test 100 objets…") {
+                openWindow(id: "spatial-v3-stress")
+            }
             Divider()
             Button(L10n.fit) { model.fitContent() }
                 .keyboardShortcut("0", modifiers: .command)

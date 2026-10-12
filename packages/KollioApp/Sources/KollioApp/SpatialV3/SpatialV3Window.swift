@@ -3,22 +3,71 @@ import SwiftUI
 /// An isolated native preview of the shared Spatial Ink contract.
 /// Does not alter existing .kollio documents, app state or persistence.
 struct SpatialV3WindowView: View {
+    private let stressMode: Bool
     @State private var depth = 1
     @State private var selectedID: String?
+    @State private var focusHistory: [String] = []
+    @State private var search = ""
+    @State private var focusedGroup: Int? = nil
 
     /// Demo-only initial state for deterministic Web/Mac screenshot comparisons.
     /// The actual native app continues to open with the initial three-node state.
-    init(initialDepth: Int = 1, initialSelectedID: String? = nil) {
+    init(initialDepth: Int = 1, initialSelectedID: String? = nil, stressMode: Bool = false) {
+        self.stressMode = stressMode
         let boundedDepth = initialDepth == 2 ? 2 : 1
         _depth = State(initialValue: boundedDepth)
         _selectedID = State(initialValue: initialSelectedID)
     }
 
+    private var allNodes: [SpatialV3Node] {
+        stressMode ? SpatialV3StressFixture.nodes : SpatialV3Fixture.nodes
+    }
+    private var allEdges: [SpatialV3Edge] {
+        stressMode ? SpatialV3StressFixture.edges : SpatialV3Fixture.edges
+    }
+    private var groupCount: Int { (allNodes.count + 11) / 12 }
+    private var focusedIDs: Set<String>? {
+        guard let focusedGroup else { return nil }
+        return Set(allNodes.dropFirst(focusedGroup * 12).prefix(12).map(\.id))
+    }
     private var visibleNodes: [SpatialV3Node] {
-        SpatialV3Fixture.nodes.filter { $0.depth <= depth }
+        allNodes.filter { node in
+            node.depth <= depth && (focusedIDs?.contains(node.id) ?? true)
+        }
     }
     private var visibleEdges: [SpatialV3Edge] {
-        SpatialV3Fixture.edges.filter { $0.depth <= depth }
+        allEdges.filter { edge in
+            edge.depth <= depth && (focusedIDs.map { $0.contains(edge.source) && $0.contains(edge.target) } ?? true)
+        }
+    }
+    private var matches: [SpatialV3Node] {
+        guard !search.isEmpty else { return [] }
+        return allNodes.filter { $0.label.localizedCaseInsensitiveContains(search) || $0.id.localizedCaseInsensitiveContains(search) }
+    }
+    private var focusedNeighbors: [SpatialV3Node] {
+        guard let selectedID else { return [] }
+        let ids = Set(allEdges.compactMap { edge -> String? in
+            if edge.source == selectedID { return edge.target }
+            if edge.target == selectedID { return edge.source }
+            return nil
+        })
+        return allNodes.filter { ids.contains($0.id) }
+    }
+    private func navigate(to node: SpatialV3Node) {
+        depth = 2
+        focusedGroup = nil
+        selectedID = node.id
+        if focusHistory.last != node.id { focusHistory.append(node.id) }
+        if focusHistory.count > 12 { focusHistory.removeFirst() }
+    }
+    private var spotlightIDs: Set<String>? {
+        guard let selectedID else { return nil }
+        var ids: Set<String> = [selectedID]
+        for edge in allEdges {
+            if edge.source == selectedID { ids.insert(edge.target) }
+            if edge.target == selectedID { ids.insert(edge.source) }
+        }
+        return ids
     }
     private var selected: SpatialV3Node? {
         visibleNodes.first { $0.id == selectedID }
@@ -50,15 +99,15 @@ struct SpatialV3WindowView: View {
                             .font(.system(size: 10, weight: .semibold))
                             .tracking(1.6)
                             .foregroundStyle(KollioV3Tokens.Light.muted)
-                        Text(SpatialV3Fixture.title)
+                        Text(stressMode ? SpatialV3StressFixture.title : SpatialV3Fixture.title)
                             .font(.system(size: 32, weight: .semibold, design: .default))
                             .tracking(-1.1)
-                        Text(SpatialV3Fixture.subtitle)
+                        Text(stressMode ? SpatialV3StressFixture.subtitle : SpatialV3Fixture.subtitle)
                             .font(.system(size: 14))
                             .foregroundStyle(KollioV3Tokens.Light.muted)
                     }
                     Spacer()
-                    Button(depth == 1 ? "+ Explorer 3 relations" : "− Replier les branches") {
+                    Button(depth == 1 ? "+ Explorer les relations" : "− Replier les branches") {
                         depth = depth == 1 ? 2 : 1
                         if let selectedID, !visibleNodes.contains(where: { $0.id == selectedID }) {
                             self.selectedID = nil
@@ -68,12 +117,87 @@ struct SpatialV3WindowView: View {
                     .tint(KollioV3Tokens.Light.accent)
                     .accessibilityIdentifier("spatial-v3-expand")
                 }
+                if stressMode {
+                    VStack(alignment: .leading, spacing: 8) {
+                        TextField("Rechercher un objet ou identifiant", text: $search)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(maxWidth: 330)
+                        if !search.isEmpty {
+                            ScrollView(.horizontal) {
+                                HStack {
+                                    ForEach(Array(matches.prefix(8))) { item in
+                                        Button(item.label) {
+                                            navigate(to: item)
+                                        }
+                                        .buttonStyle(.bordered)
+                                    }
+                                    if matches.isEmpty { Text("Aucun résultat").font(.caption) }
+                                }
+                            }
+                        }
+                        ScrollView(.horizontal) {
+                            HStack {
+                                Button("Vue d'ensemble") { focusedGroup = nil }
+                                ForEach(0..<groupCount, id: \.self) { index in
+                                    Button("Groupe \(index + 1)") {
+                                        focusedGroup = index
+                                        depth = 2
+                                    }
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                    }
+                }
+                if !focusHistory.isEmpty {
+                    ScrollView(.horizontal) {
+                        HStack(spacing: 6) {
+                            Button("Vue d'ensemble") { selectedID = nil; focusHistory = []; focusedGroup = nil }
+                            ForEach(Array(focusHistory.enumerated()), id: \.offset) { index, id in
+                                Button(allNodes.first(where: { $0.id == id })?.label ?? id) {
+                                    focusHistory = Array(focusHistory.prefix(index + 1))
+                                    if let node = allNodes.first(where: { $0.id == id }) { navigate(to: node) }
+                                }
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .accessibilityLabel("Parcours d'exploration")
+                }
+                if !focusedNeighbors.isEmpty {
+                    ScrollView(.horizontal) {
+                        HStack {
+                            ForEach(Array(focusedNeighbors.prefix(12))) { node in
+                                Button(node.label + " ↗") { navigate(to: node) }
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .accessibilityLabel("Relations de l'objet")
+                }
+                if let spotlightIDs {
+                    HStack {
+                        Text("Focus · \(spotlightIDs.count) objets reliés")
+                            .font(.caption)
+                        Spacer()
+                        Button("Revenir au contexte") {
+                            selectedID = nil
+                            focusHistory = []
+                            focusedGroup = nil
+                            depth = 2
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .padding(10)
+                    .background(KollioV3Tokens.Light.accentSoft, in: RoundedRectangle(cornerRadius: 10))
+                }
                 ScrollView(.horizontal) {
                     SpatialV3Stage(
                         nodes: visibleNodes,
-                        allNodes: SpatialV3Fixture.nodes,
+                        allNodes: focusedGroup == nil ? allNodes : visibleNodes,
                         edges: visibleEdges,
-                        selectedID: $selectedID
+                        selectedID: $selectedID,
+                        spotlightIDs: spotlightIDs
                     )
                     .frame(minWidth: 900, minHeight: 580)
                 }
@@ -81,6 +205,12 @@ struct SpatialV3WindowView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 18))
                 .overlay(RoundedRectangle(cornerRadius: 18).stroke(KollioV3Tokens.Light.border))
                 .accessibilityIdentifier("spatial-v3-canvas")
+                .onChange(of: selectedID) { _, id in
+                    if let id, focusHistory.last != id {
+                        focusHistory.append(id)
+                        if focusHistory.count > 12 { focusHistory.removeFirst() }
+                    }
+                }
                 Group {
                     if let selected {
                         HStack(alignment: .top, spacing: 12) {
@@ -128,6 +258,7 @@ struct SpatialV3Stage: View {
     let allNodes: [SpatialV3Node]
     let edges: [SpatialV3Edge]
     @Binding var selectedID: String?
+    let spotlightIDs: Set<String>?
 
     @State private var camera = SpatialV3Camera()
     @State private var lastDrag = CGSize.zero
@@ -205,11 +336,13 @@ struct SpatialV3Stage: View {
                     .allowsHitTesting(false)
                     ForEach(edges) { edge in
                         SpatialV3Branch(edge: edge, origin: contentOrigin)
+                            .opacity(spotlightIDs == nil || edge.source == selectedID || edge.target == selectedID ? 1 : 0.09)
                     }
                     ForEach(nodes) { node in
                         SpatialV3MeaningNode(node: node, selected: selectedID == node.id) {
                             selectedID = selectedID == node.id ? nil : node.id
                         }
+                        .opacity(spotlightIDs == nil || spotlightIDs?.contains(node.id) == true ? 1 : 0.17)
                         .position(x: SpatialV3Camera.world.width * node.x - contentOrigin.x,
                                   y: SpatialV3Camera.world.height * node.y - contentOrigin.y)
                     }
@@ -271,6 +404,20 @@ struct SpatialV3Stage: View {
                 .allowsHitTesting(false)
             }
             .onAppear { fit(geometry.size) }
+            .onChange(of: selectedID) { _, target in
+                guard let target, let node = allNodes.first(where: { $0.id == target }) else { return }
+                let zoom = max(0.8, min(1.2, camera.zoom))
+                let x = node.x * SpatialV3Camera.world.width - contentOrigin.x
+                let y = node.y * SpatialV3Camera.world.height - contentOrigin.y
+                withAnimation(.easeInOut(duration: 0.22)) {
+                    camera = SpatialV3Camera(
+                        zoom: zoom,
+                        x: geometry.size.width / 2 - x * zoom,
+                        y: geometry.size.height / 2 - y * zoom
+                    )
+                }
+                cameraEdited = true
+            }
             .onChange(of: nodes.count) { _, _ in
                 if !cameraEdited { fit(geometry.size) }
             }
