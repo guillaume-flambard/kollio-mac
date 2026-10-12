@@ -25,6 +25,11 @@ struct KollioApp: App {
         .defaultSize(width: 1280, height: 860)
         .windowToolbarStyle(.unifiedCompact)
         .commands { KollioCommands(model: model) }
+        Window("Spatial Ink V3", id: "spatial-v3") {
+            SpatialV3WindowView()
+                .frame(minWidth: 920, minHeight: 790)
+        }
+        .defaultSize(width: 1250, height: 1020)
     }
 }
 
@@ -45,6 +50,7 @@ struct RootView: View {
 
 /// System commands live in native macOS menus. The canvas itself stays empty.
 struct KollioCommands: Commands {
+    @Environment(\.openWindow) private var openWindow
     let model: KollioModel
 
     var body: some Commands {
@@ -67,6 +73,11 @@ struct KollioCommands: Commands {
                 .disabled(!model.canRedo)
         }
         CommandGroup(after: .toolbar) {
+            Button("Spatial Ink V3 Preview…") {
+                openWindow(id: "spatial-v3")
+            }
+            .keyboardShortcut("3", modifiers: [.command, .shift])
+            Divider()
             Button(L10n.fit) { model.fitContent() }
                 .keyboardShortcut("0", modifiers: .command)
             Button(L10n.actualSize) {
