@@ -6,6 +6,8 @@ struct SpatialV3WindowView: View {
     private let stressMode: Bool
     @State private var depth = 1
     @State private var selectedID: String?
+    @State private var search = ""
+    @State private var focusedGroup: Int? = nil
 
     /// Demo-only initial state for deterministic Web/Mac screenshot comparisons.
     /// The actual native app continues to open with the initial three-node state.
@@ -16,11 +18,30 @@ struct SpatialV3WindowView: View {
         _selectedID = State(initialValue: initialSelectedID)
     }
 
+    private var allNodes: [SpatialV3Node] {
+        stressMode ? SpatialV3StressFixture.nodes : SpatialV3Fixture.nodes
+    }
+    private var allEdges: [SpatialV3Edge] {
+        stressMode ? SpatialV3StressFixture.edges : SpatialV3Fixture.edges
+    }
+    private var groupCount: Int { (allNodes.count + 11) / 12 }
+    private var focusedIDs: Set<String>? {
+        guard let focusedGroup else { return nil }
+        return Set(allNodes.dropFirst(focusedGroup * 12).prefix(12).map(\.id))
+    }
     private var visibleNodes: [SpatialV3Node] {
-        (stressMode ? SpatialV3StressFixture.nodes : SpatialV3Fixture.nodes).filter { $0.depth <= depth }
+        allNodes.filter { node in
+            node.depth <= depth && (focusedIDs?.contains(node.id) ?? true)
+        }
     }
     private var visibleEdges: [SpatialV3Edge] {
-        (stressMode ? SpatialV3StressFixture.edges : SpatialV3Fixture.edges).filter { $0.depth <= depth }
+        allEdges.filter { edge in
+            edge.depth <= depth && (focusedIDs.map { $0.contains(edge.source) && $0.contains(edge.target) } ?? true)
+        }
+    }
+    private var matches: [SpatialV3Node] {
+        guard !search.isEmpty else { return [] }
+        return allNodes.filter { $0.label.localizedCaseInsensitiveContains(search) || $0.id.localizedCaseInsensitiveContains(search) }
     }
     private var selected: SpatialV3Node? {
         visibleNodes.first { $0.id == selectedID }
@@ -70,10 +91,44 @@ struct SpatialV3WindowView: View {
                     .tint(KollioV3Tokens.Light.accent)
                     .accessibilityIdentifier("spatial-v3-expand")
                 }
+                if stressMode {
+                    VStack(alignment: .leading, spacing: 8) {
+                        TextField("Rechercher un objet ou identifiant", text: $search)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(maxWidth: 330)
+                        if !search.isEmpty {
+                            ScrollView(.horizontal) {
+                                HStack {
+                                    ForEach(Array(matches.prefix(8))) { item in
+                                        Button(item.label) {
+                                            selectedID = item.id
+                                            depth = 2
+                                            focusedGroup = allNodes.firstIndex(where: { $0.id == item.id }).map { $0 / 12 }
+                                        }
+                                        .buttonStyle(.bordered)
+                                    }
+                                    if matches.isEmpty { Text("Aucun résultat").font(.caption) }
+                                }
+                            }
+                        }
+                        ScrollView(.horizontal) {
+                            HStack {
+                                Button("Vue d'ensemble") { focusedGroup = nil }
+                                ForEach(0..<groupCount, id: \.self) { index in
+                                    Button("Groupe \(index + 1)") {
+                                        focusedGroup = index
+                                        depth = 2
+                                    }
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                    }
+                }
                 ScrollView(.horizontal) {
                     SpatialV3Stage(
                         nodes: visibleNodes,
-                        allNodes: stressMode ? SpatialV3StressFixture.nodes : SpatialV3Fixture.nodes,
+                        allNodes: focusedGroup == nil ? allNodes : visibleNodes,
                         edges: visibleEdges,
                         selectedID: $selectedID
                     )
