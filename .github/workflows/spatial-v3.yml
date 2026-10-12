@@ -1,0 +1,21 @@
+name: Spatial Ink Native Validation
+on:
+  pull_request:
+    paths:
+      - 'packages/KollioApp/Sources/KollioApp/SpatialV3/**'
+      - 'packages/KollioApp/Sources/KollioApp/App/KollioApp.swift'
+      - 'packages/KollioApp/Tests/KollioAppTests/SpatialV3*'
+      - '.github/workflows/spatial-v3.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-spatial:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate native package
+        run: swift build --package-path packages/KollioApp
+      - name: Validate shared Spatial V3 semantics
+        run: swift test --package-path packages/KollioApp --filter SpatialV3
