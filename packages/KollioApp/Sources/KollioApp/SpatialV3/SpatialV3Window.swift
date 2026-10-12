@@ -127,32 +127,98 @@ struct SpatialV3Stage: View {
     let edges: [SpatialV3Edge]
     @Binding var selectedID: String?
 
+    @State private var camera = SpatialV3Camera()
+    @State private var lastDrag = CGSize.zero
+    @State private var lastPinch: CGFloat = 1
+    @State private var cameraEdited = false
+
+    private func fit(_ size: CGSize) {
+        camera = SpatialV3Camera.fitted(in: size)
+        cameraEdited = false
+    }
+    private func zoom(_ factor: CGFloat, in size: CGSize) {
+        camera = camera.zoomed(by: factor, around: CGPoint(x: size.width / 2, y: size.height / 2))
+        cameraEdited = true
+    }
+
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
-                Canvas { context, size in
-                    let step: CGFloat = 26
-                    for x in stride(from: CGFloat(12), through: size.width, by: step) {
-                        for y in stride(from: CGFloat(12), through: size.height, by: step) {
-                            context.fill(
-                                Path(ellipseIn: CGRect(x: x, y: y, width: 1.5, height: 1.5)),
-                                with: .color(KollioV3Tokens.Light.border)
-                            )
+            ZStack(alignment: .bottomTrailing) {
+                ZStack {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 5)
+                                .onChanged { value in
+                                    let deltaX = value.translation.width - lastDrag.width
+                                    let deltaY = value.translation.height - lastDrag.height
+                                    camera = camera.panned(dx: deltaX, dy: deltaY)
+                                    lastDrag = value.translation
+                                    cameraEdited = true
+                                }
+                                .onEnded { _ in lastDrag = .zero }
+                        )
+                    Canvas { context, size in
+                        let step: CGFloat = 26
+                        for x in stride(from: CGFloat(12), through: size.width, by: step) {
+                            for y in stride(from: CGFloat(12), through: size.height, by: step) {
+                                context.fill(
+                                    Path(ellipseIn: CGRect(x: x, y: y, width: 1.5, height: 1.5)),
+                                    with: .color(KollioV3Tokens.Light.border)
+                                )
+                            }
                         }
                     }
-                }
-                ForEach(edges) { edge in
-                    if let from = nodes.first(where: { $0.id == edge.source }),
-                       let to = nodes.first(where: { $0.id == edge.target }) {
-                        SpatialV3Branch(edge: edge, from: from, to: to, canvasSize: geometry.size)
+                    .allowsHitTesting(false)
+                    ForEach(edges) { edge in
+                        if let from = nodes.first(where: { $0.id == edge.source }),
+                           let to = nodes.first(where: { $0.id == edge.target }) {
+                            SpatialV3Branch(edge: edge, from: from, to: to, canvasSize: SpatialV3Camera.world)
+                        }
+                    }
+                    ForEach(nodes) { node in
+                        SpatialV3MeaningNode(node: node, selected: selectedID == node.id) {
+                            selectedID = selectedID == node.id ? nil : node.id
+                        }
+                        .position(x: SpatialV3Camera.world.width * node.x,
+                                  y: SpatialV3Camera.world.height * node.y)
                     }
                 }
-                ForEach(nodes) { node in
-                    SpatialV3MeaningNode(node: node, selected: selectedID == node.id) {
-                        selectedID = selectedID == node.id ? nil : node.id
-                    }
-                    .position(x: geometry.size.width * node.x, y: geometry.size.height * node.y)
+                .frame(width: SpatialV3Camera.world.width, height: SpatialV3Camera.world.height)
+                .scaleEffect(camera.zoom, anchor: .topLeading)
+                .offset(x: camera.x, y: camera.y)
+                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+                .clipped()
+                .simultaneousGesture(
+                    MagnifyGesture()
+                        .onChanged { value in
+                            let delta = value.magnification / lastPinch
+                            camera = camera.zoomed(by: delta, around: CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2))
+                            lastPinch = value.magnification
+                            cameraEdited = true
+                        }
+                        .onEnded { _ in lastPinch = 1 }
+                )
+
+                HStack(spacing: 5) {
+                    Button("−") { zoom(1 / 1.2, in: geometry.size) }
+                        .accessibilityLabel("Dézoomer")
+                    Text("\(Int((camera.zoom * 100).rounded())) %")
+                        .monospacedDigit()
+                        .font(.caption2)
+                        .frame(minWidth: 40)
+                    Button("+") { zoom(1.2, in: geometry.size) }
+                        .accessibilityLabel("Zoomer")
+                    Button("Recentrer") { fit(geometry.size) }
+                        .accessibilityIdentifier("spatial-v3-fit")
                 }
+                .buttonStyle(.bordered)
+                .padding(8)
+                .background(KollioV3Tokens.Light.surface, in: RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(KollioV3Tokens.Light.border))
+                .padding(18)
+                .accessibilityIdentifier("spatial-v3-camera")
+
                 VStack {
                     HStack {
                         Text("ESPACE 01 / EXPLORATION")
@@ -173,6 +239,10 @@ struct SpatialV3Stage: View {
                 }
                 .padding(20)
                 .allowsHitTesting(false)
+            }
+            .onAppear { fit(geometry.size) }
+            .onChange(of: geometry.size) { _, next in
+                if !cameraEdited { fit(next) }
             }
         }
     }
