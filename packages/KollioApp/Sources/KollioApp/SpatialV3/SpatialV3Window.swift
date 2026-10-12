@@ -43,6 +43,15 @@ struct SpatialV3WindowView: View {
         guard !search.isEmpty else { return [] }
         return allNodes.filter { $0.label.localizedCaseInsensitiveContains(search) || $0.id.localizedCaseInsensitiveContains(search) }
     }
+    private var spotlightIDs: Set<String>? {
+        guard let selectedID else { return nil }
+        var ids: Set<String> = [selectedID]
+        for edge in allEdges {
+            if edge.source == selectedID { ids.insert(edge.target) }
+            if edge.target == selectedID { ids.insert(edge.source) }
+        }
+        return ids
+    }
     private var selected: SpatialV3Node? {
         visibleNodes.first { $0.id == selectedID }
     }
@@ -125,12 +134,28 @@ struct SpatialV3WindowView: View {
                         }
                     }
                 }
+                if let spotlightIDs {
+                    HStack {
+                        Text("Focus · \(spotlightIDs.count) objets reliés")
+                            .font(.caption)
+                        Spacer()
+                        Button("Revenir au contexte") {
+                            selectedID = nil
+                            focusedGroup = nil
+                            depth = 2
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .padding(10)
+                    .background(KollioV3Tokens.Light.accentSoft, in: RoundedRectangle(cornerRadius: 10))
+                }
                 ScrollView(.horizontal) {
                     SpatialV3Stage(
                         nodes: visibleNodes,
                         allNodes: focusedGroup == nil ? allNodes : visibleNodes,
                         edges: visibleEdges,
-                        selectedID: $selectedID
+                        selectedID: $selectedID,
+                        spotlightIDs: spotlightIDs
                     )
                     .frame(minWidth: 900, minHeight: 580)
                 }
@@ -185,6 +210,7 @@ struct SpatialV3Stage: View {
     let allNodes: [SpatialV3Node]
     let edges: [SpatialV3Edge]
     @Binding var selectedID: String?
+    let spotlightIDs: Set<String>?
 
     @State private var camera = SpatialV3Camera()
     @State private var lastDrag = CGSize.zero
@@ -262,11 +288,13 @@ struct SpatialV3Stage: View {
                     .allowsHitTesting(false)
                     ForEach(edges) { edge in
                         SpatialV3Branch(edge: edge, origin: contentOrigin)
+                            .opacity(spotlightIDs == nil || edge.source == selectedID || edge.target == selectedID ? 1 : 0.09)
                     }
                     ForEach(nodes) { node in
                         SpatialV3MeaningNode(node: node, selected: selectedID == node.id) {
                             selectedID = selectedID == node.id ? nil : node.id
                         }
+                        .opacity(spotlightIDs == nil || spotlightIDs?.contains(node.id) == true ? 1 : 0.17)
                         .position(x: SpatialV3Camera.world.width * node.x - contentOrigin.x,
                                   y: SpatialV3Camera.world.height * node.y - contentOrigin.y)
                     }
