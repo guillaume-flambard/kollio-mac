@@ -3,22 +3,24 @@ import SwiftUI
 /// An isolated native preview of the shared Spatial Ink contract.
 /// Does not alter existing .kollio documents, app state or persistence.
 struct SpatialV3WindowView: View {
+    private let stressMode: Bool
     @State private var depth = 1
     @State private var selectedID: String?
 
     /// Demo-only initial state for deterministic Web/Mac screenshot comparisons.
     /// The actual native app continues to open with the initial three-node state.
-    init(initialDepth: Int = 1, initialSelectedID: String? = nil) {
+    init(initialDepth: Int = 1, initialSelectedID: String? = nil, stressMode: Bool = false) {
+        self.stressMode = stressMode
         let boundedDepth = initialDepth == 2 ? 2 : 1
         _depth = State(initialValue: boundedDepth)
         _selectedID = State(initialValue: initialSelectedID)
     }
 
     private var visibleNodes: [SpatialV3Node] {
-        SpatialV3Fixture.nodes.filter { $0.depth <= depth }
+        (stressMode ? SpatialV3StressFixture.nodes : SpatialV3Fixture.nodes).filter { $0.depth <= depth }
     }
     private var visibleEdges: [SpatialV3Edge] {
-        SpatialV3Fixture.edges.filter { $0.depth <= depth }
+        (stressMode ? SpatialV3StressFixture.edges : SpatialV3Fixture.edges).filter { $0.depth <= depth }
     }
     private var selected: SpatialV3Node? {
         visibleNodes.first { $0.id == selectedID }
@@ -50,15 +52,15 @@ struct SpatialV3WindowView: View {
                             .font(.system(size: 10, weight: .semibold))
                             .tracking(1.6)
                             .foregroundStyle(KollioV3Tokens.Light.muted)
-                        Text(SpatialV3Fixture.title)
+                        Text(stressMode ? SpatialV3StressFixture.title : SpatialV3Fixture.title)
                             .font(.system(size: 32, weight: .semibold, design: .default))
                             .tracking(-1.1)
-                        Text(SpatialV3Fixture.subtitle)
+                        Text(stressMode ? SpatialV3StressFixture.subtitle : SpatialV3Fixture.subtitle)
                             .font(.system(size: 14))
                             .foregroundStyle(KollioV3Tokens.Light.muted)
                     }
                     Spacer()
-                    Button(depth == 1 ? "+ Explorer 3 relations" : "− Replier les branches") {
+                    Button(depth == 1 ? "+ Explorer les relations" : "− Replier les branches") {
                         depth = depth == 1 ? 2 : 1
                         if let selectedID, !visibleNodes.contains(where: { $0.id == selectedID }) {
                             self.selectedID = nil
@@ -71,7 +73,7 @@ struct SpatialV3WindowView: View {
                 ScrollView(.horizontal) {
                     SpatialV3Stage(
                         nodes: visibleNodes,
-                        allNodes: SpatialV3Fixture.nodes,
+                        allNodes: stressMode ? SpatialV3StressFixture.nodes : SpatialV3Fixture.nodes,
                         edges: visibleEdges,
                         selectedID: $selectedID
                     )
