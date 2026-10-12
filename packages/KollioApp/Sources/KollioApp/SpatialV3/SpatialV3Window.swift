@@ -6,6 +6,14 @@ struct SpatialV3WindowView: View {
     @State private var depth = 1
     @State private var selectedID: String?
 
+    /// Demo-only initial state for deterministic Web/Mac screenshot comparisons.
+    /// The actual native app continues to open with the initial three-node state.
+    init(initialDepth: Int = 1, initialSelectedID: String? = nil) {
+        let boundedDepth = initialDepth == 2 ? 2 : 1
+        _depth = State(initialValue: boundedDepth)
+        _selectedID = State(initialValue: initialSelectedID)
+    }
+
     private var visibleNodes: [SpatialV3Node] {
         SpatialV3Fixture.nodes.filter { $0.depth <= depth }
     }
