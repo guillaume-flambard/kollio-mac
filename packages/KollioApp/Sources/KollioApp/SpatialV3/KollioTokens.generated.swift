@@ -14,6 +14,15 @@ public enum KollioV3Tokens {
     public static let verified = Color(red: 125/255.0, green: 139/255.0, blue: 85/255.0)
     public static let pending = Color(red: 166/255.0, green: 122/255.0, blue: 56/255.0)
     public static let error = Color(red: 187/255.0, green: 78/255.0, blue: 87/255.0)
+    public static let onAccent = Color(red: 255/255.0, green: 255/255.0, blue: 255/255.0)
+    public static let onAccentMuted = Color(red: 233/255.0, green: 224/255.0, blue: 237/255.0)
+    public static let gridDot = Color(red: 211/255.0, green: 204/255.0, blue: 213/255.0)
+    public static let relation = Color(red: 168/255.0, green: 157/255.0, blue: 174/255.0)
+    public static let evidenceLink = Color(red: 138/255.0, green: 154/255.0, blue: 131/255.0)
+    public static let questionLink = Color(red: 190/255.0, green: 138/255.0, blue: 128/255.0)
+    public static let eyebrow = Color(red: 119/255.0, green: 106/255.0, blue: 129/255.0)
+    public static let sourceBorder = Color(red: 202/255.0, green: 213/255.0, blue: 196/255.0)
+    public static let sourceInk = Color(red: 94/255.0, green: 117/255.0, blue: 78/255.0)
   }
   public enum Dark {
     public static let paper = Color(red: 28/255.0, green: 27/255.0, blue: 30/255.0)
@@ -27,6 +36,15 @@ public enum KollioV3Tokens {
     public static let verified = Color(red: 184/255.0, green: 202/255.0, blue: 136/255.0)
     public static let pending = Color(red: 232/255.0, green: 189/255.0, blue: 117/255.0)
     public static let error = Color(red: 237/255.0, green: 142/255.0, blue: 147/255.0)
+    public static let onAccent = Color(red: 36/255.0, green: 27/255.0, blue: 43/255.0)
+    public static let onAccentMuted = Color(red: 73/255.0, green: 56/255.0, blue: 83/255.0)
+    public static let gridDot = Color(red: 74/255.0, green: 68/255.0, blue: 76/255.0)
+    public static let relation = Color(red: 179/255.0, green: 168/255.0, blue: 185/255.0)
+    public static let evidenceLink = Color(red: 172/255.0, green: 185/255.0, blue: 165/255.0)
+    public static let questionLink = Color(red: 212/255.0, green: 165/255.0, blue: 160/255.0)
+    public static let eyebrow = Color(red: 195/255.0, green: 181/255.0, blue: 204/255.0)
+    public static let sourceBorder = Color(red: 82/255.0, green: 99/255.0, blue: 80/255.0)
+    public static let sourceInk = Color(red: 192/255.0, green: 209/255.0, blue: 175/255.0)
   }
   public enum Space {
     public static let xs: CGFloat = 4
