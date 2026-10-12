@@ -255,17 +255,10 @@ private struct SpatialV3Branch: View {
     let canvasSize: CGSize
 
     var body: some View {
-        let start = CGPoint(x: canvasSize.width * from.x, y: canvasSize.height * from.y)
-        let end = CGPoint(x: canvasSize.width * to.x, y: canvasSize.height * to.y)
-        let bend = min(CGFloat(120), max(CGFloat(45), abs(end.y - start.y) * 0.35))
-        let direction: CGFloat = end.y < start.y ? -1 : 1
         Path { path in
-            path.move(to: start)
-            path.addCurve(
-                to: end,
-                control1: CGPoint(x: start.x, y: start.y + direction * bend),
-                control2: CGPoint(x: end.x, y: end.y - direction * bend)
-            )
+            guard let first = edge.points.first else { return }
+            path.move(to: first)
+            for point in edge.points.dropFirst() { path.addLine(to: point) }
         }
         .stroke(
             edge.type == "proposes" ? KollioV3Tokens.Light.accent
