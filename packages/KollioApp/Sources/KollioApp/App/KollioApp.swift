@@ -95,6 +95,11 @@ struct KollioApp: App {
                 kollioExport: $kollioExport
             )
         }
+        Window("Spatial Ink V3", id: "spatial-v3") {
+            SpatialV3WindowView()
+                .frame(minWidth: 920, minHeight: 790)
+        }
+        .defaultSize(width: 1250, height: 1020)
     }
 }
 
@@ -158,6 +163,7 @@ struct RootView: View {
 
 /// System commands live in native macOS menus. The canvas itself stays empty.
 struct KollioCommands: Commands {
+    @Environment(\.openWindow) private var openWindow
     let model: KollioModel
     @Binding var isRenaming: Bool
     @Binding var isDuplicating: Bool
@@ -219,6 +225,11 @@ struct KollioCommands: Commands {
                 .disabled(!model.canRedo)
         }
         CommandGroup(after: .toolbar) {
+            Button("Spatial Ink V3 Preview…") {
+                openWindow(id: "spatial-v3")
+            }
+            .keyboardShortcut("3", modifiers: [.command, .shift])
+            Divider()
             Button(L10n.search) { model.openSearch() }
                 .keyboardShortcut("f", modifiers: .command)
             Button(model.isPresenting ? L10n.presentationExit : L10n.presentationStart) {
