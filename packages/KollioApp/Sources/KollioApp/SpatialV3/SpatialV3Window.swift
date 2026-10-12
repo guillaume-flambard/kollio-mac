@@ -71,6 +71,7 @@ struct SpatialV3WindowView: View {
                 ScrollView(.horizontal) {
                     SpatialV3Stage(
                         nodes: visibleNodes,
+                        allNodes: SpatialV3Fixture.nodes,
                         edges: visibleEdges,
                         selectedID: $selectedID
                     )
@@ -124,6 +125,7 @@ struct SpatialV3WindowView: View {
 
 struct SpatialV3Stage: View {
     let nodes: [SpatialV3Node]
+    let allNodes: [SpatialV3Node]
     let edges: [SpatialV3Edge]
     @Binding var selectedID: String?
 
@@ -132,8 +134,39 @@ struct SpatialV3Stage: View {
     @State private var lastPinch: CGFloat = 1
     @State private var cameraEdited = false
 
+    private func bounds(for nodes: [SpatialV3Node]) -> CGRect {
+        guard !nodes.isEmpty else {
+            return CGRect(origin: .zero, size: SpatialV3Camera.world)
+        }
+        var left = CGFloat.infinity
+        var top = CGFloat.infinity
+        var right = -CGFloat.infinity
+        var bottom = -CGFloat.infinity
+        for node in nodes {
+            let w: CGFloat = node.kind == "mission" ? 247 : node.kind == "question" ? 170 : 210
+            let h: CGFloat = node.kind == "mission" ? 115 : node.kind == "question" ? 60 : 96
+            let x = node.x * SpatialV3Camera.world.width
+            let y = node.y * SpatialV3Camera.world.height
+            left = min(left, x - w / 2)
+            top = min(top, y - h / 2)
+            right = max(right, x + w / 2)
+            bottom = max(bottom, y + h / 2)
+        }
+        return CGRect(x: left - 30, y: top - 30,
+                      width: right - left + 60, height: bottom - top + 60)
+    }
+    private var contentBounds: CGRect { bounds(for: nodes) }
+    private var fullBounds: CGRect { bounds(for: allNodes) }
+    private var contentOrigin: CGPoint {
+        CGPoint(x: min(0, fullBounds.minX), y: min(0, fullBounds.minY))
+    }
+    private var canvasSize: CGSize {
+        CGSize(width: max(SpatialV3Camera.world.width, fullBounds.maxX - contentOrigin.x),
+               height: max(SpatialV3Camera.world.height, fullBounds.maxY - contentOrigin.y))
+    }
+
     private func fit(_ size: CGSize) {
-        camera = SpatialV3Camera.fitted(in: size)
+        camera = SpatialV3Camera.fitted(in: size, bounds: contentBounds.offsetBy(dx: -contentOrigin.x, dy: -contentOrigin.y))
         cameraEdited = false
     }
     private func zoom(_ factor: CGFloat, in size: CGSize) {
@@ -171,20 +204,17 @@ struct SpatialV3Stage: View {
                     }
                     .allowsHitTesting(false)
                     ForEach(edges) { edge in
-                        if let from = nodes.first(where: { $0.id == edge.source }),
-                           let to = nodes.first(where: { $0.id == edge.target }) {
-                            SpatialV3Branch(edge: edge, from: from, to: to, canvasSize: SpatialV3Camera.world)
-                        }
+                        SpatialV3Branch(edge: edge, origin: contentOrigin)
                     }
                     ForEach(nodes) { node in
                         SpatialV3MeaningNode(node: node, selected: selectedID == node.id) {
                             selectedID = selectedID == node.id ? nil : node.id
                         }
-                        .position(x: SpatialV3Camera.world.width * node.x,
-                                  y: SpatialV3Camera.world.height * node.y)
+                        .position(x: SpatialV3Camera.world.width * node.x - contentOrigin.x,
+                                  y: SpatialV3Camera.world.height * node.y - contentOrigin.y)
                     }
                 }
-                .frame(width: SpatialV3Camera.world.width, height: SpatialV3Camera.world.height)
+                .frame(width: canvasSize.width, height: canvasSize.height)
                 .scaleEffect(camera.zoom, anchor: .topLeading)
                 .offset(x: camera.x, y: camera.y)
                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
@@ -241,6 +271,9 @@ struct SpatialV3Stage: View {
                 .allowsHitTesting(false)
             }
             .onAppear { fit(geometry.size) }
+            .onChange(of: nodes.count) { _, _ in
+                if !cameraEdited { fit(geometry.size) }
+            }
             .onChange(of: geometry.size) { _, next in
                 if !cameraEdited { fit(next) }
             }
@@ -250,15 +283,15 @@ struct SpatialV3Stage: View {
 
 private struct SpatialV3Branch: View {
     let edge: SpatialV3Edge
-    let from: SpatialV3Node
-    let to: SpatialV3Node
-    let canvasSize: CGSize
+    let origin: CGPoint
 
     var body: some View {
         Path { path in
             guard let first = edge.points.first else { return }
-            path.move(to: first)
-            for point in edge.points.dropFirst() { path.addLine(to: point) }
+            path.move(to: CGPoint(x: first.x - origin.x, y: first.y - origin.y))
+            for point in edge.points.dropFirst() {
+                path.addLine(to: CGPoint(x: point.x - origin.x, y: point.y - origin.y))
+            }
         }
         .stroke(
             edge.type == "proposes" ? KollioV3Tokens.Light.accent
