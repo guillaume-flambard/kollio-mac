@@ -18,10 +18,14 @@ struct SpatialDocumentSnapshotTests {
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
         let frame = NSRect(x: 0, y: 0, width: 1270, height: 1040)
-        let hosting = NSHostingView(rootView: SpatialV3WindowView(model: model))
+        let selected = ProcessInfo.processInfo.environment["KOLLIO_SPATIAL_C23_SELECTED"] == "1"
+            ? SpatialDocumentProjection(document: document).nodes.first?.id : nil
+        let hosting = NSHostingView(rootView: SpatialV3WindowView(
+            initialSelectedID: selected, model: model
+        ))
         hosting.frame = frame
         let window = NSWindow(contentRect: frame, styleMask: [.titled], backing: .buffered, defer: false)
-        window.title = "Kollio — document Sarah, lecture seule"
+        window.title = "Kollio — document Sarah, édition locale"
         window.contentView = hosting
         window.orderFront(nil)
         RunLoop.current.run(until: Date().addingTimeInterval(1.5))
