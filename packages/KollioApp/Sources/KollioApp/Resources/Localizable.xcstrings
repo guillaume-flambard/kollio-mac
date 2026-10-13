@@ -6294,6 +6294,114 @@
           }
         }
       }
+    },
+    "spatial.close.title": {
+      "comment": "C2.13 native close and quit guard for uncommitted text",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unconfirmed editing"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifications non confirmées"
+          }
+        }
+      }
+    },
+    "spatial.close.detail": {
+      "comment": "C2.13 native close and quit guard for uncommitted text",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This window contains %d unconfirmed input(s). Closing it loses those drafts; they are not saved to the .kollio document."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette fenêtre contient %d saisie(s) non confirmée(s). Sa fermeture perd ces brouillons ; ils ne sont pas enregistrés dans le document .kollio."
+          }
+        }
+      }
+    },
+    "spatial.close.stay": {
+      "comment": "C2.13 native close and quit guard for uncommitted text",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep editing"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer à modifier"
+          }
+        }
+      }
+    },
+    "spatial.close.discard": {
+      "comment": "C2.13 native close and quit guard for uncommitted text",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close and lose drafts"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer et perdre les brouillons"
+          }
+        }
+      }
+    },
+    "spatial.quit.detail": {
+      "comment": "C2.13 native close and quit guard for uncommitted text",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitting Kollio loses %d unconfirmed input(s) from Spatial Ink windows. Canonical document changes are saved separately."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitter Kollio perd %d saisie(s) non confirmée(s) des fenêtres Spatial Ink. Les modifications du document sont sauvegardées séparément."
+          }
+        }
+      }
+    },
+    "spatial.quit.discard": {
+      "comment": "C2.13 native close and quit guard for uncommitted text",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit and lose drafts"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitter et perdre les brouillons"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

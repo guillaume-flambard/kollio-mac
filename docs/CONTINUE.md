@@ -10,6 +10,10 @@ model. An intelligence source proposes a patch; it never regenerates the world.
 
 The direction is [PRODUCT_BLUEPRINT.md](PRODUCT_BLUEPRINT.md). Read it once, not every task.
 
+## Spatial Ink V3 — C2.13 STAR loop
+
+C2.13 adds a native macOS window-close and Cmd+Q safeguard for unconfirmed Spatial Ink input, preserving the original NSWindow delegate's veto and requiring explicit consent before discarding window-local drafts. It does **not** silently save draft text to the canonical document or to disk. Five targeted native guard tests passed; the full KollioApp suite passed **392/392 tests in 44 suites**; OpenSpec generated views, String Catalog JSON, Swift syntax and diff checks passed. See [C2.13 STAR report](SPATIAL_STAR_C33.md). Native physical close buttons, focus, VoiceOver and real keyboard/trackpad remain human acceptance gates; do not claim disk recovery or forced-quit recovery. Next C2.14: end-to-end window/quit interaction review and potential opt-in draft recovery policy.
+
 ## Spatial Ink V3 — C2.12 STAR loop
 
 C2.12 adds visible and localized unconfirmed-input counts, honest canonical Save feedback, and a native destructive confirmation before discarding a single draft. It counts an active + paused snapshot once, and includes an unsubmitted New idea in the warning. Confirmed 20/20 focused and 387/387 full KollioApp tests in 43 suites; native pending-input screenshots FR/EN captured and visually inspected (window-only text input, document unchanged); GitHub CI separately gated. No draft text is silently committed, and the existing document save semantics stay unchanged. See [C2.12 STAR record](SPATIAL_STAR_C32.md). **Not yet implemented:** retention of drafts after native window close; on-disk draft recovery is not claimed. Next C2.13: real OS-window close guard or opt-in separate draft persistence, followed by hands-on keyboard/trackpad/VoiceOver validation.

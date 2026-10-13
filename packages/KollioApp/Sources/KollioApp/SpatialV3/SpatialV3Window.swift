@@ -640,6 +640,12 @@ struct SpatialV3WindowView: View {
         }
         .accessibilityIdentifier("spatial-v3-document-scroll")
         .background(KollioV3Tokens.Light.paper)
+        .background {
+            if model != nil {
+                SpatialNativeCloseGuard(pendingCount: pendingInputCount, copy: copy)
+                    .frame(width: 0, height: 0)
+            }
+        }
         .foregroundStyle(KollioV3Tokens.Light.ink)
         .preferredColorScheme(.light)
         .onExitCommand { closeOneLevel() }
