@@ -17,5 +17,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate native package
         run: swift build --package-path packages/KollioApp
-      - name: Validate shared Spatial V3 semantics
-        run: swift test --package-path packages/KollioApp --filter SpatialV3
+      - name: Validate native spatial and document projection
+        run: swift test --package-path packages/KollioApp --filter Spatial
