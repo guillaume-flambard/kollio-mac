@@ -1,0 +1,72 @@
+import Foundation
+import Testing
+import KollioCore
+@testable import KollioApp
+
+@Suite("Spatial Ink — real .kollio canvas scene")
+struct SpatialDocumentSceneTests {
+    @Test("Sarah renders all semantic objects and links without touching the document")
+    func sarah() {
+        let document = SarahFixture.document()
+        let before = document
+        let semantic = SpatialDocumentProjection(document: document)
+        let rendered = SpatialDocumentScene(projection: semantic)
+        #expect(rendered.documentID == document.documentId)
+        #expect(rendered.revision == document.revision)
+        #expect(rendered.semanticRevision == document.semanticRevision)
+        #expect(rendered.nodes.count == document.content.count)
+        #expect(rendered.edges.count == document.relationships.count)
+        #expect(Set(rendered.nodes.map(\.id)) == Set(document.content.keys.map(\.rawValue)))
+        #expect(Set(rendered.edges.map(\.id)) == Set(document.relationships.keys.map(\.rawValue)))
+        #expect(document == before)
+        for edge in rendered.edges {
+            #expect(edge.points.count == 2)
+            #expect(edge.points.allSatisfy { $0.x.isFinite && $0.y.isFinite })
+        }
+        for instance in document.presentation.instances {
+            let visual = rendered.nodes.first { $0.id == instance.objectID.rawValue }
+            #expect(visual != nil)
+            if let visual {
+                #expect(abs(visual.x * 1000 - instance.position.x) < 0.01)
+                #expect(abs(visual.y * 640 - instance.position.y) < 0.01)
+            }
+        }
+    }
+    @Test("A real .kollio file can be reopened and displayed without writing it back")
+    @MainActor
+    func onDiskReopen() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("kollio-spatial-c2-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = DocumentFileStore(directory: directory)
+        let document = SarahFixture.document()
+        let url = store.defaultDocumentURL
+        try store.save(document, to: url)
+        let originalBytes = try Data(contentsOf: url)
+
+        // The same path taken by a normal app launch, but using an isolated
+        // temporary document directory instead of the user's real files.
+        let reopened = KollioModel.deterministicModel(fileStore: store)
+        let view = SpatialDocumentScene(projection: SpatialDocumentProjection(document: reopened.document))
+        #expect(reopened.document == document)
+        #expect(view.nodes.count == document.content.count)
+        #expect(view.edges.count == document.relationships.count)
+        #expect(try Data(contentsOf: url) == originalBytes)
+    }
+
+    @Test("Empty documents stay empty, without demo content")
+    func emptyDocument() {
+        let document = KollioDocument()
+        let scene = SpatialDocumentScene(projection: SpatialDocumentProjection(document: document))
+        #expect(scene.nodes.isEmpty)
+        #expect(scene.edges.isEmpty)
+    }
+    @Test("Scene positioning and connector endpoints are deterministic")
+    func stableScene() {
+        let projection = SpatialDocumentProjection(document: SarahFixture.document())
+        let first = SpatialDocumentScene(projection: projection)
+        let second = SpatialDocumentScene(projection: projection)
+        #expect(first.nodes == second.nodes)
+        #expect(first.edges == second.edges)
+    }
+}

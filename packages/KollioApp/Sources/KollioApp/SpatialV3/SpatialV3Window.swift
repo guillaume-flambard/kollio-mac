@@ -4,6 +4,7 @@ import SwiftUI
 /// Does not alter existing .kollio documents, app state or persistence.
 struct SpatialV3WindowView: View {
     private let stressMode: Bool
+    private let model: KollioModel?
     @State private var depth = 1
     @State private var selectedID: String?
     @State private var focusHistory: [String] = []
@@ -12,18 +13,24 @@ struct SpatialV3WindowView: View {
 
     /// Demo-only initial state for deterministic Web/Mac screenshot comparisons.
     /// The actual native app continues to open with the initial three-node state.
-    init(initialDepth: Int = 1, initialSelectedID: String? = nil, stressMode: Bool = false) {
+    init(initialDepth: Int = 1, initialSelectedID: String? = nil, stressMode: Bool = false, model: KollioModel? = nil) {
         self.stressMode = stressMode
-        let boundedDepth = initialDepth == 2 ? 2 : 1
+        self.model = model
+        let boundedDepth = model != nil ? 2 : (initialDepth == 2 ? 2 : 1)
         _depth = State(initialValue: boundedDepth)
         _selectedID = State(initialValue: initialSelectedID)
     }
 
+    private var realScene: SpatialDocumentScene? {
+        model.map { SpatialDocumentScene(projection: SpatialDocumentProjection(document: $0.document)) }
+    }
     private var allNodes: [SpatialV3Node] {
-        stressMode ? SpatialV3StressFixture.nodes : SpatialV3Fixture.nodes
+        if let realScene { return realScene.nodes }
+        return stressMode ? SpatialV3StressFixture.nodes : SpatialV3Fixture.nodes
     }
     private var allEdges: [SpatialV3Edge] {
-        stressMode ? SpatialV3StressFixture.edges : SpatialV3Fixture.edges
+        if let realScene { return realScene.edges }
+        return stressMode ? SpatialV3StressFixture.edges : SpatialV3Fixture.edges
     }
     private var groupCount: Int { (allNodes.count + 11) / 12 }
     private var focusedIDs: Set<String>? {
@@ -85,7 +92,7 @@ struct SpatialV3WindowView: View {
                     .padding(.vertical, 5)
                     .background(KollioV3Tokens.Light.accentSoft, in: RoundedRectangle(cornerRadius: 7))
                 Spacer()
-                Text("Native macOS preview · Shared fixture")
+                Text(model == nil ? "Native macOS preview · Shared fixture" : "Document .kollio · Lecture seule")
                     .font(.caption)
                     .foregroundStyle(KollioV3Tokens.Light.muted)
             }
@@ -99,25 +106,27 @@ struct SpatialV3WindowView: View {
                             .font(.system(size: 10, weight: .semibold))
                             .tracking(1.6)
                             .foregroundStyle(KollioV3Tokens.Light.muted)
-                        Text(stressMode ? SpatialV3StressFixture.title : SpatialV3Fixture.title)
+                        Text(model == nil ? (stressMode ? SpatialV3StressFixture.title : SpatialV3Fixture.title) : "Document actif")
                             .font(.system(size: 32, weight: .semibold, design: .default))
                             .tracking(-1.1)
-                        Text(stressMode ? SpatialV3StressFixture.subtitle : SpatialV3Fixture.subtitle)
+                        Text(model == nil ? (stressMode ? SpatialV3StressFixture.subtitle : SpatialV3Fixture.subtitle) : "\(allNodes.count) objets · \(allEdges.count) relations · révision \(realScene?.revision ?? 0)")
                             .font(.system(size: 14))
                             .foregroundStyle(KollioV3Tokens.Light.muted)
                     }
                     Spacer()
-                    Button(depth == 1 ? "+ Explorer les relations" : "− Replier les branches") {
-                        depth = depth == 1 ? 2 : 1
-                        if let selectedID, !visibleNodes.contains(where: { $0.id == selectedID }) {
-                            self.selectedID = nil
+                    if model == nil {
+                        Button(depth == 1 ? "+ Explorer les relations" : "− Replier les branches") {
+                            depth = depth == 1 ? 2 : 1
+                            if let selectedID, !visibleNodes.contains(where: { $0.id == selectedID }) {
+                                self.selectedID = nil
+                            }
                         }
+                        .buttonStyle(.borderedProminent)
+                        .tint(KollioV3Tokens.Light.accent)
+                        .accessibilityIdentifier("spatial-v3-expand")
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(KollioV3Tokens.Light.accent)
-                    .accessibilityIdentifier("spatial-v3-expand")
                 }
-                if stressMode {
+                if stressMode || model != nil {
                     VStack(alignment: .leading, spacing: 8) {
                         TextField("Rechercher un objet ou identifiant", text: $search)
                             .textFieldStyle(.roundedBorder)
@@ -135,17 +144,19 @@ struct SpatialV3WindowView: View {
                                 }
                             }
                         }
-                        ScrollView(.horizontal) {
-                            HStack {
-                                Button("Vue d'ensemble") { focusedGroup = nil }
-                                ForEach(0..<groupCount, id: \.self) { index in
-                                    Button("Groupe \(index + 1)") {
-                                        focusedGroup = index
-                                        depth = 2
+                        if stressMode || allNodes.count > 20 {
+                            ScrollView(.horizontal) {
+                                HStack {
+                                    Button("Vue d'ensemble") { focusedGroup = nil }
+                                    ForEach(0..<groupCount, id: \.self) { index in
+                                        Button("Groupe \(index + 1)") {
+                                            focusedGroup = index
+                                            depth = 2
+                                        }
                                     }
                                 }
+                                .buttonStyle(.bordered)
                             }
-                            .buttonStyle(.bordered)
                         }
                     }
                 }
@@ -190,6 +201,12 @@ struct SpatialV3WindowView: View {
                     }
                     .padding(10)
                     .background(KollioV3Tokens.Light.accentSoft, in: RoundedRectangle(cornerRadius: 10))
+                }
+                if model != nil && allNodes.isEmpty {
+                    Text("Ce document est vide. Ajoute du contenu dans la fenêtre Kollio principale pour le voir ici.")
+                        .font(.callout)
+                        .foregroundStyle(KollioV3Tokens.Light.muted)
+                        .accessibilityIdentifier("spatial-v3-empty-document")
                 }
                 ScrollView(.horizontal) {
                     SpatialV3Stage(
@@ -239,7 +256,9 @@ struct SpatialV3WindowView: View {
                     }
                 }
                 .frame(minHeight: 65, alignment: .topLeading)
-                Text("Prévisualisation uniquement · Aucune IA ni mutation de document activée.")
+                Text(model == nil
+                     ? "Prévisualisation uniquement · Aucune IA ni mutation de document activée."
+                     : "Lecture seule du document actif · Aucun enregistrement ni modification depuis Spatial Ink.")
                     .font(.caption2)
                     .foregroundStyle(KollioV3Tokens.Light.muted)
             }
