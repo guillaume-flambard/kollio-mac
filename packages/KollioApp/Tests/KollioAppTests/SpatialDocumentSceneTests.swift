@@ -142,4 +142,109 @@ struct SpatialDocumentSceneTests {
         #expect(route.blocked)
         #expect(route.crossings == 1)
     }
+
+    @Test("C2.5 two authored occurrences stay individually visible without copying the semantic object")
+    func multipleOccurrences() throws {
+        var document = SarahFixture.document()
+        let relation = try #require(document.relationships.values.sorted {
+            $0.id.rawValue < $1.id.rawValue
+        }.first { $0.from != $0.to })
+        let objectID = relation.from
+        let otherID = relation.to
+        document.presentation.instances = [
+            NodeInstance(id: "copy-b", objectID: objectID, position: Position(x: 750, y: 600)),
+            NodeInstance(id: "copy-a", objectID: objectID, position: Position(x: 100, y: 200)),
+            NodeInstance(id: "target", objectID: otherID, position: Position(x: 400, y: 600))
+        ]
+        let before = document
+        let projection = SpatialDocumentProjection(document: document)
+        let projectedObject = try #require(projection.nodes.first { $0.id == objectID.rawValue })
+        #expect(projectedObject.occurrences.map(\.id) == ["copy-a", "copy-b"])
+        let rendered = SpatialDocumentScene(projection: projection)
+        let copies = rendered.nodes.filter { rendered.objectID(for: $0.id) == objectID.rawValue }
+        #expect(copies.count == 2)
+        #expect(rendered.semanticObjectCount == document.content.count)
+        #expect(rendered.nodes.count == document.content.count + 1)
+        #expect(Set(rendered.nodes.map(\.id)).count == rendered.nodes.count)
+        #expect(rendered.visualID(for: objectID.rawValue) == objectID.rawValue)
+        #expect(rendered.occurrenceCount(for: objectID.rawValue) == 2)
+        let first = try #require(copies.first { $0.id == objectID.rawValue })
+        let alternate = try #require(copies.first { $0.id != objectID.rawValue })
+        #expect(abs(first.x * 1000 - 100) < 0.01)
+        #expect(abs(first.y * 640 - 200) < 0.01)
+        #expect(abs(alternate.x * 1000 - 750) < 0.01)
+        #expect(abs(alternate.y * 640 - 600) < 0.01)
+        #expect(first.label == alternate.label)
+        #expect(rendered.objectID(for: alternate.id) == objectID.rawValue)
+        #expect(rendered.edges.count == document.relationships.count)
+        let edge = try #require(rendered.edges.first { $0.id == relation.id.rawValue })
+        #expect(edge.source == alternate.id) // Nearest presentation copy
+        #expect(edge.target == otherID.rawValue)
+        #expect(SpatialDocumentScene(projection: projection).nodes == rendered.nodes)
+        #expect(SpatialDocumentScene(projection: projection).edges == rendered.edges)
+        #expect(document == before)
+    }
+
+    @Test("C2.5 hidden copies never leak into the visible scene")
+    func hiddenOccurrence() throws {
+        var document = SarahFixture.document()
+        let objectID = try #require(document.content.keys.sorted { $0.rawValue < $1.rawValue }.first)
+        document.presentation.instances = [
+            NodeInstance(id: "visible", objectID: objectID, position: Position(x: 150, y: 200)),
+            NodeInstance(id: "hidden", objectID: objectID,
+                         position: Position(x: 700, y: 450), hidden: true)
+        ]
+        let projection = SpatialDocumentProjection(document: document)
+        let content = try #require(projection.nodes.first { $0.id == objectID.rawValue })
+        #expect(content.occurrences.count == 2)
+        #expect(content.occurrences.filter(\.isHidden).count == 1)
+        let rendered = SpatialDocumentScene(projection: projection)
+        #expect(rendered.occurrenceCount(for: objectID.rawValue) == 1)
+        #expect(rendered.nodes.filter { rendered.objectID(for: $0.id) == objectID.rawValue }.count == 1)
+        #expect(document.presentation.instances.count == 2)
+    }
+
+    @Test("C2.5 only hidden representations do not create synthetic replacements")
+    func allCopiesHidden() throws {
+        var document = SarahFixture.document()
+        let objectID = try #require(document.content.keys.sorted { $0.rawValue < $1.rawValue }.first)
+        document.presentation.instances = [
+            NodeInstance(id: "hidden", objectID: objectID,
+                         position: Position(x: 700, y: 450), hidden: true)
+        ]
+        let rendered = SpatialDocumentScene(projection: SpatialDocumentProjection(document: document))
+        #expect(rendered.occurrenceCount(for: objectID.rawValue) == 0)
+        #expect(rendered.visualID(for: objectID.rawValue) == nil)
+        #expect(!rendered.nodes.contains { rendered.objectID(for: $0.id) == objectID.rawValue })
+    }
+
+    @Test("C2.5 folding a frame hides only its member instance, not the shared object")
+    func foldedFrameDoesNotHideOtherCopy() throws {
+        var document = SarahFixture.document()
+        let objectID = try #require(document.content.keys.sorted { $0.rawValue < $1.rawValue }.first)
+        document.presentation.instances = [
+            NodeInstance(id: "inside-frame", objectID: objectID,
+                         position: Position(x: 100, y: 180)),
+            NodeInstance(id: "outside-frame", objectID: objectID,
+                         position: Position(x: 820, y: 450))
+        ]
+        document.presentation.frames = [
+            Frame(id: "c25-frame", name: LocalizedText("Zone repliée"),
+                  position: Position(x: 0, y: 0),
+                  memberInstanceIDs: [InstanceID("inside-frame")], isFolded: true)
+        ]
+        let before = document
+        let projection = SpatialDocumentProjection(document: document)
+        let occurrences = try #require(projection.nodes.first { $0.id == objectID.rawValue }).occurrences
+        #expect(occurrences.first { $0.id == "inside-frame" }?.isHidden == true)
+        #expect(occurrences.first { $0.id == "outside-frame" }?.isHidden == false)
+        let displayed = SpatialDocumentScene(projection: projection)
+        #expect(displayed.occurrenceCount(for: objectID.rawValue) == 1)
+        let soleCopy = try #require(displayed.nodes.first {
+            displayed.objectID(for: $0.id) == objectID.rawValue
+        })
+        #expect(abs(soleCopy.x * 1000 - 820) < 0.01)
+        #expect(abs(soleCopy.y * 640 - 450) < 0.01)
+        #expect(document == before)
+    }
 }
