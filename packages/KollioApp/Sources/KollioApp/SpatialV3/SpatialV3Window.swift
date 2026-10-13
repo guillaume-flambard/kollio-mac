@@ -910,6 +910,18 @@ struct SpatialV3Stage: View {
                 .allowsHitTesting(false)
             }
             .coordinateSpace(name: "spatial-v3-screen")
+            .background {
+                // A local AppKit monitor owns only precise two-finger scrolls
+                // inside this viewport. The outer document ScrollView and its
+                // text inputs retain native scrolling outside the canvas.
+                SpatialTrackpadScrollCapture(
+                    canPan: activeDrag == nil && panPreview == .zero && pinchPreview == 1
+                ) { delta in
+                    camera = camera.panned(dx: delta.width, dy: delta.height)
+                    cameraEdited = true
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height)
+            }
             .onAppear { fit(geometry.size) }
             .onChange(of: focusRequest) { _, _ in
                 // A menu choice follows the object and moves keyboard/VoiceOver

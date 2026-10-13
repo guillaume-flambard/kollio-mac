@@ -39,6 +39,7 @@
 		26444A9DC152CED6E9285A55 /* SpatialDocumentProjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 691C37A593E25D03ADEFBEC0 /* SpatialDocumentProjection.swift */; };
 		33F480DD1E07E73D8105D926 /* SpatialDocumentScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25E429DC8C17FFE61FE14B0F /* SpatialDocumentScene.swift */; };
 		8B95F86B72A9D3789F6DFEA0 /* SpatialNativeCloseGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B965D72DD1D5B930EF371FF /* SpatialNativeCloseGuard.swift */; };
+		41823701B804D246D171B480 /* SpatialTrackpadScrollCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92C8E84A0F7AF56F5C4C4D7E /* SpatialTrackpadScrollCapture.swift */; };
 		2EFBA7FB0C51ED87404E4B60 /* SpatialV3Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = C744EA6A2C7F0E25B6D3975C /* SpatialV3Camera.swift */; };
 		D75C22B0D4E3D711F22AA6D8 /* SpatialV3Fixture.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC5D747BB9353347C50A1D73 /* SpatialV3Fixture.generated.swift */; };
 		9477666EC40C39D0B41E80C0 /* SpatialV3Stress.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA613388DFB387861DE4E79 /* SpatialV3Stress.generated.swift */; };
@@ -81,6 +82,7 @@
 		691C37A593E25D03ADEFBEC0 /* SpatialDocumentProjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SpatialDocumentProjection.swift; path = ../../packages/KollioApp/Sources/KollioApp/SpatialV3/SpatialDocumentProjection.swift; sourceTree = SOURCE_ROOT; };
 		25E429DC8C17FFE61FE14B0F /* SpatialDocumentScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SpatialDocumentScene.swift; path = ../../packages/KollioApp/Sources/KollioApp/SpatialV3/SpatialDocumentScene.swift; sourceTree = SOURCE_ROOT; };
 		3B965D72DD1D5B930EF371FF /* SpatialNativeCloseGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SpatialNativeCloseGuard.swift; path = ../../packages/KollioApp/Sources/KollioApp/SpatialV3/SpatialNativeCloseGuard.swift; sourceTree = SOURCE_ROOT; };
+		92C8E84A0F7AF56F5C4C4D7E /* SpatialTrackpadScrollCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SpatialTrackpadScrollCapture.swift; path = ../../packages/KollioApp/Sources/KollioApp/SpatialV3/SpatialTrackpadScrollCapture.swift; sourceTree = SOURCE_ROOT; };
 		C744EA6A2C7F0E25B6D3975C /* SpatialV3Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SpatialV3Camera.swift; path = ../../packages/KollioApp/Sources/KollioApp/SpatialV3/SpatialV3Camera.swift; sourceTree = SOURCE_ROOT; };
 		CC5D747BB9353347C50A1D73 /* SpatialV3Fixture.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SpatialV3Fixture.generated.swift; path = ../../packages/KollioApp/Sources/KollioApp/SpatialV3/SpatialV3Fixture.generated.swift; sourceTree = SOURCE_ROOT; };
 		ADA613388DFB387861DE4E79 /* SpatialV3Stress.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SpatialV3Stress.generated.swift; path = ../../packages/KollioApp/Sources/KollioApp/SpatialV3/SpatialV3Stress.generated.swift; sourceTree = SOURCE_ROOT; };
@@ -259,6 +261,7 @@
 				691C37A593E25D03ADEFBEC0 /* SpatialDocumentProjection.swift */,
 				25E429DC8C17FFE61FE14B0F /* SpatialDocumentScene.swift */,
 				3B965D72DD1D5B930EF371FF /* SpatialNativeCloseGuard.swift */,
+				92C8E84A0F7AF56F5C4C4D7E /* SpatialTrackpadScrollCapture.swift */,
 				C744EA6A2C7F0E25B6D3975C /* SpatialV3Camera.swift */,
 				CC5D747BB9353347C50A1D73 /* SpatialV3Fixture.generated.swift */,
 				ADA613388DFB387861DE4E79 /* SpatialV3Stress.generated.swift */,
@@ -372,6 +375,7 @@
 				26444A9DC152CED6E9285A55 /* SpatialDocumentProjection.swift in Sources */,
 				33F480DD1E07E73D8105D926 /* SpatialDocumentScene.swift in Sources */,
 				8B95F86B72A9D3789F6DFEA0 /* SpatialNativeCloseGuard.swift in Sources */,
+				41823701B804D246D171B480 /* SpatialTrackpadScrollCapture.swift in Sources */,
 				2EFBA7FB0C51ED87404E4B60 /* SpatialV3Camera.swift in Sources */,
 				D75C22B0D4E3D711F22AA6D8 /* SpatialV3Fixture.generated.swift in Sources */,
 				9477666EC40C39D0B41E80C0 /* SpatialV3Stress.generated.swift in Sources */,
