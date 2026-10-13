@@ -30,6 +30,8 @@ struct SpatialV3WindowView: View {
         _selectedID = State(initialValue: initialSelectedID)
     }
 
+    private var copy: SpatialV3Copy { SpatialV3Copy(languageCode: model?.languageCode) }
+
     private var realScene: SpatialDocumentScene? {
         model.map { SpatialDocumentScene(projection: SpatialDocumentProjection(document: $0.document, languageCode: $0.languageCode)) }
     }
@@ -126,9 +128,9 @@ struct SpatialV3WindowView: View {
             depth = 2
             selectedID = created.rawValue
             focusedGroup = nil
-            editFeedback = "Idée ajoutée au document. Pense à enregistrer."
+            editFeedback = copy.text("spatial.feedback.ideaAdded")
         } else {
-            editFeedback = "Impossible de créer cette idée. Saisis un texte non vide."
+            editFeedback = copy.text("spatial.feedback.ideaRefused")
         }
     }
 
@@ -149,9 +151,9 @@ struct SpatialV3WindowView: View {
         if succeeded {
             self.editingID = nil
             self.editVersion = nil
-            editFeedback = "Modification appliquée. Pense à enregistrer."
+            editFeedback = copy.text("spatial.feedback.editApplied")
         } else {
-            editFeedback = "Conflit ou texte invalide : la modification n'a pas été appliquée."
+            editFeedback = copy.text("spatial.feedback.editRefused")
         }
     }
 
@@ -161,8 +163,8 @@ struct SpatialV3WindowView: View {
         let created = SpatialDocumentEditor(model: model)
             .associate(objectID, with: relationTargetID)
         editFeedback = created == nil
-            ? "Relation refusée : vérifie la cible ou l'existence d'un lien identique."
-            : "Association ajoutée. Pense à enregistrer."
+            ? copy.text("spatial.feedback.linkRefused")
+            : copy.text("spatial.feedback.linkAdded")
         if created != nil { relationTargetID = "" }
     }
 
@@ -170,14 +172,14 @@ struct SpatialV3WindowView: View {
         guard let model else { return }
         let applied = SpatialDocumentEditor(model: model)
             .moveOccurrence(instanceID, by: delta)
-        editFeedback = L10n.callAsFunction(applied ? "spatial.drag.saved" : "spatial.drag.refused")
+        editFeedback = copy.text(applied ? "spatial.drag.saved" : "spatial.drag.refused")
     }
 
     private func saveDocument() {
         guard let model else { return }
         editFeedback = SpatialDocumentEditor(model: model).save()
-            ? "Document enregistré dans son fichier .kollio."
-            : "Échec de l'enregistrement : vérifie le document et le stockage."
+            ? copy.text("spatial.feedback.saved")
+            : copy.text("spatial.feedback.saveFailed")
     }
 
     var body: some View {
@@ -196,7 +198,7 @@ struct SpatialV3WindowView: View {
                     .padding(.vertical, 5)
                     .background(KollioV3Tokens.Light.accentSoft, in: RoundedRectangle(cornerRadius: 7))
                 Spacer()
-                Text(model == nil ? "Native macOS preview · Shared fixture" : "Document .kollio · Édition locale")
+                Text(model == nil ? copy.text("spatial.mode.fixture") : copy.text("spatial.mode.document"))
                     .font(.caption)
                     .foregroundStyle(KollioV3Tokens.Light.muted)
             }
@@ -206,20 +208,20 @@ struct SpatialV3WindowView: View {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .bottom, spacing: 18) {
                     VStack(alignment: .leading, spacing: 7) {
-                        Text("SPATIAL INK · EXPLORATION")
+                        Text(copy.text("spatial.section.exploration"))
                             .font(.system(size: 10, weight: .semibold))
                             .tracking(1.6)
                             .foregroundStyle(KollioV3Tokens.Light.muted)
-                        Text(model == nil ? (stressMode ? SpatialV3StressFixture.title : SpatialV3Fixture.title) : "Document actif")
+                        Text(model == nil ? (stressMode ? SpatialV3StressFixture.title : SpatialV3Fixture.title) : copy.text("spatial.document.active"))
                             .font(.system(size: 32, weight: .semibold, design: .default))
                             .tracking(-1.1)
-                        Text(model == nil ? (stressMode ? SpatialV3StressFixture.subtitle : SpatialV3Fixture.subtitle) : "\(realScene?.semanticObjectCount ?? 0) objets · \(allNodes.count) représentations · \(allEdges.count) relations · révision \(realScene?.revision ?? 0)")
+                        Text(model == nil ? (stressMode ? SpatialV3StressFixture.subtitle : SpatialV3Fixture.subtitle) : copy.format("spatial.document.counts", realScene?.semanticObjectCount ?? 0, allNodes.count, allEdges.count, realScene?.revision ?? 0))
                             .font(.system(size: 14))
                             .foregroundStyle(KollioV3Tokens.Light.muted)
                     }
                     Spacer()
                     if model == nil {
-                        Button(depth == 1 ? "+ Explorer les relations" : "− Replier les branches") {
+                        Button(depth == 1 ? copy.text("spatial.expand") : copy.text("spatial.collapse")) {
                             depth = depth == 1 ? 2 : 1
                             if let selectedID, !visibleNodes.contains(where: { $0.id == selectedID }) {
                                 self.selectedID = nil
@@ -232,19 +234,19 @@ struct SpatialV3WindowView: View {
                 }
                 if model != nil {
                     HStack(spacing: 10) {
-                        TextField("Nouvelle idée…", text: $newIdeaDraft)
+                        TextField(copy.text("spatial.createPlaceholder"), text: $newIdeaDraft)
                             .textFieldStyle(.roundedBorder)
                             .accessibilityIdentifier("spatial-v3-create-input")
-                        Button("Ajouter l'idée") { addIdea() }
+                        Button(copy.text("spatial.create")) { addIdea() }
                             .disabled(newIdeaDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                             .accessibilityIdentifier("spatial-v3-create")
-                        Button("Enregistrer") { saveDocument() }
+                        Button(copy.text("spatial.save")) { saveDocument() }
                             .accessibilityIdentifier("spatial-v3-save")
                         if let model {
-                            Button("Annuler") { SpatialDocumentEditor(model: model).undo() }
+                            Button(copy.text("spatial.undo")) { SpatialDocumentEditor(model: model).undo() }
                                 .disabled(!model.canUndo)
                                 .accessibilityIdentifier("spatial-v3-undo")
-                            Button("Rétablir") { SpatialDocumentEditor(model: model).redo() }
+                            Button(copy.text("spatial.redo")) { SpatialDocumentEditor(model: model).redo() }
                                 .disabled(!model.canRedo)
                                 .accessibilityIdentifier("spatial-v3-redo")
                         }
@@ -259,7 +261,7 @@ struct SpatialV3WindowView: View {
                 }
                 if stressMode || model != nil {
                     VStack(alignment: .leading, spacing: 8) {
-                        TextField("Rechercher un objet ou identifiant", text: $search)
+                        TextField(copy.text("spatial.search"), text: $search)
                             .textFieldStyle(.roundedBorder)
                             .frame(maxWidth: 330)
                         if !search.isEmpty {
@@ -271,16 +273,16 @@ struct SpatialV3WindowView: View {
                                         }
                                         .buttonStyle(.bordered)
                                     }
-                                    if matches.isEmpty { Text("Aucun résultat").font(.caption) }
+                                    if matches.isEmpty { Text(copy.text("spatial.noResults")).font(.caption) }
                                 }
                             }
                         }
                         if stressMode || allNodes.count > 20 {
                             ScrollView(.horizontal) {
                                 HStack {
-                                    Button("Vue d'ensemble") { focusedGroup = nil }
+                                    Button(copy.text("spatial.overview")) { focusedGroup = nil }
                                     ForEach(0..<groupCount, id: \.self) { index in
-                                        Button("Groupe \(index + 1)") {
+                                        Button(copy.format("spatial.group", index + 1)) {
                                             focusedGroup = index
                                             depth = 2
                                         }
@@ -294,7 +296,7 @@ struct SpatialV3WindowView: View {
                 if !focusHistory.isEmpty {
                     ScrollView(.horizontal) {
                         HStack(spacing: 6) {
-                            Button("Vue d'ensemble") { selectedID = nil; focusHistory = []; focusedGroup = nil }
+                            Button(copy.text("spatial.overview")) { selectedID = nil; focusHistory = []; focusedGroup = nil }
                             ForEach(Array(focusHistory.enumerated()), id: \.offset) { index, id in
                                 Button(allNodes.first(where: { $0.id == id })?.label ?? id) {
                                     focusHistory = Array(focusHistory.prefix(index + 1))
@@ -304,7 +306,7 @@ struct SpatialV3WindowView: View {
                         }
                         .buttonStyle(.bordered)
                     }
-                    .accessibilityLabel("Parcours d'exploration")
+                    .accessibilityLabel(copy.text("spatial.explorationHistory"))
                 }
                 if !focusedNeighbors.isEmpty {
                     ScrollView(.horizontal) {
@@ -315,14 +317,14 @@ struct SpatialV3WindowView: View {
                         }
                         .buttonStyle(.bordered)
                     }
-                    .accessibilityLabel("Relations de l'objet")
+                    .accessibilityLabel(copy.text("spatial.objectRelations"))
                 }
                 if let spotlightIDs {
                     HStack {
-                        Text("Focus · \(spotlightIDs.count) objets reliés")
+                        Text(copy.format("spatial.focus", spotlightIDs.count))
                             .font(.caption)
                         Spacer()
-                        Button("Revenir au contexte") {
+                        Button(copy.text("spatial.returnToContext")) {
                             selectedID = nil
                             focusHistory = []
                             focusedGroup = nil
@@ -334,7 +336,7 @@ struct SpatialV3WindowView: View {
                     .background(KollioV3Tokens.Light.accentSoft, in: RoundedRectangle(cornerRadius: 10))
                 }
                 if model != nil && allNodes.isEmpty {
-                    Text("Ce document est vide. Saisis une idée dans le champ ci-dessus pour commencer.")
+                    Text(copy.text("spatial.emptyDocument"))
                         .font(.callout)
                         .foregroundStyle(KollioV3Tokens.Light.muted)
                         .accessibilityIdentifier("spatial-v3-empty-document")
@@ -346,6 +348,7 @@ struct SpatialV3WindowView: View {
                         edges: visibleEdges,
                         selectedID: $selectedID,
                         spotlightIDs: spotlightIDs,
+                        copy: copy,
                         focusRequest: focusRequest,
                         instanceIDByVisualID: realScene?.instanceIDByVisualID ?? [:],
                         onMoveOccurrence: { instanceID, delta in
@@ -370,7 +373,7 @@ struct SpatialV3WindowView: View {
                     if let selected {
                         HStack(alignment: .top, spacing: 12) {
                             VStack(alignment: .leading, spacing: 6) {
-                                Text("\(selected.eyebrow) · \(selected.status)")
+                                Text("\(copy.kind(selected.eyebrow)) · \(copy.status(selected.status))")
                                     .font(.system(size: 10, weight: .bold))
                                     .tracking(1.2)
                                     .foregroundStyle(KollioV3Tokens.Light.muted)
@@ -378,9 +381,7 @@ struct SpatialV3WindowView: View {
                                     .font(.headline)
                                 if let id = semanticID(selected.id),
                                    let count = realScene?.occurrenceCount(for: id), count > 1 {
-                                    Text(model?.languageCode == "en"
-                                         ? "\(count) views of the same object"
-                                         : "\(count) représentations de ce même objet")
+                                    Text(copy.format("spatial.occurrences", count))
                                         .font(.caption)
                                         .foregroundStyle(KollioV3Tokens.Light.muted)
                                         .accessibilityIdentifier("spatial-v3-occurrence-count")
@@ -392,9 +393,9 @@ struct SpatialV3WindowView: View {
                             Spacer()
                             if model != nil {
                                 VStack(alignment: .trailing, spacing: 9) {
-                                    Button("Modifier") { beginEdit(selected.id) }
+                                    Button(copy.text("spatial.edit")) { beginEdit(selected.id) }
                                         .accessibilityIdentifier("spatial-v3-edit")
-                                    Button(L10n.callAsFunction("spatial.camera.centerSelected")) {
+                                    Button(copy.text("spatial.camera.centerSelected")) {
                                         focusRequest += 1
                                     }
                                     .accessibilityIdentifier("spatial-v3-center-selected")
@@ -406,31 +407,31 @@ struct SpatialV3WindowView: View {
                                                 } label: {
                                                     Image(systemName: direction.symbol)
                                                 }
-                                                .accessibilityLabel(L10n.callAsFunction(direction.localizationKey))
-                                                .help(L10n.callAsFunction(direction.localizationKey))
+                                                .accessibilityLabel(copy.text(direction.localizationKey))
+                                                .help(copy.text(direction.localizationKey))
                                                 .accessibilityIdentifier("spatial-v3-move-\(direction.rawValue)")
                                             }
                                         }
                                         .accessibilityElement(children: .contain)
-                                        .accessibilityLabel(L10n.callAsFunction("spatial.move.controls"))
+                                        .accessibilityLabel(copy.text("spatial.move.controls"))
                                     }
                                     if !relationTargets.isEmpty {
-                                        Picker("Associer à", selection: $relationTargetID) {
-                                            Text("Choisir un objet").tag("")
+                                        Picker(copy.text("spatial.associate"), selection: $relationTargetID) {
+                                            Text(copy.text("spatial.chooseObject")).tag("")
                                             ForEach(relationTargets) { target in
                                                 Text(target.label).tag(target.id)
                                             }
                                         }
                                         .frame(maxWidth: 245)
                                         .accessibilityIdentifier("spatial-v3-relation-target")
-                                        Button("Créer l'association") { addAssociation(from: selected.id) }
+                                        Button(copy.text("spatial.createLink")) { addAssociation(from: selected.id) }
                                             .disabled(relationTargetID.isEmpty || relationTargetID == semanticID(selected.id))
                                             .accessibilityIdentifier("spatial-v3-link")
                                     }
                                 }
                                 .buttonStyle(.bordered)
                             }
-                            Button("Fermer") { selectedID = nil }
+                            Button(copy.text("spatial.close")) { selectedID = nil }
                                 .buttonStyle(.bordered)
                         }
                         .padding(14)
@@ -438,29 +439,29 @@ struct SpatialV3WindowView: View {
                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(KollioV3Tokens.Light.border))
                         if model != nil && editingID == selected.id {
                             HStack(spacing: 8) {
-                                TextField("Modifier le texte de l'objet", text: $editDraft)
+                                TextField(copy.text("spatial.editInput"), text: $editDraft)
                                     .textFieldStyle(.roundedBorder)
                                     .accessibilityIdentifier("spatial-v3-edit-input")
-                                Button("Valider") { finishEdit() }
+                                Button(copy.text("spatial.confirm")) { finishEdit() }
                                     .disabled(editDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                                     .accessibilityIdentifier("spatial-v3-edit-confirm")
-                                Button("Annuler") { editingID = nil; editVersion = nil }
+                                Button(copy.text("spatial.cancel")) { editingID = nil; editVersion = nil }
                                     .accessibilityIdentifier("spatial-v3-edit-cancel")
                             }
                             .buttonStyle(.bordered)
                         }
                     } else {
                         Text(model == nil
-                             ? "Sélectionne un objet pour lire son sens et sa provenance. Replier ne supprime rien."
-                             : L10n.callAsFunction("spatial.drag.hint"))
+                             ? copy.text("spatial.fixtureSelectionHint")
+                             : copy.text("spatial.drag.hint"))
                             .font(.caption)
                             .foregroundStyle(KollioV3Tokens.Light.muted)
                     }
                 }
                 .frame(minHeight: 65, alignment: .topLeading)
                 Text(model == nil
-                     ? "Prévisualisation uniquement · Aucune IA ni mutation de document activée."
-                     : "Édition locale via commandes Kollio · Enregistrer pour conserver les modifications.")
+                     ? copy.text("spatial.fixtureSafety")
+                     : copy.text("spatial.documentEditingHint"))
                     .font(.caption2)
                     .foregroundStyle(KollioV3Tokens.Light.muted)
             }
@@ -482,6 +483,7 @@ struct SpatialV3Stage: View {
     let edges: [SpatialV3Edge]
     @Binding var selectedID: String?
     let spotlightIDs: Set<String>?
+    let copy: SpatialV3Copy
     let focusRequest: Int
     /// Only real authored instances can move; fixture and derived cards cannot.
     let instanceIDByVisualID: [String: String]
@@ -489,6 +491,7 @@ struct SpatialV3Stage: View {
 
     // @GestureState clears itself on cancellation, view removal and completed
     // gestures. No document mutation can occur until onEnded fires.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @GestureState private var activeDrag: SpatialActiveDrag?
     @GestureState private var panPreview = CGSize.zero
     @State private var camera = SpatialV3Camera()
@@ -537,7 +540,7 @@ struct SpatialV3Stage: View {
     @ViewBuilder
     private func drawing(_ node: SpatialV3Node) -> some View {
         let isMoving = activeDrag?.visualID == node.id
-        SpatialV3MeaningNode(node: node, selected: selectedID == node.id) {
+        SpatialV3MeaningNode(node: node, selected: selectedID == node.id, copy: copy) {
             selectedID = selectedID == node.id ? nil : node.id
         }
         .opacity(spotlightIDs == nil || spotlightIDs?.contains(node.id) == true ? 1 : 0.17)
@@ -624,20 +627,16 @@ struct SpatialV3Stage: View {
                         if let instanceID = instanceIDByVisualID[node.id] {
                             drawing(node)
                                 .highPriorityGesture(moveGesture(for: node.id, instanceID: instanceID))
-                                .onMoveCommand { direction in
-                                    guard let direction = SpatialNudgeDirection(direction) else { return }
-                                    onMoveOccurrence(instanceID, direction.delta)
-                                }
-                                .accessibilityAction(named: Text(L10n.callAsFunction("spatial.move.up"))) {
+                                .accessibilityAction(named: Text(copy.text("spatial.move.up"))) {
                                     onMoveOccurrence(instanceID, SpatialNudgeDirection.up.delta)
                                 }
-                                .accessibilityAction(named: Text(L10n.callAsFunction("spatial.move.down"))) {
+                                .accessibilityAction(named: Text(copy.text("spatial.move.down"))) {
                                     onMoveOccurrence(instanceID, SpatialNudgeDirection.down.delta)
                                 }
-                                .accessibilityAction(named: Text(L10n.callAsFunction("spatial.move.left"))) {
+                                .accessibilityAction(named: Text(copy.text("spatial.move.left"))) {
                                     onMoveOccurrence(instanceID, SpatialNudgeDirection.left.delta)
                                 }
-                                .accessibilityAction(named: Text(L10n.callAsFunction("spatial.move.right"))) {
+                                .accessibilityAction(named: Text(copy.text("spatial.move.right"))) {
                                     onMoveOccurrence(instanceID, SpatialNudgeDirection.right.delta)
                                 }
                         } else {
@@ -665,14 +664,14 @@ struct SpatialV3Stage: View {
 
                 HStack(spacing: 5) {
                     Button("−") { zoom(1 / 1.2, in: geometry.size) }
-                        .accessibilityLabel("Dézoomer")
+                        .accessibilityLabel(copy.text("spatial.camera.zoomOut"))
                     Text("\(Int((camera.zoom * 100).rounded())) %")
                         .monospacedDigit()
                         .font(.caption2)
                         .frame(minWidth: 40)
                     Button("+") { zoom(1.2, in: geometry.size) }
-                        .accessibilityLabel("Zoomer")
-                    Button("Recentrer") { fit(geometry.size) }
+                        .accessibilityLabel(copy.text("spatial.camera.zoomIn"))
+                    Button(copy.text("spatial.camera.fit")) { fit(geometry.size) }
                         .accessibilityIdentifier("spatial-v3-fit")
                 }
                 .buttonStyle(.bordered)
@@ -684,7 +683,7 @@ struct SpatialV3Stage: View {
 
                 VStack {
                     HStack {
-                        Text("ESPACE 01 / EXPLORATION")
+                        Text(copy.text("spatial.stage.exploration"))
                             .font(.system(size: 10, weight: .bold))
                             .tracking(1.6)
                             .foregroundStyle(KollioV3Tokens.Light.muted)
@@ -692,7 +691,7 @@ struct SpatialV3Stage: View {
                     }
                     Spacer()
                     HStack {
-                        Text("─ Relation établie  ·  ┄ Changement proposé  ·  \(nodes.count) objets")
+                        Text(copy.format("spatial.stage.legend", nodes.count))
                             .font(.caption2)
                             .foregroundStyle(KollioV3Tokens.Light.muted)
                             .padding(10)
@@ -707,8 +706,12 @@ struct SpatialV3Stage: View {
             .onAppear { fit(geometry.size) }
             .onChange(of: focusRequest) { _, _ in
                 // Camera follows only an explicit navigation or Center command.
-                withAnimation(.easeInOut(duration: 0.22)) {
+                if reduceMotion {
                     centerSelected(in: geometry.size)
+                } else {
+                    withAnimation(.easeInOut(duration: 0.22)) {
+                        centerSelected(in: geometry.size)
+                    }
                 }
             }
             .onChange(of: nodes.count) { _, _ in
@@ -758,9 +761,58 @@ private struct SpatialV3Branch: View {
     }
 }
 
+
+/// Native spatial controls follow the document language, never translate its
+/// authored content, and keep the preview in the system interface language.
+struct SpatialV3Copy {
+    let locale: Locale
+    private let localizedBundle: Bundle
+
+    init(languageCode: String?) {
+        let fallback = Locale.current.language.languageCode?.identifier == "en" ? "en" : "fr"
+        let code = ["fr", "en"].contains(languageCode ?? "") ? languageCode ?? fallback : fallback
+        locale = Locale(identifier: code)
+        // `String(localized:, locale:)` alone does not force the catalog language
+        // under SwiftPM on macOS (the host app still chooses English). Select
+        // the compiled language resources explicitly from the same bundle.
+        localizedBundle = L10n.bundle.path(forResource: code, ofType: "lproj")
+            .flatMap { Bundle(path: $0) } ?? L10n.bundle
+    }
+
+    func text(_ key: String) -> String {
+        localizedBundle.localizedString(forKey: key, value: key, table: "Localizable")
+    }
+
+    func format(_ key: String, _ args: CVarArg...) -> String {
+        String(format: text(key), locale: locale, arguments: args)
+    }
+
+    func kind(_ value: String) -> String {
+        let name = value.lowercased()
+        guard Self.kinds.contains(name) else { return value }
+        return text("spatial.kind." + name)
+    }
+
+    func status(_ value: String) -> String {
+        let name = value.lowercased()
+        guard Self.statuses.contains(name) else { return value }
+        return text("spatial.status." + name)
+    }
+
+    private static let kinds: Set<String> = [
+        "context", "constraint", "idea", "hypothesis", "goal", "question",
+        "evidence", "contribution", "decision", "action", "source",
+        "proposal", "mission"
+    ]
+    private static let statuses: Set<String> = [
+        "active", "set-aside", "saved", "pending", "open", "unverified"
+    ]
+}
+
 private struct SpatialV3MeaningNode: View {
     let node: SpatialV3Node
     let selected: Bool
+    let copy: SpatialV3Copy
     let onSelect: () -> Void
 
     private var background: Color {
@@ -783,7 +835,7 @@ private struct SpatialV3MeaningNode: View {
     var body: some View {
         Button(action: onSelect) {
             VStack(alignment: node.kind == "mission" ? .center : .leading, spacing: 6) {
-                Text(node.eyebrow.uppercased())
+                Text(copy.kind(node.eyebrow).uppercased())
                     .font(.system(size: 10, weight: .bold))
                     .tracking(1.2)
                     .foregroundStyle(node.kind == "mission" ? Color.white.opacity(0.8) : KollioV3Tokens.Light.muted)
@@ -791,7 +843,7 @@ private struct SpatialV3MeaningNode: View {
                     .font(.system(size: node.kind == "mission" ? 19 : 15, weight: .semibold))
                     .multilineTextAlignment(node.kind == "mission" ? .center : .leading)
                 if node.kind == "mission" {
-                    Text("Ce qui nous rassemble")
+                    Text(copy.text("spatial.missionFooter"))
                         .font(.caption2)
                         .foregroundStyle(Color.white.opacity(0.8))
                 }
@@ -806,7 +858,10 @@ private struct SpatialV3MeaningNode: View {
                 .stroke(stroke, style: StrokeStyle(lineWidth: selected ? 2.5 : 1.5, dash: node.kind == "proposal" ? [5, 5] : [])))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(node.eyebrow) : \(node.label). \(node.status). Afficher les détails.")
+        .accessibilityLabel(copy.format("spatial.node.accessible",
+            copy.kind(node.eyebrow), node.label, copy.status(node.status)))
+        .accessibilityValue(copy.text(selected ? "spatial.node.selected" : "spatial.node.unselected"))
+        .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityIdentifier("spatial-v3-node-\(node.id)")
     }
 }

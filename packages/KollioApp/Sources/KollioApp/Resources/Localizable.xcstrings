@@ -1,6 +1,1248 @@
 {
   "sourceLanguage": "fr",
   "strings": {
+    "spatial.node.selected": {
+      "comment": "Native Spatial Ink VoiceOver selection state",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sélectionné"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected"
+          }
+        }
+      }
+    },
+    "spatial.node.unselected": {
+      "comment": "Native Spatial Ink VoiceOver selection state",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non sélectionné"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not selected"
+          }
+        }
+      }
+    },
+    "spatial.mode.fixture": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aperçu natif macOS · Exemple partagé"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Native macOS preview · Shared fixture"
+          }
+        }
+      }
+    },
+    "spatial.mode.document": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Document .kollio · Édition locale"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local .kollio editing"
+          }
+        }
+      }
+    },
+    "spatial.section.exploration": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SPATIAL INK · EXPLORATION"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SPATIAL INK · EXPLORE"
+          }
+        }
+      }
+    },
+    "spatial.document.active": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Document actif"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active document"
+          }
+        }
+      }
+    },
+    "spatial.expand": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explorer les relations"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explore relations"
+          }
+        }
+      }
+    },
+    "spatial.collapse": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replier les branches"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapse branches"
+          }
+        }
+      }
+    },
+    "spatial.createPlaceholder": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouvelle idée…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New idea…"
+          }
+        }
+      }
+    },
+    "spatial.create": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter l'idée"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add idea"
+          }
+        }
+      }
+    },
+    "spatial.save": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        }
+      }
+    },
+    "spatial.undo": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo"
+          }
+        }
+      }
+    },
+    "spatial.redo": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rétablir"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redo"
+          }
+        }
+      }
+    },
+    "spatial.search": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher un objet ou identifiant"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find an object or identifier"
+          }
+        }
+      }
+    },
+    "spatial.noResults": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun résultat"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matches"
+          }
+        }
+      }
+    },
+    "spatial.overview": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vue d'ensemble"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overview"
+          }
+        }
+      }
+    },
+    "spatial.returnToContext": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revenir au contexte"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to context"
+          }
+        }
+      }
+    },
+    "spatial.emptyDocument": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce document est vide. Saisis une idée dans le champ ci-dessus pour commencer."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This document is empty. Enter an idea above to begin."
+          }
+        }
+      }
+    },
+    "spatial.edit": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        }
+      }
+    },
+    "spatial.close": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        }
+      }
+    },
+    "spatial.associate": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Associer à"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Associate with"
+          }
+        }
+      }
+    },
+    "spatial.chooseObject": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir un objet"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an object"
+          }
+        }
+      }
+    },
+    "spatial.createLink": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créer l'association"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create association"
+          }
+        }
+      }
+    },
+    "spatial.editInput": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier le texte de l'objet"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit object text"
+          }
+        }
+      }
+    },
+    "spatial.confirm": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valider"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm"
+          }
+        }
+      }
+    },
+    "spatial.camera.zoomOut": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dézoomer"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoom out"
+          }
+        }
+      }
+    },
+    "spatial.camera.zoomIn": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoomer"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoom in"
+          }
+        }
+      }
+    },
+    "spatial.camera.fit": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recentrer"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fit canvas"
+          }
+        }
+      }
+    },
+    "spatial.stage.exploration": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ESPACE 01 / EXPLORATION"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SPACE 01 / EXPLORE"
+          }
+        }
+      }
+    },
+    "spatial.explorationHistory": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parcours d'exploration"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exploration history"
+          }
+        }
+      }
+    },
+    "spatial.objectRelations": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relations de l'objet"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Object relations"
+          }
+        }
+      }
+    },
+    "spatial.missionFooter": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce qui nous rassemble"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What brings us together"
+          }
+        }
+      }
+    },
+    "spatial.fixtureSelectionHint": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sélectionne un objet pour lire son sens et sa provenance. Replier ne supprime rien."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select an object to read its meaning and origin. Collapsing deletes nothing."
+          }
+        }
+      }
+    },
+    "spatial.fixtureSafety": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prévisualisation uniquement · Aucune IA ni mutation de document activée."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview only · No AI or document edits are enabled."
+          }
+        }
+      }
+    },
+    "spatial.documentEditingHint": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Édition locale via commandes Kollio · Enregistrer pour conserver les modifications."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local edits through Kollio commands · Save to keep your changes."
+          }
+        }
+      }
+    },
+    "spatial.feedback.ideaAdded": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idée ajoutée au document. Pense à enregistrer."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idea added. Remember to save."
+          }
+        }
+      }
+    },
+    "spatial.feedback.ideaRefused": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de créer cette idée. Saisis un texte non vide."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unable to create this idea. Enter non-empty text."
+          }
+        }
+      }
+    },
+    "spatial.feedback.editApplied": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modification appliquée. Pense à enregistrer."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit applied. Remember to save."
+          }
+        }
+      }
+    },
+    "spatial.feedback.editRefused": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conflit ou texte invalide : la modification n'a pas été appliquée."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit not applied: conflict or invalid text."
+          }
+        }
+      }
+    },
+    "spatial.feedback.linkRefused": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relation refusée : vérifie la cible ou l'existence d'un lien identique."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Association rejected: check the target or an existing duplicate link."
+          }
+        }
+      }
+    },
+    "spatial.feedback.linkAdded": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Association ajoutée. Pense à enregistrer."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Association added. Remember to save."
+          }
+        }
+      }
+    },
+    "spatial.feedback.saved": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Document enregistré dans son fichier .kollio."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Document saved to its .kollio file."
+          }
+        }
+      }
+    },
+    "spatial.feedback.saveFailed": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec de l'enregistrement : vérifie le document et le stockage."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save failed: check the document and storage."
+          }
+        }
+      }
+    },
+    "spatial.document.counts": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d objets · %2$d représentations · %3$d relations · révision %4$d"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$d objects · %2$d representations · %3$d relations · revision %4$d"
+          }
+        }
+      }
+    },
+    "spatial.group": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groupe %d"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group %d"
+          }
+        }
+      }
+    },
+    "spatial.focus": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus · %d objets reliés"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus · %d connected objects"
+          }
+        }
+      }
+    },
+    "spatial.occurrences": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d représentations de ce même objet"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d views of this object"
+          }
+        }
+      }
+    },
+    "spatial.stage.legend": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "─ Relation établie · ┄ Changement proposé · %d objets"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "─ Established link · ┄ Proposed change · %d objects"
+          }
+        }
+      }
+    },
+    "spatial.node.accessible": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ : %2$@. %3$@. Afficher les détails."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ : %2$@. %3$@. View details."
+          }
+        }
+      }
+    },
+    "spatial.kind.context": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contexte"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Context"
+          }
+        }
+      }
+    },
+    "spatial.kind.constraint": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contrainte"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Constraint"
+          }
+        }
+      }
+    },
+    "spatial.kind.idea": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idée"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idea"
+          }
+        }
+      }
+    },
+    "spatial.kind.hypothesis": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hypothèse"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hypothesis"
+          }
+        }
+      }
+    },
+    "spatial.kind.goal": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objectif"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goal"
+          }
+        }
+      }
+    },
+    "spatial.kind.question": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Question"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Question"
+          }
+        }
+      }
+    },
+    "spatial.kind.evidence": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preuve"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evidence"
+          }
+        }
+      }
+    },
+    "spatial.kind.contribution": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contribution"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contribution"
+          }
+        }
+      }
+    },
+    "spatial.kind.decision": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Décision"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decision"
+          }
+        }
+      }
+    },
+    "spatial.kind.action": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Action"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Action"
+          }
+        }
+      }
+    },
+    "spatial.kind.source": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source"
+          }
+        }
+      }
+    },
+    "spatial.kind.proposal": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposition"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposal"
+          }
+        }
+      }
+    },
+    "spatial.kind.mission": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mission"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mission"
+          }
+        }
+      }
+    },
+    "spatial.status.active": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active"
+          }
+        }
+      }
+    },
+    "spatial.status.set-aside": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écarté"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set aside"
+          }
+        }
+      }
+    },
+    "spatial.status.saved": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistré"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved"
+          }
+        }
+      }
+    },
+    "spatial.status.pending": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attente"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending"
+          }
+        }
+      }
+    },
+    "spatial.status.open": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvert"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        }
+      }
+    },
+    "spatial.status.unverified": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non vérifié"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unverified"
+          }
+        }
+      }
+    },
+    "spatial.cancel": {
+      "comment": "Spatial Ink V3 native UI chrome; user-authored text is never translated",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
     "spatial.camera.centerSelected": {
       "comment": "Explicit camera centering of selected canvas card (does not change document)",
       "extractionState": "manual",

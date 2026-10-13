@@ -27,7 +27,10 @@ struct SpatialNativeAcceptanceTests {
         let original = document
         let fileStore = DocumentFileStore(directory: FileManager.default.temporaryDirectory
             .appendingPathComponent("kollio-c28-native-\(UUID().uuidString)"))
-        let model = KollioModel.deterministicModel(document: document, fileStore: fileStore)
+        let languageCode = ProcessInfo.processInfo.environment["KOLLIO_SPATIAL_C29_LANGUAGE"] == "en" ? "en" : "fr"
+        let model = KollioModel(document: document,
+                                service: KollioModel.makeDemoService(languageCode: languageCode),
+                                fileStore: fileStore, languageCode: languageCode, mode: .demo)
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
         let compact = ProcessInfo.processInfo.environment["KOLLIO_SPATIAL_C28_COMPACT"] == "1"

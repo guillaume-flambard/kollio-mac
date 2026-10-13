@@ -327,4 +327,37 @@ struct SpatialDocumentEditorTests {
         #expect(!editor.moveOccurrence(occurrence.id.rawValue, by: Position(x: 0, y: 0)))
         #expect(model.document == before)
     }
+
+    @Test("C2.9 FR and EN native controls use their document language, not source content")
+    func spatialUITranslationsPreserveAuthoredText() throws {
+        let french = SpatialV3Copy(languageCode: "fr")
+        let english = SpatialV3Copy(languageCode: "en")
+        #expect(french.text("spatial.save") == "Enregistrer")
+        #expect(english.text("spatial.save") == "Save")
+        #expect(french.text("spatial.camera.centerSelected") == "Centrer sur la carte")
+        #expect(english.text("spatial.camera.centerSelected") == "Center on card")
+        #expect(french.text("spatial.node.selected") == "Sélectionné")
+        #expect(english.text("spatial.node.selected") == "Selected")
+        #expect(french.kind("CONSTRAINT") == "Contrainte")
+        #expect(english.kind("CONSTRAINT") == "Constraint")
+        #expect(english.status("set-aside") == "Set aside")
+        #expect(french.status("active") == "Active")
+        #expect(french.format("spatial.document.counts", 6, 7, 5, 11)
+                == "6 objets · 7 représentations · 5 relations · révision 11")
+        #expect(english.format("spatial.document.counts", 6, 7, 5, 11)
+                == "6 objects · 7 representations · 5 relations · revision 11")
+        #expect(english.format("spatial.occurrences", 2) == "2 views of this object")
+        let document = SarahFixture.document()
+        let before = document
+        let fr = SpatialDocumentProjection(document: document, languageCode: "fr")
+        let en = SpatialDocumentProjection(document: document, languageCode: "en")
+        #expect(fr.nodes.count == en.nodes.count)
+        #expect(document == before)
+        for object in document.content.values {
+            let frenchText = object.text.resolve(languageCode: "fr")
+            let englishText = object.text.resolve(languageCode: "en")
+            #expect(fr.nodes.first(where: { $0.id == object.id.rawValue })?.label == frenchText)
+            #expect(en.nodes.first(where: { $0.id == object.id.rawValue })?.label == englishText)
+        }
+    }
 }

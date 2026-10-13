@@ -10,6 +10,10 @@ model. An intelligence source proposes a patch; it never regenerates the world.
 
 The direction is [PRODUCT_BLUEPRINT.md](PRODUCT_BLUEPRINT.md). Read it once, not every task.
 
+## Spatial Ink V3 — STAR loop (2026-10-13)
+
+C2.8 is in [PR #12](https://github.com/guillaume-flambard/kollio-mac/pull/12), with the native CI green and isolated FR/EN-independent macOS screenshots. C2.9 is the next stacked branch (`feat/spatial-v3-c29-a11y-l10n`, based on C2.8): native document-localized controls, explicit compiled `.lproj` lookup, no implicit arrow-key movement, VoiceOver selected state, and Reduce Motion camera focus. Verified 378/378 KollioApp tests in 42 suites, plus two real NSHostingView captures (French and English), kept out of Git. See [STAR record](SPATIAL_STAR_C29.md). Real trackpad / keyboard focus and VoiceOver tests remain human-gated. Next: C2.10 focus and accessibility hierarchy, then remaining spec gaps; do not merge stacked branches without the necessary CI and review.
+
 ## Active milestone: G0, real entry point and on-device Apple intelligence
 
 **Status: G0-A and G0-B both reached. The human gesture pass is still owed.**
