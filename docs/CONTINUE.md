@@ -10,6 +10,10 @@ model. An intelligence source proposes a patch; it never regenerates the world.
 
 The direction is [PRODUCT_BLUEPRINT.md](PRODUCT_BLUEPRINT.md). Read it once, not every task.
 
+## Spatial Ink V3 — C2.11 STAR loop
+
+C2.11 builds on C2.10 with Escape hierarchy, paused/recovered editing per semantic object and authored language, explicit conflict comparison/rebase, and Cmd+Return commit through the existing validated command. Verified 385/385 KollioApp tests in 43 suites, with native FR/EN baseline scene captures. The captures do not prove the active editing panel or physical Escape/Cmd+Return delivery; keyboard/VoiceOver and trackpad remain manual gates. Draft memory is window-local, not persisted between launches. See [C2.11 STAR ledger](SPATIAL_STAR_C31.md). Next C2.12: unsaved-draft lifecycle and explicit save/close feedback, then real native editing acceptance.
+
 ## Spatial Ink V3 — C2.10 STAR loop
 
 C2.10 continues C2.9 with a native FR/EN Browse cards menu, relation-first deterministic reading order, and explicit keyboard/VoiceOver focus after chosen navigation. Confirmed 381/381 KollioApp tests in 43 suites, and two real 900x700 NSHostingView captures FR/EN. Selection does not mutate the document. See [C2.10 STAR record](SPATIAL_STAR_C30.md). Real VoiceOver, keyboard focus delivery and trackpad use remain unverified by a person. Next: C2.11 — Escape hierarchy and recoverable editing drafts per CAN-02/CAN-04.

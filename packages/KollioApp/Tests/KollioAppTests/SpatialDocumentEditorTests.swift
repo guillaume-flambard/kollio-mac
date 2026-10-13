@@ -360,4 +360,96 @@ struct SpatialDocumentEditorTests {
             #expect(en.nodes.first(where: { $0.id == object.id.rawValue })?.label == englishText)
         }
     }
+
+    @Test("C2.11 Escape pauses the editor before closing the selection")
+    func escapeOneLevelAtATime() {
+        #expect(SpatialEscapeRoute.next(editing: true, selected: true, grouped: true,
+                                        canCollapse: true) == .pauseEditor)
+        #expect(SpatialEscapeRoute.next(editing: false, selected: true, grouped: true,
+                                        canCollapse: true) == .clearSelection)
+        #expect(SpatialEscapeRoute.next(editing: false, selected: false, grouped: true,
+                                        canCollapse: true) == .clearGroup)
+        #expect(SpatialEscapeRoute.next(editing: false, selected: false, grouped: false,
+                                        canCollapse: true) == .collapseBranches)
+        #expect(SpatialEscapeRoute.next(editing: false, selected: false, grouped: false,
+                                        canCollapse: false) == .none)
+    }
+
+    @Test("C2.11 one draft survives selection, sibling occurrence and reopened editing")
+    func pausedDraftRemainsRecoverable() throws {
+        var memory = SpatialDraftMemory()
+        let saved1 = memory.keep(objectID: "shared-object", languageCode: "fr",
+                            draft: "Original", original: "Original", version: 5)
+        #expect(!saved1)
+        #expect(memory.draft(for: "shared-object", languageCode: "fr") == nil)
+        let saved2 = memory.keep(objectID: "shared-object", languageCode: "fr", draft: "My unfinished thought",
+                            original: "Original", version: 5)
+        #expect(saved2)
+        #expect(memory.draft(for: "shared-object", languageCode: "fr") == SpatialStoredDraft(
+            text: "My unfinished thought", original: "Original", version: 5))
+        // A second visual instance of this same object does not get a new draft.
+        #expect(memory.draft(for: "shared-object", languageCode: "fr")?.text == "My unfinished thought")
+        let saved3 = memory.keep(objectID: "another-object", languageCode: "fr", draft: "Second draft",
+                            original: "Original", version: 7)
+        #expect(saved3)
+        #expect(memory.draft(for: "another-object", languageCode: "fr")?.text == "Second draft")
+        let saved4 = memory.keep(objectID: "shared-object", languageCode: "fr", draft: "Original",
+                             original: "Original", version: 5)
+        #expect(!saved4)
+        #expect(memory.draft(for: "shared-object", languageCode: "fr") == nil)
+        // Drafts of a different translated variant are isolated, not
+        // automatically grafted onto the current document language.
+        let saved5 = memory.keep(objectID: "shared-object", languageCode: "en",
+                            draft: "English draft", original: "Original", version: 5)
+        #expect(saved5)
+        #expect(memory.draft(for: "shared-object", languageCode: "fr") == nil)
+        #expect(memory.draft(for: "shared-object", languageCode: "en")?.text == "English draft")
+        memory.discard("shared-object", languageCode: "en")
+        #expect(memory.draft(for: "shared-object", languageCode: "en") == nil)
+        #expect(memory.draft(for: "another-object", languageCode: "fr")?.text == "Second draft")
+    }
+
+    @Test("C2.11 a stale write preserves a recoverable draft until explicitly reconciled")
+    func staleDraftNeverOverwritesWithoutAChosenCurrentVersion() throws {
+        let (editor, model, directory) = prepare()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let target = try #require(model.document.content.keys.sorted(
+            by: { $0.rawValue < $1.rawValue }).first)
+        let before = try #require(model.object(target))
+        let originalText = before.text.resolve(languageCode: model.languageCode)
+        var memory = SpatialDraftMemory()
+        let authored = "My unfinished draft, do not lose this"
+        let saved6 = memory.keep(objectID: target.rawValue, languageCode: "fr", draft: authored,
+                            original: originalText, version: before.objectVersion)
+        #expect(saved6)
+        #expect(editor.updateText("Different concurrent text", of: target.rawValue,
+                                  expectedVersion: before.objectVersion))
+        let concurrent = try #require(model.object(target))
+        let changedDocument = model.document
+        #expect(!editor.updateText(authored, of: target.rawValue,
+                                   expectedVersion: before.objectVersion))
+        #expect(model.document == changedDocument)
+        #expect(memory.draft(for: target.rawValue, languageCode: "fr")?.text == authored)
+        #expect(memory.draft(for: target.rawValue, languageCode: "fr")?.version == before.objectVersion)
+        #expect(concurrent.objectVersion > before.objectVersion)
+        // The user's explicit choice to reconcile updates the optimistic
+        // version at the UI layer; only an additional Confirm commits the draft.
+        #expect(editor.updateText(authored, of: target.rawValue,
+                                  expectedVersion: concurrent.objectVersion))
+        memory.discard(target.rawValue, languageCode: "fr")
+        #expect(memory.draft(for: target.rawValue, languageCode: "fr") == nil)
+        #expect(model.object(target)?.text.resolve(languageCode: model.languageCode) == authored)
+    }
+
+    @Test("C2.11 recovery copy is available in the active document language")
+    func draftCopyInFRAndEN() {
+        #expect(SpatialV3Copy(languageCode: "fr").text("spatial.draft.resume")
+                == "Reprendre le brouillon")
+        #expect(SpatialV3Copy(languageCode: "en").text("spatial.draft.resume")
+                == "Resume draft")
+        #expect(SpatialV3Copy(languageCode: "fr").text("spatial.draft.pause")
+                == "Conserver le brouillon et fermer")
+        #expect(SpatialV3Copy(languageCode: "en").text("spatial.draft.pause")
+                == "Keep draft and close")
+    }
 }

@@ -14,7 +14,11 @@ struct SpatialV3WindowView: View {
     @State private var newIdeaDraft = ""
     @State private var editingID: String?
     @State private var editDraft = ""
+    @State private var editOriginalText = ""
+    @State private var editLanguageCode = "fr"
     @State private var editVersion: Int?
+    @State private var pausedDrafts = SpatialDraftMemory()
+    @FocusState private var editingFieldFocused: Bool
     @State private var relationTargetID = ""
     @State private var focusRequest = 0
     @State private var editFeedback: String?
@@ -134,23 +138,80 @@ struct SpatialV3WindowView: View {
         }
     }
 
+    private func pauseEditing() {
+        guard let editingID,
+              let semanticID = semanticID(editingID),
+              let editVersion else { return }
+        let remembered = pausedDrafts.keep(
+            objectID: semanticID, languageCode: editLanguageCode, draft: editDraft,
+            original: editOriginalText, version: editVersion
+        )
+        self.editingID = nil
+        self.editVersion = nil
+        editingFieldFocused = false
+        if remembered { editFeedback = copy.text("spatial.draft.saved") }
+    }
+
     private func beginEdit(_ id: String) {
         guard let model, let objectID = semanticID(id),
               let object = model.object(ObjectID(objectID)) else { return }
+        if editingID != nil { pauseEditing() }
+        let currentText = object.text.resolve(languageCode: model.languageCode)
+        let recovered = pausedDrafts.draft(for: objectID, languageCode: model.languageCode)
         editingID = id
+        editLanguageCode = model.languageCode
+        editVersion = recovered?.version ?? object.objectVersion
+        editOriginalText = recovered?.original ?? currentText
+        editDraft = recovered?.text ?? currentText
+        editFeedback = recovered == nil ? nil : copy.text("spatial.draft.recovered")
+    }
+
+    private var editIsStale: Bool {
+        guard let model, let editingID,
+              let id = semanticID(editingID), let version = editVersion
+        else { return false }
+        return model.object(ObjectID(id))?.objectVersion != version
+    }
+
+    private func adoptLatestVersion() {
+        guard let model, let editingID, let id = semanticID(editingID),
+              let object = model.object(ObjectID(id)) else { return }
+        // Explicit human reconciliation: keep the user's draft untouched,
+        // but compare it to the latest current text when pausing again.
         editVersion = object.objectVersion
-        editDraft = object.text.resolve(languageCode: model.languageCode)
-        editFeedback = nil
+        editOriginalText = object.text.resolve(languageCode: model.languageCode)
+        editFeedback = copy.text("spatial.draft.rebased")
+    }
+
+    private func closeOneLevel() {
+        switch SpatialEscapeRoute.next(
+            editing: editingID != nil, selected: selectedID != nil,
+            grouped: focusedGroup != nil, canCollapse: depth > 1 && model == nil
+        ) {
+        case .pauseEditor: pauseEditing()
+        case .clearSelection: selectedID = nil
+        case .clearGroup: focusedGroup = nil
+        case .collapseBranches: depth = 1
+        case .none: break
+        }
     }
 
     private func finishEdit() {
         guard let model, let editingID, let editVersion,
               let objectID = semanticID(editingID) else { return }
+        // Changing the document's UI language cannot reassign a previously
+        // drafted French text to the English variant (or vice versa).
+        guard editLanguageCode == model.languageCode else {
+            editFeedback = copy.text("spatial.draft.languageChanged")
+            return
+        }
         let succeeded = SpatialDocumentEditor(model: model)
             .updateText(editDraft, of: objectID, expectedVersion: editVersion)
         if succeeded {
+            pausedDrafts.discard(objectID, languageCode: editLanguageCode)
             self.editingID = nil
             self.editVersion = nil
+            editingFieldFocused = false
             editFeedback = copy.text("spatial.feedback.editApplied")
         } else {
             editFeedback = copy.text("spatial.feedback.editRefused")
@@ -180,6 +241,140 @@ struct SpatialV3WindowView: View {
         editFeedback = SpatialDocumentEditor(model: model).save()
             ? copy.text("spatial.feedback.saved")
             : copy.text("spatial.feedback.saveFailed")
+    }
+
+    @ViewBuilder
+    private var selectionPanel: some View {
+        if let selected {
+            selectedInspector(for: selected)
+            editPanel(for: selected)
+        } else {
+            Text(model == nil
+                 ? copy.text("spatial.fixtureSelectionHint")
+                 : copy.text("spatial.drag.hint"))
+                .font(.caption)
+                .foregroundStyle(KollioV3Tokens.Light.muted)
+        }
+    }
+
+    private func selectedInspector(for selected: SpatialV3Node) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("\(copy.kind(selected.eyebrow)) · \(copy.status(selected.status))")
+                    .font(.system(size: 10, weight: .bold))
+                    .tracking(1.2)
+                    .foregroundStyle(KollioV3Tokens.Light.muted)
+                Text(selected.label)
+                    .font(.headline)
+                if let id = semanticID(selected.id),
+                   let count = realScene?.occurrenceCount(for: id), count > 1 {
+                    Text(copy.format("spatial.occurrences", count))
+                        .font(.caption)
+                        .foregroundStyle(KollioV3Tokens.Light.muted)
+                        .accessibilityIdentifier("spatial-v3-occurrence-count")
+                }
+                Text(selected.detail)
+                    .font(.subheadline)
+                    .foregroundStyle(KollioV3Tokens.Light.muted)
+            }
+            Spacer()
+            if model != nil {
+                VStack(alignment: .trailing, spacing: 9) {
+                    Button(copy.text(
+                        semanticID(selected.id).flatMap {
+                            pausedDrafts.draft(for: $0, languageCode: model?.languageCode ?? "fr")
+                        } == nil
+                            ? "spatial.edit" : "spatial.draft.resume"
+                    )) { beginEdit(selected.id) }
+                        .accessibilityIdentifier("spatial-v3-edit")
+                    Button(copy.text("spatial.camera.centerSelected")) {
+                        focusRequest += 1
+                    }
+                    .accessibilityIdentifier("spatial-v3-center-selected")
+                    if let instanceID = realScene?.instanceIDByVisualID[selected.id] {
+                        HStack(spacing: 5) {
+                            ForEach(SpatialNudgeDirection.allCases) { direction in
+                                Button {
+                                    moveSelectedOccurrence(instanceID, by: direction.delta)
+                                } label: {
+                                    Image(systemName: direction.symbol)
+                                }
+                                .accessibilityLabel(copy.text(direction.localizationKey))
+                                .help(copy.text(direction.localizationKey))
+                                .accessibilityIdentifier("spatial-v3-move-\(direction.rawValue)")
+                            }
+                        }
+                        .accessibilityElement(children: .contain)
+                        .accessibilityLabel(copy.text("spatial.move.controls"))
+                    }
+                    if !relationTargets.isEmpty {
+                        Picker(copy.text("spatial.associate"), selection: $relationTargetID) {
+                            Text(copy.text("spatial.chooseObject")).tag("")
+                            ForEach(relationTargets) { target in
+                                Text(target.label).tag(target.id)
+                            }
+                        }
+                        .frame(maxWidth: 245)
+                        .accessibilityIdentifier("spatial-v3-relation-target")
+                        Button(copy.text("spatial.createLink")) { addAssociation(from: selected.id) }
+                            .disabled(relationTargetID.isEmpty || relationTargetID == semanticID(selected.id))
+                            .accessibilityIdentifier("spatial-v3-link")
+                    }
+                }
+                .buttonStyle(.bordered)
+            }
+            Button(copy.text("spatial.close")) { selectedID = nil }
+                .buttonStyle(.bordered)
+        }
+        .padding(14)
+        .background(KollioV3Tokens.Light.surface, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(KollioV3Tokens.Light.border))
+    }
+
+    @ViewBuilder
+    private func editPanel(for selected: SpatialV3Node) -> some View {
+        if model != nil && editingID == selected.id {
+            HStack(spacing: 8) {
+                if editIsStale, let model, let id = semanticID(editingID),
+                   let current = model.object(ObjectID(id)) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(copy.text("spatial.draft.conflict"))
+                            .font(.caption).foregroundStyle(KollioV3Tokens.Light.ink)
+                        Text(copy.text("spatial.draft.current"))
+                            .font(.caption2).foregroundStyle(KollioV3Tokens.Light.muted)
+                        Text(current.text.resolve(languageCode: model.languageCode))
+                            .textSelection(.enabled)
+                        Text(copy.text("spatial.draft.mine"))
+                            .font(.caption2).foregroundStyle(KollioV3Tokens.Light.muted)
+                        Button(copy.text("spatial.draft.rebase")) { adoptLatestVersion() }
+                            .accessibilityIdentifier("spatial-v3-rebase-draft")
+                    }
+                    .accessibilityIdentifier("spatial-v3-stale-edit")
+                }
+                TextField(copy.text("spatial.editInput"), text: $editDraft)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($editingFieldFocused)
+                    .onAppear { editingFieldFocused = true }
+                    .onKeyPress(.escape) {
+                        // Handle here so this same key cannot also dismiss
+                        // the selected card through the ancestor Exit command.
+                        pauseEditing()
+                        return .handled
+                    }
+                    .onKeyPress(keys: [.return], phases: .down) { event in
+                        guard event.modifiers.contains(.command) else { return .ignored }
+                        finishEdit()
+                        return .handled
+                    }
+                    .accessibilityIdentifier("spatial-v3-edit-input")
+                Button(copy.text("spatial.confirm")) { finishEdit() }
+                    .disabled(editDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .accessibilityIdentifier("spatial-v3-edit-confirm")
+                Button(copy.text("spatial.draft.pause")) { pauseEditing() }
+                    .accessibilityIdentifier("spatial-v3-edit-cancel")
+            }
+            .buttonStyle(.bordered)
+        }
     }
 
     var body: some View {
@@ -379,102 +574,14 @@ struct SpatialV3WindowView: View {
                 .overlay(RoundedRectangle(cornerRadius: 18).stroke(KollioV3Tokens.Light.border))
                 .accessibilityIdentifier("spatial-v3-canvas")
                 .onChange(of: selectedID) { _, id in
-                    if editingID != id { editingID = nil; editVersion = nil }
+                    if editingID != id && editingID != nil { pauseEditing() }
                     relationTargetID = ""
                     if let id, focusHistory.last != id {
                         focusHistory.append(id)
                         if focusHistory.count > 12 { focusHistory.removeFirst() }
                     }
                 }
-                Group {
-                    if let selected {
-                        HStack(alignment: .top, spacing: 12) {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("\(copy.kind(selected.eyebrow)) · \(copy.status(selected.status))")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .tracking(1.2)
-                                    .foregroundStyle(KollioV3Tokens.Light.muted)
-                                Text(selected.label)
-                                    .font(.headline)
-                                if let id = semanticID(selected.id),
-                                   let count = realScene?.occurrenceCount(for: id), count > 1 {
-                                    Text(copy.format("spatial.occurrences", count))
-                                        .font(.caption)
-                                        .foregroundStyle(KollioV3Tokens.Light.muted)
-                                        .accessibilityIdentifier("spatial-v3-occurrence-count")
-                                }
-                                Text(selected.detail)
-                                    .font(.subheadline)
-                                    .foregroundStyle(KollioV3Tokens.Light.muted)
-                            }
-                            Spacer()
-                            if model != nil {
-                                VStack(alignment: .trailing, spacing: 9) {
-                                    Button(copy.text("spatial.edit")) { beginEdit(selected.id) }
-                                        .accessibilityIdentifier("spatial-v3-edit")
-                                    Button(copy.text("spatial.camera.centerSelected")) {
-                                        focusRequest += 1
-                                    }
-                                    .accessibilityIdentifier("spatial-v3-center-selected")
-                                    if let instanceID = realScene?.instanceIDByVisualID[selected.id] {
-                                        HStack(spacing: 5) {
-                                            ForEach(SpatialNudgeDirection.allCases) { direction in
-                                                Button {
-                                                    moveSelectedOccurrence(instanceID, by: direction.delta)
-                                                } label: {
-                                                    Image(systemName: direction.symbol)
-                                                }
-                                                .accessibilityLabel(copy.text(direction.localizationKey))
-                                                .help(copy.text(direction.localizationKey))
-                                                .accessibilityIdentifier("spatial-v3-move-\(direction.rawValue)")
-                                            }
-                                        }
-                                        .accessibilityElement(children: .contain)
-                                        .accessibilityLabel(copy.text("spatial.move.controls"))
-                                    }
-                                    if !relationTargets.isEmpty {
-                                        Picker(copy.text("spatial.associate"), selection: $relationTargetID) {
-                                            Text(copy.text("spatial.chooseObject")).tag("")
-                                            ForEach(relationTargets) { target in
-                                                Text(target.label).tag(target.id)
-                                            }
-                                        }
-                                        .frame(maxWidth: 245)
-                                        .accessibilityIdentifier("spatial-v3-relation-target")
-                                        Button(copy.text("spatial.createLink")) { addAssociation(from: selected.id) }
-                                            .disabled(relationTargetID.isEmpty || relationTargetID == semanticID(selected.id))
-                                            .accessibilityIdentifier("spatial-v3-link")
-                                    }
-                                }
-                                .buttonStyle(.bordered)
-                            }
-                            Button(copy.text("spatial.close")) { selectedID = nil }
-                                .buttonStyle(.bordered)
-                        }
-                        .padding(14)
-                        .background(KollioV3Tokens.Light.surface, in: RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(KollioV3Tokens.Light.border))
-                        if model != nil && editingID == selected.id {
-                            HStack(spacing: 8) {
-                                TextField(copy.text("spatial.editInput"), text: $editDraft)
-                                    .textFieldStyle(.roundedBorder)
-                                    .accessibilityIdentifier("spatial-v3-edit-input")
-                                Button(copy.text("spatial.confirm")) { finishEdit() }
-                                    .disabled(editDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                                    .accessibilityIdentifier("spatial-v3-edit-confirm")
-                                Button(copy.text("spatial.cancel")) { editingID = nil; editVersion = nil }
-                                    .accessibilityIdentifier("spatial-v3-edit-cancel")
-                            }
-                            .buttonStyle(.bordered)
-                        }
-                    } else {
-                        Text(model == nil
-                             ? copy.text("spatial.fixtureSelectionHint")
-                             : copy.text("spatial.drag.hint"))
-                            .font(.caption)
-                            .foregroundStyle(KollioV3Tokens.Light.muted)
-                    }
-                }
+                selectionPanel
                 .frame(minHeight: 65, alignment: .topLeading)
                 Text(model == nil
                      ? copy.text("spatial.fixtureSafety")
@@ -491,6 +598,7 @@ struct SpatialV3WindowView: View {
         .background(KollioV3Tokens.Light.paper)
         .foregroundStyle(KollioV3Tokens.Light.ink)
         .preferredColorScheme(.light)
+        .onExitCommand { closeOneLevel() }
     }
 }
 
@@ -790,6 +898,60 @@ private struct SpatialV3Branch: View {
     }
 }
 
+
+/// A pause is local to the window, not a document transaction. Each
+/// semantic object has one recoverable authored-language draft, regardless of
+/// how many cards show it. A failed optimistic edit keeps the original version.
+struct SpatialStoredDraft: Equatable {
+    let text: String
+    let original: String
+    let version: Int
+}
+
+struct SpatialDraftMemory {
+    struct Key: Hashable {
+        let objectID: String
+        let languageCode: String
+    }
+
+    private(set) var drafts: [Key: SpatialStoredDraft] = [:]
+
+    @discardableResult
+    mutating func keep(objectID: String, languageCode: String,
+                       draft: String, original: String, version: Int) -> Bool {
+        let key = Key(objectID: objectID, languageCode: languageCode)
+        guard draft != original else {
+            // Explicitly restoring the original text discards the pending
+            // edit. No invisible stale draft should come back later.
+            drafts.removeValue(forKey: key)
+            return false
+        }
+        drafts[key] = SpatialStoredDraft(text: draft, original: original, version: version)
+        return true
+    }
+
+    func draft(for objectID: String, languageCode: String) -> SpatialStoredDraft? {
+        drafts[Key(objectID: objectID, languageCode: languageCode)]
+    }
+
+    mutating func discard(_ objectID: String, languageCode: String) {
+        drafts.removeValue(forKey: Key(objectID: objectID, languageCode: languageCode))
+    }
+}
+
+/// Escape always closes only the innermost context. It never commits a draft.
+enum SpatialEscapeRoute: Equatable {
+    case pauseEditor, clearSelection, clearGroup, collapseBranches, none
+
+    static func next(editing: Bool, selected: Bool, grouped: Bool,
+                     canCollapse: Bool) -> Self {
+        if editing { return .pauseEditor }
+        if selected { return .clearSelection }
+        if grouped { return .clearGroup }
+        if canCollapse { return .collapseBranches }
+        return .none
+    }
+}
 
 /// A predictable reading route through graph relations, then document
 /// position. This navigation-only projection never writes positions or content.
