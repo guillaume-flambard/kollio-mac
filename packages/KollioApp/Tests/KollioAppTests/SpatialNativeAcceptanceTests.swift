@@ -137,4 +137,77 @@ struct SpatialNativeAcceptanceTests {
         #expect(model.document == initial)
     }
 
+
+    @Test("C2.18 selected actions remain discoverable in a compact native window")
+    @MainActor
+    func compactSelectedActions() throws {
+        guard let output = ProcessInfo.processInfo.environment["KOLLIO_SPATIAL_C38_CAPTURE"]
+        else { return }
+
+        let original = SarahFixture.document()
+        let objectID = try #require(original.content.keys.sorted {
+            $0.rawValue < $1.rawValue
+        }.first)
+        let locale = ProcessInfo.processInfo.environment["KOLLIO_SPATIAL_C29_LANGUAGE"] == "en"
+            ? "en" : "fr"
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("kollio-c38-compact-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let model = KollioModel(
+            document: original,
+            service: KollioModel.makeDemoService(languageCode: locale),
+            fileStore: DocumentFileStore(directory: folder),
+            languageCode: locale, mode: .demo
+        )
+        NSApplication.shared.setActivationPolicy(.accessory)
+        let frame = NSRect(x: 0, y: 0, width: 680, height: 520)
+        let hosting = NSHostingView(rootView: SpatialV3WindowView(
+            initialSelectedID: objectID.rawValue, model: model
+        ))
+        hosting.frame = frame
+        let window = NSWindow(contentRect: frame, styleMask: [.titled],
+                              backing: .buffered, defer: false)
+        window.contentView = hosting
+        window.orderFront(nil)
+        defer { window.orderOut(nil); window.close() }
+
+        RunLoop.current.run(until: Date().addingTimeInterval(0.9))
+        hosting.layoutSubtreeIfNeeded()
+        let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds))
+        hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
+        let png = try #require(bitmap.representation(using: .png, properties: [:]))
+        try png.write(to: URL(fileURLWithPath: output), options: .atomic)
+        #expect(png.count > 8_000)
+        // Inspect the actual AppKit accessibility subtree (not a SwiftUI
+        // source-code assumption). Keep this diagnostic separate from any
+        // claim that a human VoiceOver session was completed.
+        func accessibilityIDs(_ candidate: Any, depth: Int = 0) -> Set<String> {
+            guard depth < 18 else { return [] }
+            let identifier: String?
+            let children: [Any]
+            if let view = candidate as? NSView {
+                identifier = view.accessibilityIdentifier()
+                children = view.accessibilityChildren() ?? []
+            } else if let element = candidate as? NSAccessibilityElement {
+                identifier = element.accessibilityIdentifier()
+                children = element.accessibilityChildren() ?? []
+            } else {
+                return []
+            }
+            var ids: Set<String> = []
+            if let identifier { ids.insert(identifier) }
+            for child in children {
+                ids.formUnion(accessibilityIDs(child, depth: depth + 1))
+            }
+            return ids
+        }
+        let exposed = accessibilityIDs(hosting)
+        print("NATIVE-C38 accessibility IDs:", exposed.sorted().filter {
+            $0.hasPrefix("spatial-v3")
+        })
+        #expect(SpatialV3Copy(languageCode: locale).text("spatial.navigation.actions")
+                == (locale == "en" ? "Card actions" : "Actions de la carte"))
+        #expect(model.document == original)
+        print("NATIVE-C38 compact selected actions: \(output) (\(png.count) bytes)")
+    }
 }

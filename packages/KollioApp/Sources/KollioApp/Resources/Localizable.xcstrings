@@ -1,6 +1,42 @@
 {
   "sourceLanguage": "fr",
   "strings": {
+    "spatial.navigation.actions": {
+      "comment": "CAN-02 C2.18 contextual access to selected-card actions in compact windows",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card actions"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actions de la carte"
+          }
+        }
+      }
+    },
+    "spatial.navigation.actionsHint": {
+      "comment": "CAN-02 C2.18 contextual access to selected-card actions in compact windows",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to the selected card’s editing, movement and relationship commands without dragging."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atteindre les commandes d’édition, de déplacement et de liaison de la carte sans glisser."
+          }
+        }
+      }
+    },
     "spatial.pending.notice": {
       "comment": "C2.12 honest canonical save versus uncommitted text and explicit discard",
       "extractionState": "manual",

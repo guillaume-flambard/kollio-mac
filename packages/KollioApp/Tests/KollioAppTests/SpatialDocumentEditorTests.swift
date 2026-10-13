@@ -513,4 +513,29 @@ struct SpatialDocumentEditorTests {
         drafts.discard(objectID.rawValue, languageCode: "fr")
         #expect(model.document.content == before.content)
     }
+
+    @Test("C2.18 opening contextual actions focuses an actionable inspector control")
+    func contextualFocusHasStableFallback() {
+        #expect(SpatialActionFocusRoute.destination(editable: true) == .edit)
+        #expect(SpatialActionFocusRoute.destination(editable: false) == .close)
+        #expect(SpatialEscapeRoute.next(
+            editing: true, selected: true, grouped: false, canCollapse: false
+        ) == .pauseEditor)
+        #expect(SpatialEscapeRoute.next(
+            editing: false, selected: true, grouped: false, canCollapse: false
+        ) == .clearSelection)
+        #expect(SpatialEscapeRoute.next(
+            editing: false, selected: false, grouped: false, canCollapse: false
+        ) == .none)
+    }
+
+    @Test("C2.18 contextual focus labels and hints are translated from native resources")
+    func contextualFocusCopyIsLocalized() {
+        let fr = SpatialV3Copy(languageCode: "fr")
+        let en = SpatialV3Copy(languageCode: "en")
+        #expect(fr.text("spatial.navigation.actions") == "Actions de la carte")
+        #expect(en.text("spatial.navigation.actions") == "Card actions")
+        #expect(fr.text("spatial.navigation.actionsHint").contains("sans glisser"))
+        #expect(en.text("spatial.navigation.actionsHint").contains("without dragging"))
+    }
 }
