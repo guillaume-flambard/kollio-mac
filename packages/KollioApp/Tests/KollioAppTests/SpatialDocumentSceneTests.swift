@@ -248,3 +248,57 @@ struct SpatialDocumentSceneTests {
         #expect(document == before)
     }
 }
+
+@Suite("Spatial Ink C2.10 — readable graph navigation without pointer gestures")
+struct SpatialV3ReadingOrderTests {
+    private func node(_ id: String, y: Double) -> SpatialV3Node {
+        SpatialV3Node(id: id, kind: "idea", label: id, eyebrow: "IDEA",
+                      detail: "", status: "active", depth: 2, x: 0.5, y: y)
+    }
+
+    private func edge(_ source: String, _ target: String) -> SpatialV3Edge {
+        SpatialV3Edge(id: source + ">" + target, source: source, target: target,
+                      type: "relates", label: "", depth: 2, points: [],
+                      blocked: false, crossings: 0)
+    }
+
+    @Test("Dependencies read before their children even when child is higher on screen")
+    func graphFirst() {
+        let nodes = [
+            node("c", y: 0.2), node("b", y: 0.1),
+            node("d", y: 0.9), node("a", y: 0.6)
+        ]
+        let links = [edge("b", "c"), edge("a", "b")]
+        let read = SpatialV3ReadingOrder.ordered(nodes, edges: links).map(\.id)
+        #expect(read == ["a", "b", "c", "d"])
+        #expect(SpatialV3ReadingOrder.ordered(Array(nodes.reversed()), edges: Array(links.reversed()))
+            .map(\.id) == read)
+    }
+
+    @Test("Cycles and disconnected drawings are reachable once, with stable ordering")
+    func disconnectedAndCycles() {
+        let nodes = [node("a", y: 0.3), node("b", y: 0.1), node("c", y: 0.7)]
+        let edges = [edge("a", "b"), edge("b", "a")]
+        let first = SpatialV3ReadingOrder.ordered(nodes, edges: edges).map(\.id)
+        let second = SpatialV3ReadingOrder.ordered(Array(nodes.reversed()), edges: Array(edges.reversed()))
+            .map(\.id)
+        #expect(first == second)
+        #expect(first.count == 3)
+        #expect(Set(first) == Set(["a", "b", "c"]))
+    }
+
+    @Test("Browse uses the visual scene without changing the real .kollio document")
+    func actualDocument() {
+        let document = SarahFixture.document()
+        let before = document
+        let scene = SpatialDocumentScene(projection: SpatialDocumentProjection(document: document))
+        let browsable = SpatialV3ReadingOrder.ordered(scene.nodes, edges: scene.edges)
+        #expect(browsable.count == scene.nodes.count)
+        #expect(Set(browsable.map(\.id)) == Set(scene.nodes.map(\.id)))
+        #expect(document == before)
+        #expect(SpatialV3Copy(languageCode: "fr").format("spatial.navigation.count", 7)
+                == "Parcourir 7 cartes")
+        #expect(SpatialV3Copy(languageCode: "en").format("spatial.navigation.count", 7)
+                == "Browse 7 cards")
+    }
+}
