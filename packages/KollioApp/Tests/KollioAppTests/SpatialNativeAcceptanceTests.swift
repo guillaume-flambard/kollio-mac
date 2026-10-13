@@ -68,4 +68,73 @@ struct SpatialNativeAcceptanceTests {
         #expect(model.document == original)
         print("NATIVE-C28 capture \(pngPath) (\(data.count) bytes)")
     }
+
+    @Test("C2.16 a real native Spatial Ink viewport routes scroll without a document edit")
+    @MainActor
+    func realViewportScrollRouting() throws {
+        guard ProcessInfo.processInfo.environment["KOLLIO_SPATIAL_C36_NATIVE"] == "1"
+        else { return }
+
+        let initial = SarahFixture.document()
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("kollio-c36-scroll-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let model = KollioModel(
+            document: initial,
+            service: KollioModel.makeDemoService(languageCode: "en"),
+            fileStore: DocumentFileStore(directory: directory),
+            languageCode: "en", mode: .demo
+        )
+        NSApplication.shared.setActivationPolicy(.accessory)
+        let frame = NSRect(x: 0, y: 0, width: 900, height: 700)
+        let hosting = NSHostingView(rootView: SpatialV3WindowView(model: model))
+        hosting.frame = frame
+        let window = NSWindow(
+            contentRect: frame, styleMask: [.titled], backing: .buffered, defer: false
+        )
+        window.contentView = hosting
+        window.orderFront(nil)
+        defer { window.orderOut(nil); window.close() }
+
+        RunLoop.current.run(until: Date().addingTimeInterval(0.8))
+        hosting.layoutSubtreeIfNeeded()
+
+        func lookup(_ view: NSView) -> SpatialTrackpadScrollObservationView? {
+            if let match = view as? SpatialTrackpadScrollObservationView { return match }
+            for child in view.subviews {
+                if let found = lookup(child) { return found }
+            }
+            return nil
+        }
+
+        let observer = try #require(lookup(hosting))
+        #expect(observer.bounds.width > 180)
+        #expect(observer.bounds.height > 180)
+        #expect(observer.hitTest(NSPoint(x: 30, y: 30)) == nil)
+
+        // Tests only our own local monitor's routing. No system input is
+        // injected, and the user's actual pointer/window focus is untouched.
+        let sample = SpatialTrackpadScrollInput(
+            delta: CGSize(width: 95, height: -42), isPrecise: true,
+            hasReservedModifiers: false, hasMomentum: false, isEnding: false
+        )
+        let center = observer.convert(
+            CGPoint(x: observer.bounds.midX, y: observer.bounds.midY), to: nil
+        )
+        let before = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds))
+        hosting.cacheDisplay(in: hosting.bounds, to: before)
+        let beforeData = try #require(before.representation(using: .png, properties: [:]))
+
+        #expect(!observer.route(sample, windowNumber: window.windowNumber + 50, point: center))
+        #expect(observer.route(sample, windowNumber: window.windowNumber, point: center))
+        RunLoop.current.run(until: Date().addingTimeInterval(0.3))
+        hosting.layoutSubtreeIfNeeded()
+
+        let after = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds))
+        hosting.cacheDisplay(in: hosting.bounds, to: after)
+        let afterData = try #require(after.representation(using: .png, properties: [:]))
+        #expect(beforeData != afterData)
+        #expect(model.document == initial)
+    }
+
 }

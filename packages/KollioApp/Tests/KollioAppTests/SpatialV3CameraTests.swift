@@ -146,3 +146,68 @@ struct SpatialPinchTransactionTests {
         ).zoom == SpatialV3Camera.minZoom)
     }
 }
+
+@Suite("Spatial C2.16 — precise trackpad scroll owns only the canvas")
+struct SpatialTrackpadScrollTests {
+    private func input(
+        dx: CGFloat = 16,
+        dy: CGFloat = -23,
+        precise: Bool = true,
+        modifiers: Bool = false,
+        momentum: Bool = false,
+        ending: Bool = false
+    ) -> SpatialTrackpadScrollInput {
+        SpatialTrackpadScrollInput(
+            delta: CGSize(width: dx, height: dy),
+            isPrecise: precise, hasReservedModifiers: modifiers,
+            hasMomentum: momentum, isEnding: ending
+        )
+    }
+
+    @Test("Two-finger scroll translates the camera by screen points, never zooms it")
+    func incrementalPanIsPresentationOnly() {
+        let original = SpatialV3Camera(zoom: 0.42, x: 64, y: -125)
+        let first = input().translatedCamera(
+            from: original, insideViewport: true, canPan: true
+        )
+        #expect(first == SpatialV3Camera(zoom: 0.42, x: 80, y: -148))
+        let second = input(dx: -9, dy: 3).translatedCamera(
+            from: first!, insideViewport: true, canPan: true
+        )
+        #expect(second == SpatialV3Camera(zoom: 0.42, x: 71, y: -145))
+        #expect(original == SpatialV3Camera(zoom: 0.42, x: 64, y: -125))
+    }
+
+    @Test("Scroll outside the canvas or during drag/pan/pinch belongs to native controls")
+    func viewAndGesturesOwnTheirInput() {
+        let original = SpatialV3Camera()
+        #expect(input().translatedCamera(from: original,
+            insideViewport: false, canPan: true) == nil)
+        #expect(input().translatedCamera(from: original,
+            insideViewport: true, canPan: false) == nil)
+        #expect(input(precise: false).translatedCamera(from: original,
+            insideViewport: true, canPan: true) == nil)
+        #expect(input(modifiers: true).translatedCamera(from: original,
+            insideViewport: true, canPan: true) == nil)
+    }
+
+    @Test("Ended, cancelled, momentum and invalid deltas never poison the next pan")
+    func interruptionsDoNotAccumulateStaleState() {
+        let baseline = SpatialV3Camera(zoom: 1.2, x: -18, y: 2)
+        #expect(input(ending: true).translatedCamera(from: baseline,
+            insideViewport: true, canPan: true) == nil)
+        #expect(input(momentum: true).translatedCamera(from: baseline,
+            insideViewport: true, canPan: true) == nil)
+        #expect(input(dx: .nan).translatedCamera(from: baseline,
+            insideViewport: true, canPan: true) == nil)
+        #expect(input(dy: .infinity).translatedCamera(from: baseline,
+            insideViewport: true, canPan: true) == nil)
+        #expect(input(dx: 0, dy: 0).translatedCamera(from: baseline,
+            insideViewport: true, canPan: true) == nil)
+        #expect(input(dx: 6, dy: -4).translatedCamera(from: baseline,
+            insideViewport: true, canPan: true)
+            == SpatialV3Camera(zoom: 1.2, x: -12, y: -2))
+    }
+
+
+}

@@ -31,3 +31,8 @@ jobs:
         env:
           KOLLIO_SPATIAL_C34_NATIVE: '1'
         run: swift test --package-path packages/KollioApp --filter SpatialNativeWindowJourneyTests
+      - name: Exercise real canvas two-finger scroll routing
+        env:
+          KOLLIO_SPATIAL_C36_NATIVE: '1'
+        # NSWindow and NSHostingView fixtures must never run concurrently.
+        run: swift test --package-path packages/KollioApp --filter SpatialNativeAcceptanceTests --no-parallel
