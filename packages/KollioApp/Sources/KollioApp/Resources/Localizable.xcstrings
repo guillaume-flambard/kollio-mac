@@ -1,6 +1,60 @@
 {
   "sourceLanguage": "fr",
   "strings": {
+    "spatial.drag.hint": {
+      "comment": "Spatial Ink v3 real-document instance dragging",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select an object or drag a card to move it. Then save."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sélectionne un objet ou fais glisser une carte pour la déplacer. Enregistre ensuite."
+          }
+        }
+      }
+    },
+    "spatial.drag.refused": {
+      "comment": "Spatial Ink v3 real-document instance dragging",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move rejected: the position was not changed."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplacement refusé : la position est inchangée."
+          }
+        }
+      }
+    },
+    "spatial.drag.saved": {
+      "comment": "Spatial Ink v3 real-document instance dragging",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Position updated. Save to keep this change."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Position modifiée. Enregistre pour la conserver."
+          }
+        }
+      }
+    },
     "canvas.add": {
       "comment": "Add something to the selected object",
       "extractionState": "manual",

@@ -168,4 +168,98 @@ struct SpatialDocumentEditorTests {
         #expect(reopened.nodes.filter { reopened.objectID(for: $0.id) == semanticID }
             .allSatisfy { $0.label == "Texte partagé" })
     }
+
+    @Test("C2.6 move only one occurrence, undo redo, save and reopen")
+    func moveOneOccurrenceOnly() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("kollio-v3-c26-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        var document = SarahFixture.document()
+        let objectID = try #require(document.content.keys.sorted {
+            $0.rawValue < $1.rawValue
+        }.first)
+        document.presentation.instances = [
+            NodeInstance(id: "move-first", objectID: objectID,
+                         position: Position(x: 100, y: 150)),
+            NodeInstance(id: "move-second", objectID: objectID,
+                         position: Position(x: 530, y: 400))
+        ]
+        let model = KollioModel.deterministicModel(
+            document: document, fileStore: DocumentFileStore(directory: directory)
+        )
+        let editor = SpatialDocumentEditor(model: model)
+        let firstID = InstanceID("move-first")
+        let secondID = InstanceID("move-second")
+        let originalSemantic = model.document.content
+        let semanticRevision = model.document.semanticRevision
+        let beforeRevision = model.document.revision
+        let originalSecond = try #require(model.document.presentation.instance(id: secondID)).position
+        let scene = SpatialDocumentScene(
+            projection: SpatialDocumentProjection(document: model.document)
+        )
+        #expect(scene.instanceIDByVisualID[objectID.rawValue] == "move-first")
+        let secondCard = try #require(scene.nodes.first {
+            scene.instanceIDByVisualID[$0.id] == "move-second"
+        })
+        #expect(scene.objectID(for: secondCard.id) == objectID.rawValue)
+        #expect(editor.moveOccurrence("move-second", by: Position(x: 120, y: -80)))
+        #expect(model.document.presentation.instance(id: firstID)?.position ==
+                Position(x: 100, y: 150))
+        #expect(model.document.presentation.instance(id: secondID)?.position ==
+                Position(x: 650, y: 320))
+        #expect(model.document.semanticRevision == semanticRevision)
+        #expect(model.document.revision > beforeRevision)
+        #expect(model.document.content == originalSemantic)
+
+        let movedScene = SpatialDocumentScene(
+            projection: SpatialDocumentProjection(document: model.document)
+        )
+        let movedVisual = try #require(movedScene.nodes.first { $0.id == secondCard.id })
+        #expect(abs(movedVisual.x * 1000 - 650) < 0.01)
+        #expect(abs(movedVisual.y * 640 - 320) < 0.01)
+        editor.undo()
+        #expect(model.document.presentation.instance(id: secondID)?.position == originalSecond)
+        #expect(model.document.presentation.instance(id: firstID)?.position ==
+                Position(x: 100, y: 150))
+        editor.redo()
+        #expect(model.document.presentation.instance(id: secondID)?.position ==
+                Position(x: 650, y: 320))
+
+        #expect(editor.save())
+        model.reloadFromDisk()
+        #expect(model.document.presentation.instance(id: secondID)?.position ==
+                Position(x: 650, y: 320))
+        #expect(model.document.presentation.instance(id: firstID)?.position ==
+                Position(x: 100, y: 150))
+        #expect(model.document.content == originalSemantic)
+    }
+
+    @Test("C2.6 invalid or tiny drag never changes the authored document")
+    func invalidMoveIsSafe() throws {
+        let (editor, model, directory) = prepare()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let before = model.document
+        let valid = try #require(model.document.presentation.instances.first?.id.rawValue)
+        #expect(!editor.moveOccurrence("instance:missing", by: Position(x: 5, y: 3)))
+        #expect(!editor.moveOccurrence(valid, by: Position(x: 0.01, y: 0.01)))
+        #expect(!editor.moveOccurrence(valid, by: Position(x: .infinity, y: 5)))
+        #expect(!editor.moveOccurrence(valid, by: Position(x: 3, y: .nan)))
+        #expect(model.document == before)
+    }
+
+    @Test("C2.6 zoom-aware dragging converts only screen translation, never camera pan")
+    func screenTranslationIsWorldSpace() {
+        let translation = CGSize(width: 120, height: -48)
+        let one = SpatialOccurrenceDrag.worldDelta(screenTranslation: translation, zoom: 1)
+        let two = SpatialOccurrenceDrag.worldDelta(screenTranslation: translation, zoom: 2)
+        let half = SpatialOccurrenceDrag.worldDelta(screenTranslation: translation, zoom: 0.5)
+        #expect(one == Position(x: 120, y: -48))
+        #expect(two == Position(x: 60, y: -24))
+        #expect(half == Position(x: 240, y: -96))
+        #expect(SpatialOccurrenceDrag.worldDelta(screenTranslation: translation, zoom: 0) == nil)
+        #expect(SpatialOccurrenceDrag.worldDelta(screenTranslation: translation, zoom: .nan) == nil)
+        #expect(SpatialOccurrenceDrag.worldDelta(
+            screenTranslation: CGSize(width: CGFloat.infinity, height: 0), zoom: 1) == nil)
+    }
 }
