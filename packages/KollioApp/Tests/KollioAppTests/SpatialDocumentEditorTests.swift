@@ -452,4 +452,65 @@ struct SpatialDocumentEditorTests {
         #expect(SpatialV3Copy(languageCode: "en").text("spatial.draft.pause")
                 == "Keep draft and close")
     }
+
+    @Test("C2.12 active and paused drafts count once, plus unsubmitted new ideas")
+    func pendingInputCountReflectsActualUncommittedText() {
+        var memory = SpatialDraftMemory()
+        let fr = SpatialDraftMemory.Key(objectID: "same", languageCode: "fr")
+        let en = SpatialDraftMemory.Key(objectID: "same", languageCode: "en")
+        #expect(SpatialPendingInput.count(paused: memory, activeKey: nil,
+                                         activeIsEdited: false, hasNewIdea: false) == 0)
+        let recorded = memory.keep(objectID: "same", languageCode: "fr",
+                                   draft: "Unfinished", original: "Before", version: 3)
+        #expect(recorded)
+        #expect(SpatialPendingInput.count(paused: memory, activeKey: nil,
+                                         activeIsEdited: false, hasNewIdea: false) == 1)
+        #expect(SpatialPendingInput.count(paused: memory, activeKey: fr,
+                                         activeIsEdited: true, hasNewIdea: false) == 1)
+        #expect(SpatialPendingInput.count(paused: memory, activeKey: fr,
+                                         activeIsEdited: false, hasNewIdea: false) == 0)
+        #expect(SpatialPendingInput.count(paused: memory, activeKey: en,
+                                         activeIsEdited: true, hasNewIdea: true) == 3)
+        memory.discard("same", languageCode: "fr")
+        #expect(SpatialPendingInput.count(paused: memory, activeKey: nil,
+                                         activeIsEdited: false, hasNewIdea: true) == 1)
+    }
+
+    @Test("C2.12 Save reports that canonical document is saved but draft is not")
+    func savingDoesNotLieAboutDrafts() throws {
+        let (editor, model, directory) = prepare()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let before = model.document
+        let objectID = try #require(before.content.keys.sorted(by: {
+            $0.rawValue < $1.rawValue }).first)
+        var drafts = SpatialDraftMemory()
+        let original = try #require(model.object(objectID))
+        let pending = drafts.keep(objectID: objectID.rawValue, languageCode: "fr",
+                                  draft: "Not in the document",
+                                  original: original.text.resolve(languageCode: "fr"),
+                                  version: original.objectVersion)
+        #expect(pending)
+        let count = SpatialPendingInput.count(
+            paused: drafts, activeKey: nil, activeIsEdited: false, hasNewIdea: false
+        )
+        let copyFR = SpatialV3Copy(languageCode: "fr")
+        let copyEN = SpatialV3Copy(languageCode: "en")
+        #expect(count == 1)
+        #expect(SpatialSaveFeedback.message(saved: true, pendingCount: 0, copy: copyEN)
+                == "Document saved to its .kollio file.")
+        let warning = SpatialSaveFeedback.message(saved: true, pendingCount: count, copy: copyEN)
+        #expect(warning.contains("NOT saved"))
+        #expect(warning.contains("NOT saved: 1"))
+        #expect(SpatialSaveFeedback.message(saved: true, pendingCount: count, copy: copyFR)
+                .contains("Saisies non sauvegardées : 1"))
+        #expect(SpatialSaveFeedback.message(saved: false, pendingCount: count, copy: copyEN)
+                .contains("Save failed"))
+        #expect(editor.save())
+        model.reloadFromDisk()
+        #expect(model.document.content == before.content)
+        #expect(drafts.draft(for: objectID.rawValue, languageCode: "fr")?.text
+                == "Not in the document")
+        drafts.discard(objectID.rawValue, languageCode: "fr")
+        #expect(model.document.content == before.content)
+    }
 }

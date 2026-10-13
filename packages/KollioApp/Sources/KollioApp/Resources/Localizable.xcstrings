@@ -1,6 +1,114 @@
 {
   "sourceLanguage": "fr",
   "strings": {
+    "spatial.pending.notice": {
+      "comment": "C2.12 honest canonical save versus uncommitted text and explicit discard",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unconfirmed inputs: %d. Save writes the document, not these texts. Closing this window loses them."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisies non validées : %d. Enregistrer conserve le document, pas ces textes. Fermer cette fenêtre les perd."
+          }
+        }
+      }
+    },
+    "spatial.pending.savedButPending": {
+      "comment": "C2.12 honest canonical save versus uncommitted text and explicit discard",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Document saved. Unconfirmed inputs NOT saved: %d. Confirm before closing this window."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Document enregistré. Saisies non sauvegardées : %d. Valide-les avant de fermer cette fenêtre."
+          }
+        }
+      }
+    },
+    "spatial.draft.discard": {
+      "comment": "C2.12 honest canonical save versus uncommitted text and explicit discard",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard this draft"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abandonner ce brouillon"
+          }
+        }
+      }
+    },
+    "spatial.draft.discardPrompt": {
+      "comment": "C2.12 honest canonical save versus uncommitted text and explicit discard",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard your unfinished text?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abandonner ton texte en cours ?"
+          }
+        }
+      }
+    },
+    "spatial.draft.discardDetails": {
+      "comment": "C2.12 honest canonical save versus uncommitted text and explicit discard",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only this pending draft is removed. The saved document stays unchanged."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seul ce brouillon non validé est supprimé. Le document enregistré reste inchangé."
+          }
+        }
+      }
+    },
+    "spatial.draft.discarded": {
+      "comment": "C2.12 honest canonical save versus uncommitted text and explicit discard",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft discarded. The document was not changed."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brouillon abandonné. Le document n’a pas été modifié."
+          }
+        }
+      }
+    },
     "spatial.draft.languageChanged": {
       "comment": "C2.11 prevents writing a draft to a different language variant",
       "extractionState": "manual",

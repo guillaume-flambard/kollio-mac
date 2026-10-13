@@ -18,6 +18,7 @@ struct SpatialV3WindowView: View {
     @State private var editLanguageCode = "fr"
     @State private var editVersion: Int?
     @State private var pausedDrafts = SpatialDraftMemory()
+    @State private var showingDiscardConfirmation = false
     @FocusState private var editingFieldFocused: Bool
     @State private var relationTargetID = ""
     @State private var focusRequest = 0
@@ -26,12 +27,14 @@ struct SpatialV3WindowView: View {
 
     /// Demo-only initial state for deterministic Web/Mac screenshot comparisons.
     /// The actual native app continues to open with the initial three-node state.
-    init(initialDepth: Int = 1, initialSelectedID: String? = nil, stressMode: Bool = false, model: KollioModel? = nil) {
+    init(initialDepth: Int = 1, initialSelectedID: String? = nil, stressMode: Bool = false,
+         model: KollioModel? = nil, initialNewIdeaDraft: String = "") {
         self.stressMode = stressMode
         self.model = model
         let boundedDepth = model != nil ? 2 : (initialDepth == 2 ? 2 : 1)
         _depth = State(initialValue: boundedDepth)
         _selectedID = State(initialValue: initialSelectedID)
+        _newIdeaDraft = State(initialValue: initialNewIdeaDraft)
     }
 
     private var copy: SpatialV3Copy { SpatialV3Copy(languageCode: model?.languageCode) }
@@ -166,6 +169,30 @@ struct SpatialV3WindowView: View {
         editFeedback = recovered == nil ? nil : copy.text("spatial.draft.recovered")
     }
 
+    /// Counts authored edits and unsubmitted ideas which Save does not write.
+    /// The active editor and its paused snapshot count as just one draft.
+    private var pendingInputCount: Int {
+        let editingKey = editingID.flatMap { semanticID($0) }.map {
+            SpatialDraftMemory.Key(objectID: $0, languageCode: editLanguageCode)
+        }
+        return SpatialPendingInput.count(
+            paused: pausedDrafts,
+            activeKey: editingKey,
+            activeIsEdited: editingKey != nil && editDraft != editOriginalText,
+            hasNewIdea: !newIdeaDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        )
+    }
+
+    private func discardActiveDraft() {
+        guard let editingID, let objectID = semanticID(editingID) else { return }
+        pausedDrafts.discard(objectID, languageCode: editLanguageCode)
+        self.editingID = nil
+        self.editVersion = nil
+        self.editDraft = ""
+        editingFieldFocused = false
+        editFeedback = copy.text("spatial.draft.discarded")
+    }
+
     private var editIsStale: Bool {
         guard let model, let editingID,
               let id = semanticID(editingID), let version = editVersion
@@ -238,9 +265,10 @@ struct SpatialV3WindowView: View {
 
     private func saveDocument() {
         guard let model else { return }
-        editFeedback = SpatialDocumentEditor(model: model).save()
-            ? copy.text("spatial.feedback.saved")
-            : copy.text("spatial.feedback.saveFailed")
+        let saved = SpatialDocumentEditor(model: model).save()
+        editFeedback = SpatialSaveFeedback.message(
+            saved: saved, pendingCount: pendingInputCount, copy: copy
+        )
     }
 
     @ViewBuilder
@@ -372,8 +400,23 @@ struct SpatialV3WindowView: View {
                     .accessibilityIdentifier("spatial-v3-edit-confirm")
                 Button(copy.text("spatial.draft.pause")) { pauseEditing() }
                     .accessibilityIdentifier("spatial-v3-edit-cancel")
+                Button(copy.text("spatial.draft.discard")) {
+                    showingDiscardConfirmation = true
+                }
+                .accessibilityIdentifier("spatial-v3-edit-discard")
             }
             .buttonStyle(.bordered)
+        }
+    }
+
+    @ViewBuilder
+    private var pendingInputNotice: some View {
+        if pendingInputCount > 0 {
+            Text(copy.format("spatial.pending.notice", pendingInputCount))
+                .font(.caption)
+                .foregroundStyle(KollioV3Tokens.Light.ink)
+                .accessibilityIdentifier("spatial-v3-unsaved-inputs")
+                .padding(.vertical, 6)
         }
     }
 
@@ -447,6 +490,7 @@ struct SpatialV3WindowView: View {
                         }
                     }
                     .buttonStyle(.bordered)
+                    pendingInputNotice
                     if let editFeedback {
                         Text(editFeedback)
                             .font(.caption)
@@ -599,6 +643,18 @@ struct SpatialV3WindowView: View {
         .foregroundStyle(KollioV3Tokens.Light.ink)
         .preferredColorScheme(.light)
         .onExitCommand { closeOneLevel() }
+        .confirmationDialog(
+            copy.text("spatial.draft.discardPrompt"),
+            isPresented: $showingDiscardConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(copy.text("spatial.draft.discard"), role: .destructive) {
+                discardActiveDraft()
+            }
+            Button(copy.text("spatial.cancel"), role: .cancel) {}
+        } message: {
+            Text(copy.text("spatial.draft.discardDetails"))
+        }
     }
 }
 
@@ -936,6 +992,36 @@ struct SpatialDraftMemory {
 
     mutating func discard(_ objectID: String, languageCode: String) {
         drafts.removeValue(forKey: Key(objectID: objectID, languageCode: languageCode))
+    }
+}
+
+/// Pure count of user input not included in the current canonical save.
+enum SpatialPendingInput {
+    static func count(paused: SpatialDraftMemory,
+                      activeKey: SpatialDraftMemory.Key?,
+                      activeIsEdited: Bool,
+                      hasNewIdea: Bool) -> Int {
+        var keys = Set(paused.drafts.keys)
+        if let activeKey {
+            if activeIsEdited {
+                keys.insert(activeKey)
+            } else {
+                // A resumed draft explicitly reverted to the original text
+                // must not trigger a false unsaved-input warning.
+                keys.remove(activeKey)
+            }
+        }
+        return keys.count + (hasNewIdea ? 1 : 0)
+    }
+}
+
+/// Save is permitted: it writes only canonical content, never a draft.
+/// The feedback must never call uncommitted text "saved".
+enum SpatialSaveFeedback {
+    static func message(saved: Bool, pendingCount: Int, copy: SpatialV3Copy) -> String {
+        guard saved else { return copy.text("spatial.feedback.saveFailed") }
+        guard pendingCount > 0 else { return copy.text("spatial.feedback.saved") }
+        return copy.format("spatial.pending.savedButPending", pendingCount)
     }
 }
 
