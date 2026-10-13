@@ -178,33 +178,9 @@ struct SpatialNativeAcceptanceTests {
         let png = try #require(bitmap.representation(using: .png, properties: [:]))
         try png.write(to: URL(fileURLWithPath: output), options: .atomic)
         #expect(png.count > 8_000)
-        // Inspect the actual AppKit accessibility subtree (not a SwiftUI
-        // source-code assumption). Keep this diagnostic separate from any
-        // claim that a human VoiceOver session was completed.
-        func accessibilityIDs(_ candidate: Any, depth: Int = 0) -> Set<String> {
-            guard depth < 18 else { return [] }
-            let identifier: String?
-            let children: [Any]
-            if let view = candidate as? NSView {
-                identifier = view.accessibilityIdentifier()
-                children = view.accessibilityChildren() ?? []
-            } else if let element = candidate as? NSAccessibilityElement {
-                identifier = element.accessibilityIdentifier()
-                children = element.accessibilityChildren() ?? []
-            } else {
-                return []
-            }
-            var ids: Set<String> = []
-            if let identifier { ids.insert(identifier) }
-            for child in children {
-                ids.formUnion(accessibilityIDs(child, depth: depth + 1))
-            }
-            return ids
-        }
-        let exposed = accessibilityIDs(hosting)
-        print("NATIVE-C38 accessibility IDs:", exposed.sorted().filter {
-            $0.hasPrefix("spatial-v3")
-        })
+        // A raw NSHostingView accessibilityChildren walk was removed after
+        // it caused a signal 11 crash on the headless GitHub macOS runner.
+        // VoiceOver is a separate human acceptance gate, not a screenshot test.
         #expect(SpatialV3Copy(languageCode: locale).text("spatial.navigation.actions")
                 == (locale == "en" ? "Card actions" : "Actions de la carte"))
         #expect(model.document == original)
