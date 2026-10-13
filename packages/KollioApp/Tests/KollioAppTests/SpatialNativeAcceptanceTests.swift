@@ -36,8 +36,13 @@ struct SpatialNativeAcceptanceTests {
         let compact = ProcessInfo.processInfo.environment["KOLLIO_SPATIAL_C28_COMPACT"] == "1"
         let frame = NSRect(x: 0, y: 0, width: compact ? 900 : 1280,
                            height: compact ? 700 : 1100)
+        // C2.12: opt-in non-mutating UI fixture for a pending draft banner.
+        let pending = ProcessInfo.processInfo.environment["KOLLIO_SPATIAL_C32_PENDING"] == "1"
+        let draft = pending
+            ? (languageCode == "en" ? "Not yet committed" : "Texte non encore validé")
+            : ""
         let hosting = NSHostingView(rootView: SpatialV3WindowView(
-            initialSelectedID: objectID.rawValue, model: model
+            initialSelectedID: objectID.rawValue, model: model, initialNewIdeaDraft: draft
         ))
         hosting.frame = frame
         let window = NSWindow(

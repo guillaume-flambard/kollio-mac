@@ -10,6 +10,10 @@ model. An intelligence source proposes a patch; it never regenerates the world.
 
 The direction is [PRODUCT_BLUEPRINT.md](PRODUCT_BLUEPRINT.md). Read it once, not every task.
 
+## Spatial Ink V3 — C2.12 STAR loop
+
+C2.12 adds visible and localized unconfirmed-input counts, honest canonical Save feedback, and a native destructive confirmation before discarding a single draft. It counts an active + paused snapshot once, and includes an unsubmitted New idea in the warning. Confirmed 20/20 focused and 387/387 full KollioApp tests in 43 suites; native pending-input screenshots FR/EN captured and visually inspected (window-only text input, document unchanged); GitHub CI separately gated. No draft text is silently committed, and the existing document save semantics stay unchanged. See [C2.12 STAR record](SPATIAL_STAR_C32.md). **Not yet implemented:** retention of drafts after native window close; on-disk draft recovery is not claimed. Next C2.13: real OS-window close guard or opt-in separate draft persistence, followed by hands-on keyboard/trackpad/VoiceOver validation.
+
 ## Spatial Ink V3 — C2.11 STAR loop
 
 C2.11 builds on C2.10 with Escape hierarchy, paused/recovered editing per semantic object and authored language, explicit conflict comparison/rebase, and Cmd+Return commit through the existing validated command. Verified 385/385 KollioApp tests in 43 suites, with native FR/EN baseline scene captures. The captures do not prove the active editing panel or physical Escape/Cmd+Return delivery; keyboard/VoiceOver and trackpad remain manual gates. Draft memory is window-local, not persisted between launches. See [C2.11 STAR ledger](SPATIAL_STAR_C31.md). Next C2.12: unsaved-draft lifecycle and explicit save/close feedback, then real native editing acceptance.
