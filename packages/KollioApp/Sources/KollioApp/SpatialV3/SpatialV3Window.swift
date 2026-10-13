@@ -20,6 +20,14 @@ struct SpatialV3WindowView: View {
     @State private var pausedDrafts = SpatialDraftMemory()
     @State private var showingDiscardConfirmation = false
     @FocusState private var editingFieldFocused: Bool
+    @FocusState private var editActionFocused: Bool
+    @FocusState private var closeActionFocused: Bool
+    @FocusState private var navigatorFocused: Bool
+    @AccessibilityFocusState private var editActionAXFocused: Bool
+    @AccessibilityFocusState private var closeActionAXFocused: Bool
+    @AccessibilityFocusState private var navigatorAXFocused: Bool
+    @State private var actionFocusRequest = 0
+    @State private var navigationReturnRequest = 0
     @State private var relationTargetID = ""
     @State private var focusRequest = 0
     @State private var editFeedback: String?
@@ -153,6 +161,11 @@ struct SpatialV3WindowView: View {
         self.editVersion = nil
         editingFieldFocused = false
         if remembered { editFeedback = copy.text("spatial.draft.saved") }
+        // This explicitly exits the editor: focus its owning Edit action after
+        // the text field disappears. A background update never uses this route.
+        Task { @MainActor in
+            if selectedID != nil { focusInspectorAction() }
+        }
     }
 
     private func beginEdit(_ id: String) {
@@ -210,13 +223,35 @@ struct SpatialV3WindowView: View {
         editFeedback = copy.text("spatial.draft.rebased")
     }
 
+    private func closeSelectedFromInspector() {
+        selectedID = nil
+        navigationReturnRequest += 1
+    }
+
+    private func focusInspectorAction() {
+        guard selected != nil else { return }
+        switch SpatialActionFocusRoute.destination(editable: model != nil) {
+        case .edit:
+            editActionFocused = true
+            editActionAXFocused = true
+        case .close:
+            closeActionFocused = true
+            closeActionAXFocused = true
+        }
+    }
+
+    private func showSelectedActions() {
+        guard selected != nil else { return }
+        actionFocusRequest += 1
+    }
+
     private func closeOneLevel() {
         switch SpatialEscapeRoute.next(
             editing: editingID != nil, selected: selectedID != nil,
             grouped: focusedGroup != nil, canCollapse: depth > 1 && model == nil
         ) {
         case .pauseEditor: pauseEditing()
-        case .clearSelection: selectedID = nil
+        case .clearSelection: closeSelectedFromInspector()
         case .clearGroup: focusedGroup = nil
         case .collapseBranches: depth = 1
         case .none: break
@@ -314,6 +349,8 @@ struct SpatialV3WindowView: View {
                         } == nil
                             ? "spatial.edit" : "spatial.draft.resume"
                     )) { beginEdit(selected.id) }
+                        .focused($editActionFocused)
+                        .accessibilityFocused($editActionAXFocused)
                         .accessibilityIdentifier("spatial-v3-edit")
                     Button(copy.text("spatial.camera.centerSelected")) {
                         focusRequest += 1
@@ -351,7 +388,10 @@ struct SpatialV3WindowView: View {
                 }
                 .buttonStyle(.bordered)
             }
-            Button(copy.text("spatial.close")) { selectedID = nil }
+            Button(copy.text("spatial.close")) { closeSelectedFromInspector() }
+                .focused($closeActionFocused)
+                .accessibilityFocused($closeActionAXFocused)
+                .accessibilityIdentifier("spatial-v3-close-selection")
                 .buttonStyle(.bordered)
         }
         .padding(14)
@@ -424,6 +464,7 @@ struct SpatialV3WindowView: View {
         // The canvas plus its selected-card actions may exceed the window height.
         // Scroll the content instead of vertically centering and clipping the
         // header and inspector off-screen on smaller macOS windows.
+        ScrollViewReader { scroll in
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
@@ -519,6 +560,19 @@ struct SpatialV3WindowView: View {
                             .accessibilityLabel(copy.text("spatial.navigation.label"))
                             .accessibilityHint(copy.text("spatial.navigation.hint"))
                             .accessibilityIdentifier("spatial-v3-navigator")
+                            .id("spatial-v3-navigation")
+                            .focused($navigatorFocused)
+                            .accessibilityFocused($navigatorAXFocused)
+                        }
+                        // Keep this contextual action on its own row: at 680pt
+                        // the search field + menu + button would clip horizontally.
+                        if selected != nil {
+                            Button(copy.text("spatial.navigation.actions")) {
+                                showSelectedActions()
+                            }
+                            .buttonStyle(.bordered)
+                            .accessibilityHint(copy.text("spatial.navigation.actionsHint"))
+                            .accessibilityIdentifier("spatial-v3-show-actions")
                         }
                         if !search.isEmpty {
                             ScrollView(.horizontal) {
@@ -609,7 +663,8 @@ struct SpatialV3WindowView: View {
                         instanceIDByVisualID: realScene?.instanceIDByVisualID ?? [:],
                         onMoveOccurrence: { instanceID, delta in
                             moveSelectedOccurrence(instanceID, by: delta)
-                        }
+                        },
+                        onShowSelectedActions: showSelectedActions
                     )
                     .frame(minWidth: 900, minHeight: 580)
                 }
@@ -617,6 +672,7 @@ struct SpatialV3WindowView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 18))
                 .overlay(RoundedRectangle(cornerRadius: 18).stroke(KollioV3Tokens.Light.border))
                 .accessibilityIdentifier("spatial-v3-canvas")
+                .id("spatial-v3-canvas")
                 .onChange(of: selectedID) { _, id in
                     if editingID != id && editingID != nil { pauseEditing() }
                     relationTargetID = ""
@@ -627,6 +683,7 @@ struct SpatialV3WindowView: View {
                 }
                 selectionPanel
                 .frame(minHeight: 65, alignment: .topLeading)
+                .id("spatial-v3-actions")
                 Text(model == nil
                      ? copy.text("spatial.fixtureSafety")
                      : copy.text("spatial.documentEditingHint"))
@@ -639,6 +696,23 @@ struct SpatialV3WindowView: View {
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
         .accessibilityIdentifier("spatial-v3-document-scroll")
+        .onChange(of: focusRequest) { _, _ in
+            // Only explicit navigation requests move the document scroll.
+            // Click/selection updates never jump the reader while typing.
+            scroll.scrollTo("spatial-v3-canvas", anchor: .center)
+        }
+        .onChange(of: actionFocusRequest) { _, _ in
+            scroll.scrollTo("spatial-v3-actions", anchor: .center)
+            Task { @MainActor in focusInspectorAction() }
+        }
+        .onChange(of: navigationReturnRequest) { _, _ in
+            scroll.scrollTo("spatial-v3-navigation", anchor: .top)
+            Task { @MainActor in
+                navigatorFocused = true
+                navigatorAXFocused = true
+            }
+        }
+        }
         .background(KollioV3Tokens.Light.paper)
         .background {
             if model != nil {
@@ -675,6 +749,7 @@ struct SpatialV3Stage: View {
     /// Only real authored instances can move; fixture and derived cards cannot.
     let instanceIDByVisualID: [String: String]
     let onMoveOccurrence: (String, Position) -> Void
+    let onShowSelectedActions: () -> Void
 
     // @GestureState clears itself on cancellation, view removal and completed
     // gestures. No document mutation can occur until onEnded fires.
@@ -906,6 +981,23 @@ struct SpatialV3Stage: View {
                 .padding(18)
                 .accessibilityIdentifier("spatial-v3-camera")
 
+                if selectedID != nil && nodes.contains(where: { $0.id == selectedID }) {
+                    VStack {
+                        HStack {
+                            Button(copy.text("spatial.navigation.actions")) {
+                                onShowSelectedActions()
+                            }
+                            .buttonStyle(.bordered)
+                            .accessibilityHint(copy.text("spatial.navigation.actionsHint"))
+                            .accessibilityIdentifier("spatial-v3-canvas-actions")
+                            Spacer()
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 44)
+                }
+
                 VStack {
                     HStack {
                         Text(copy.text("spatial.stage.exploration"))
@@ -1072,6 +1164,15 @@ enum SpatialSaveFeedback {
         guard saved else { return copy.text("spatial.feedback.saveFailed") }
         guard pendingCount > 0 else { return copy.text("spatial.feedback.saved") }
         return copy.format("spatial.pending.savedButPending", pendingCount)
+    }
+}
+
+/// Explicit focus route after opening the selected-card actions.
+enum SpatialActionFocusRoute: Equatable {
+    case edit, close
+
+    static func destination(editable: Bool) -> Self {
+        editable ? .edit : .close
     }
 }
 
