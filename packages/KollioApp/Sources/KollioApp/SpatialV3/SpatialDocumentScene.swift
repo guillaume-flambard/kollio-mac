@@ -9,32 +9,82 @@ struct SpatialDocumentScene {
     let documentID: String
     let revision: Int
     let semanticRevision: Int
+    let semanticObjectCount: Int
     let nodes: [SpatialV3Node]
     let edges: [SpatialV3Edge]
+    /// Only the view owns these visual identities. They never enter the file.
+    let objectIDByVisualID: [String: String]
+    let visualIDsByObjectID: [String: [String]]
+
+    func objectID(for visualID: String) -> String? { objectIDByVisualID[visualID] }
+    func visualID(for objectID: String) -> String? { visualIDsByObjectID[objectID]?.first }
+    func occurrenceCount(for objectID: String) -> Int { visualIDsByObjectID[objectID]?.count ?? 0 }
+
+    private struct Renderable {
+        let visualID: String
+        let objectID: String
+        let authored: CGPoint?
+    }
 
     init(projection: SpatialDocumentProjection) {
         documentID = projection.documentID
         revision = projection.revision
         semanticRevision = projection.semanticRevision
+        semanticObjectCount = projection.nodes.count
 
-        // Authored positions retain their original world coordinates; only
-        // missing positions get deterministic, visual-only grid slots.
-        let columns = max(1, Int(ceil(sqrt(Double(projection.nodes.count) * 1.5))))
-        var occupied: [CGPoint] = projection.nodes.compactMap { node in
-            node.authoredPositions.first.map { CGPoint(x: $0.x, y: $0.y) }
-        }
-        var positioned: [String: CGPoint] = [:]
+        let reservedIDs = Set(projection.nodes.map(\.id))
+        var usedIDs: Set<String> = []
+        var renderables: [Renderable] = []
+        // Every visible occurrence gets a separate card. The first card keeps
+        // the historical object ID for backwards compatibility; additional
+        // cards get a stable presentation-only ID derived from the instance.
+        // Objects without any authored occurrence still get a derived slot.
+        // Explicitly hidden/folded occurrences must NOT reappear as fallbacks.
         for node in projection.nodes {
-            if let saved = node.authoredPositions.first {
-                positioned[node.id] = CGPoint(x: saved.x, y: saved.y)
+            let visible = node.occurrences.filter { !$0.isHidden }
+            if node.occurrences.isEmpty {
+                renderables.append(Renderable(visualID: node.id, objectID: node.id, authored: nil))
+                usedIDs.insert(node.id)
+            }
+            for (index, occurrence) in visible.enumerated() {
+                var candidate = index == 0 ? node.id : "\(node.id)::occurrence::\(occurrence.id)"
+                let base = candidate
+                var suffix = 2
+                while usedIDs.contains(candidate) || (index > 0 && reservedIDs.contains(candidate)) {
+                    candidate = "\(base)::\(suffix)"
+                    suffix += 1
+                }
+                usedIDs.insert(candidate)
+                renderables.append(Renderable(
+                    visualID: candidate,
+                    objectID: node.id,
+                    authored: CGPoint(x: occurrence.position.x, y: occurrence.position.y)
+                ))
+            }
+        }
+        objectIDByVisualID = Dictionary(uniqueKeysWithValues: renderables.map { ($0.visualID, $0.objectID) })
+        let groupedVisualIDs = Dictionary(grouping: renderables, by: \.objectID)
+            .mapValues { $0.map(\.visualID) }
+        visualIDsByObjectID = groupedVisualIDs
+
+        // Authored instance positions remain untouched. Missing positions
+        // receive deterministic view-only slots clear of every authored card.
+        let columns = max(1, Int(ceil(sqrt(Double(renderables.count) * 1.5))))
+        var occupied = renderables.compactMap(\.authored)
+        var positioned: [String: CGPoint] = [:]
+        for renderable in renderables {
+            if let saved = renderable.authored {
+                positioned[renderable.visualID] = saved
                 continue
             }
             var slot = 0
             while true {
-                let proposal = CGPoint(x: CGFloat(slot % columns) * 270 + 150,
-                                       y: CGFloat(slot / columns) * 160 + 115)
+                let proposal = CGPoint(
+                    x: CGFloat(slot % columns) * 270 + 150,
+                    y: CGFloat(slot / columns) * 160 + 115
+                )
                 if occupied.allSatisfy({ abs($0.x - proposal.x) >= 250 || abs($0.y - proposal.y) >= 145 }) {
-                    positioned[node.id] = proposal
+                    positioned[renderable.visualID] = proposal
                     occupied.append(proposal)
                     break
                 }
@@ -42,43 +92,58 @@ struct SpatialDocumentScene {
             }
         }
 
-        nodes = projection.nodes.map { node in
-            let position = positioned[node.id] ?? .zero
+        let semantic = Dictionary(uniqueKeysWithValues: projection.nodes.map { ($0.id, $0) })
+        nodes = renderables.compactMap { display in
+            guard let original = semantic[display.objectID],
+                  let position = positioned[display.visualID] else { return nil }
             let family: String
-            switch node.kind {
+            switch original.kind {
             case "evidence", "contribution": family = "source"
             case "question": family = "question"
             default: family = "idea"
             }
             return SpatialV3Node(
-                id: node.id,
+                id: display.visualID,
                 kind: family,
-                label: node.label,
-                eyebrow: node.kind.uppercased(),
-                detail: node.detail ?? "",
-                status: node.isSetAside ? "set-aside" : "active",
+                label: original.label,
+                eyebrow: original.kind.uppercased(),
+                detail: original.detail ?? "",
+                status: original.isSetAside ? "set-aside" : "active",
                 depth: 2,
                 x: Double(position.x) / 1000,
                 y: Double(position.y) / 640
             )
         }
 
-        // Spatial routing is display-only. We never persist generated bends,
-        // alter authored positions or change the semantic relationship IDs.
+        // Relationships remain *semantic*: one displayed edge per real
+        // relationship. Pick the nearest visible pair of occurrences, with
+        // stable ID tie-breaks, rather than multiplying links by N × M.
+        // This is purely visual, with no changes to authored relationships.
         edges = projection.edges.compactMap { relation in
-            guard let start = positioned[relation.source],
-                  let end = positioned[relation.target] else { return nil }
+            let sources = groupedVisualIDs[relation.source] ?? []
+            let targets = groupedVisualIDs[relation.target] ?? []
+            var pairs: [(source: String, target: String, distance: CGFloat)] = []
+            for source in sources {
+                for target in targets where source != target {
+                    guard let a = positioned[source], let b = positioned[target] else { continue }
+                    pairs.append((source, target, hypot(a.x - b.x, a.y - b.y)))
+                }
+            }
+            guard let chosen = pairs.min(by: { a, b in
+                if abs(a.distance - b.distance) > 0.001 { return a.distance < b.distance }
+                if a.source != b.source { return a.source < b.source }
+                return a.target < b.target
+            }),
+                let start = positioned[chosen.source],
+                let end = positioned[chosen.target]
+            else { return nil }
             let delta = CGPoint(x: end.x - start.x, y: end.y - start.y)
             let a = Self.border(from: start, toward: delta)
             let b = Self.border(from: end, toward: CGPoint(x: -delta.x, y: -delta.y))
             let obstacles = positioned
-                .filter { $0.key != relation.source && $0.key != relation.target }
+                .filter { $0.key != chosen.source && $0.key != chosen.target }
                 .map { _, center in
-                    // Conservative card envelope in stage/world coordinates.
-                    // Source/target cards are excluded; this protects intermediate
-                    // cards from paths without changing their saved geometry.
-                    CGRect(x: center.x - 115, y: center.y - 70,
-                           width: 230, height: 140)
+                    CGRect(x: center.x - 115, y: center.y - 70, width: 230, height: 140)
                 }
             let route = SpatialDocumentRouter.route(from: a, to: b, avoiding: obstacles)
             let style: String
@@ -90,8 +155,8 @@ struct SpatialDocumentScene {
             }
             return SpatialV3Edge(
                 id: relation.id,
-                source: relation.source,
-                target: relation.target,
+                source: chosen.source,
+                target: chosen.target,
                 type: style,
                 label: relation.label ?? relation.kind,
                 depth: 2,

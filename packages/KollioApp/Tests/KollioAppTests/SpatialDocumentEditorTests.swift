@@ -133,4 +133,39 @@ struct SpatialDocumentEditorTests {
         #expect(editor.createIdea("Not allowed", near: "object:missing") == nil)
         #expect(model.document == before)
     }
+
+    @Test("C2.5 selecting a second drawing edits the one authored semantic object")
+    func editThroughAlternateOccurrence() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("kollio-v3-c25-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        var document = SarahFixture.document()
+        let objectID = try #require(document.content.keys.sorted { $0.rawValue < $1.rawValue }.first)
+        document.presentation.instances = [
+            NodeInstance(id: "copy-1", objectID: objectID, position: Position(x: 130, y: 210)),
+            NodeInstance(id: "copy-2", objectID: objectID, position: Position(x: 730, y: 510))
+        ]
+        let model = KollioModel.deterministicModel(
+            document: document, fileStore: DocumentFileStore(directory: directory)
+        )
+        let editor = SpatialDocumentEditor(model: model)
+        let scene = SpatialDocumentScene(projection: SpatialDocumentProjection(document: model.document, languageCode: model.languageCode))
+        let second = try #require(scene.nodes.first {
+            scene.objectID(for: $0.id) == objectID.rawValue && $0.id != objectID.rawValue
+        })
+        let semanticID = try #require(scene.objectID(for: second.id))
+        let version = try #require(model.object(ObjectID(semanticID))).objectVersion
+        let count = model.document.content.count
+        #expect(editor.updateText("Texte partagé", of: semanticID, expectedVersion: version))
+        let after = SpatialDocumentScene(projection: SpatialDocumentProjection(document: model.document, languageCode: model.languageCode))
+        let copies = after.nodes.filter { after.objectID(for: $0.id) == semanticID }
+        #expect(copies.count == 2)
+        #expect(copies.allSatisfy { $0.label == "Texte partagé" })
+        #expect(model.document.content.count == count)
+        #expect(editor.save())
+        model.reloadFromDisk()
+        let reopened = SpatialDocumentScene(projection: SpatialDocumentProjection(document: model.document, languageCode: model.languageCode))
+        #expect(reopened.nodes.filter { reopened.objectID(for: $0.id) == semanticID }
+            .allSatisfy { $0.label == "Texte partagé" })
+    }
 }

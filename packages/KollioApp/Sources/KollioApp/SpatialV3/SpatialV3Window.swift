@@ -40,6 +40,27 @@ struct SpatialV3WindowView: View {
         if let realScene { return realScene.edges }
         return stressMode ? SpatialV3StressFixture.edges : SpatialV3Fixture.edges
     }
+    /// Spatial IDs name drawings; Kollio commands always require semantic IDs.
+    private func semanticID(_ visualID: String?) -> String? {
+        guard let visualID else { return nil }
+        return realScene?.objectID(for: visualID) ?? visualID
+    }
+    private struct RelationTargetChoice: Identifiable {
+        let id: String  // Semantic object ID, never an occurrence ID.
+        let label: String
+    }
+    private var relationTargets: [RelationTargetChoice] {
+        // Compute the real scene only once, not once per menu item.
+        let scene = realScene
+        let candidates = scene?.nodes ?? (stressMode ? SpatialV3StressFixture.nodes : SpatialV3Fixture.nodes)
+        let source = selectedID.flatMap { scene?.objectID(for: $0) } ?? selectedID
+        var seen: Set<String> = []
+        return candidates.compactMap { node in
+            let identity = scene?.objectID(for: node.id) ?? node.id
+            guard identity != source, seen.insert(identity).inserted else { return nil }
+            return RelationTargetChoice(id: identity, label: node.label)
+        }
+    }
     private var groupCount: Int { (allNodes.count + 11) / 12 }
     private var focusedIDs: Set<String>? {
         guard let focusedGroup else { return nil }
@@ -61,12 +82,15 @@ struct SpatialV3WindowView: View {
     }
     private var focusedNeighbors: [SpatialV3Node] {
         guard let selectedID else { return [] }
+        let scene = realScene
+        let objectID = scene?.objectID(for: selectedID) ?? selectedID
+        let appearances = Set(scene?.visualIDsByObjectID[objectID] ?? [selectedID])
         let ids = Set(allEdges.compactMap { edge -> String? in
-            if edge.source == selectedID { return edge.target }
-            if edge.target == selectedID { return edge.source }
+            if appearances.contains(edge.source) { return edge.target }
+            if appearances.contains(edge.target) { return edge.source }
             return nil
         })
-        return allNodes.filter { ids.contains($0.id) }
+        return allNodes.filter { ids.contains($0.id) && !appearances.contains($0.id) }
     }
     private func navigate(to node: SpatialV3Node) {
         depth = 2
@@ -77,10 +101,12 @@ struct SpatialV3WindowView: View {
     }
     private var spotlightIDs: Set<String>? {
         guard let selectedID else { return nil }
-        var ids: Set<String> = [selectedID]
+        let scene = realScene
+        let objectID = scene?.objectID(for: selectedID) ?? selectedID
+        var ids = Set(scene?.visualIDsByObjectID[objectID] ?? [selectedID])
         for edge in allEdges {
-            if edge.source == selectedID { ids.insert(edge.target) }
-            if edge.target == selectedID { ids.insert(edge.source) }
+            if ids.contains(edge.source) { ids.insert(edge.target) }
+            if ids.contains(edge.target) { ids.insert(edge.source) }
         }
         return ids
     }
@@ -91,7 +117,7 @@ struct SpatialV3WindowView: View {
     private func addIdea() {
         guard let model else { return }
         let editor = SpatialDocumentEditor(model: model)
-        if let created = editor.createIdea(newIdeaDraft, near: selectedID) {
+        if let created = editor.createIdea(newIdeaDraft, near: semanticID(selectedID)) {
             newIdeaDraft = ""
             depth = 2
             selectedID = created.rawValue
@@ -103,7 +129,8 @@ struct SpatialV3WindowView: View {
     }
 
     private func beginEdit(_ id: String) {
-        guard let model, let object = model.object(ObjectID(id)) else { return }
+        guard let model, let objectID = semanticID(id),
+              let object = model.object(ObjectID(objectID)) else { return }
         editingID = id
         editVersion = object.objectVersion
         editDraft = object.text.resolve(languageCode: model.languageCode)
@@ -111,9 +138,10 @@ struct SpatialV3WindowView: View {
     }
 
     private func finishEdit() {
-        guard let model, let editingID, let editVersion else { return }
+        guard let model, let editingID, let editVersion,
+              let objectID = semanticID(editingID) else { return }
         let succeeded = SpatialDocumentEditor(model: model)
-            .updateText(editDraft, of: editingID, expectedVersion: editVersion)
+            .updateText(editDraft, of: objectID, expectedVersion: editVersion)
         if succeeded {
             self.editingID = nil
             self.editVersion = nil
@@ -125,8 +153,9 @@ struct SpatialV3WindowView: View {
 
     private func addAssociation(from sourceID: String) {
         guard let model else { return }
+        guard let objectID = semanticID(sourceID) else { return }
         let created = SpatialDocumentEditor(model: model)
-            .associate(sourceID, with: relationTargetID)
+            .associate(objectID, with: relationTargetID)
         editFeedback = created == nil
             ? "Relation refusée : vérifie la cible ou l'existence d'un lien identique."
             : "Association ajoutée. Pense à enregistrer."
@@ -169,7 +198,7 @@ struct SpatialV3WindowView: View {
                         Text(model == nil ? (stressMode ? SpatialV3StressFixture.title : SpatialV3Fixture.title) : "Document actif")
                             .font(.system(size: 32, weight: .semibold, design: .default))
                             .tracking(-1.1)
-                        Text(model == nil ? (stressMode ? SpatialV3StressFixture.subtitle : SpatialV3Fixture.subtitle) : "\(allNodes.count) objets · \(allEdges.count) relations · révision \(realScene?.revision ?? 0)")
+                        Text(model == nil ? (stressMode ? SpatialV3StressFixture.subtitle : SpatialV3Fixture.subtitle) : "\(realScene?.semanticObjectCount ?? 0) objets · \(allNodes.count) représentations · \(allEdges.count) relations · révision \(realScene?.revision ?? 0)")
                             .font(.system(size: 14))
                             .foregroundStyle(KollioV3Tokens.Light.muted)
                     }
@@ -327,6 +356,15 @@ struct SpatialV3WindowView: View {
                                     .foregroundStyle(KollioV3Tokens.Light.muted)
                                 Text(selected.label)
                                     .font(.headline)
+                                if let id = semanticID(selected.id),
+                                   let count = realScene?.occurrenceCount(for: id), count > 1 {
+                                    Text(model?.languageCode == "en"
+                                         ? "\(count) views of the same object"
+                                         : "\(count) représentations de ce même objet")
+                                        .font(.caption)
+                                        .foregroundStyle(KollioV3Tokens.Light.muted)
+                                        .accessibilityIdentifier("spatial-v3-occurrence-count")
+                                }
                                 Text(selected.detail)
                                     .font(.subheadline)
                                     .foregroundStyle(KollioV3Tokens.Light.muted)
@@ -336,17 +374,17 @@ struct SpatialV3WindowView: View {
                                 VStack(alignment: .trailing, spacing: 9) {
                                     Button("Modifier") { beginEdit(selected.id) }
                                         .accessibilityIdentifier("spatial-v3-edit")
-                                    if allNodes.count > 1 {
+                                    if !relationTargets.isEmpty {
                                         Picker("Associer à", selection: $relationTargetID) {
                                             Text("Choisir un objet").tag("")
-                                            ForEach(allNodes.filter { $0.id != selected.id }) { target in
+                                            ForEach(relationTargets) { target in
                                                 Text(target.label).tag(target.id)
                                             }
                                         }
                                         .frame(maxWidth: 245)
                                         .accessibilityIdentifier("spatial-v3-relation-target")
                                         Button("Créer l'association") { addAssociation(from: selected.id) }
-                                            .disabled(relationTargetID.isEmpty || relationTargetID == selected.id)
+                                            .disabled(relationTargetID.isEmpty || relationTargetID == semanticID(selected.id))
                                             .accessibilityIdentifier("spatial-v3-link")
                                     }
                                 }
