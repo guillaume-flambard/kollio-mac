@@ -1,6 +1,186 @@
 {
   "sourceLanguage": "fr",
   "strings": {
+    "spatial.draft.languageChanged": {
+      "comment": "C2.11 prevents writing a draft to a different language variant",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La langue du document a changé. Ferme l’édition pour conserver ce brouillon dans sa langue d’origine."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The document language changed. Close the editor to keep this draft in its original language."
+          }
+        }
+      }
+    },
+    "spatial.draft.saved": {
+      "comment": "Spatial Ink C2.11 recoverable editing and explicit conflict resolution",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft kept. Resume editing to continue."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brouillon conservé. Reprends l’édition pour continuer."
+          }
+        }
+      }
+    },
+    "spatial.draft.recovered": {
+      "comment": "Spatial Ink C2.11 recoverable editing and explicit conflict resolution",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovered the draft you were editing."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brouillon d’édition récupéré."
+          }
+        }
+      }
+    },
+    "spatial.draft.resume": {
+      "comment": "Spatial Ink C2.11 recoverable editing and explicit conflict resolution",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume draft"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprendre le brouillon"
+          }
+        }
+      }
+    },
+    "spatial.draft.pause": {
+      "comment": "Spatial Ink C2.11 recoverable editing and explicit conflict resolution",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep draft and close"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserver le brouillon et fermer"
+          }
+        }
+      }
+    },
+    "spatial.draft.conflict": {
+      "comment": "Spatial Ink C2.11 recoverable editing and explicit conflict resolution",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The document changed while you were editing. Your draft is safe."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le document a changé pendant l’édition. Ton brouillon est conservé."
+          }
+        }
+      }
+    },
+    "spatial.draft.current": {
+      "comment": "Spatial Ink C2.11 recoverable editing and explicit conflict resolution",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current document text"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texte actuel du document"
+          }
+        }
+      }
+    },
+    "spatial.draft.mine": {
+      "comment": "Spatial Ink C2.11 recoverable editing and explicit conflict resolution",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your draft (editable below)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton brouillon (modifiable ci-dessous)"
+          }
+        }
+      }
+    },
+    "spatial.draft.rebase": {
+      "comment": "Spatial Ink C2.11 recoverable editing and explicit conflict resolution",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use current version to retry my draft"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reprendre mon brouillon sur la version actuelle"
+          }
+        }
+      }
+    },
+    "spatial.draft.rebased": {
+      "comment": "Spatial Ink C2.11 recoverable editing and explicit conflict resolution",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Latest version acknowledged. Review your draft before confirming."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version actuelle prise en compte. Vérifie ton brouillon avant de valider."
+          }
+        }
+      }
+    },
     "spatial.navigation.count": {
       "comment": "Native non-pointer graph navigation for Spatial Ink",
       "extractionState": "manual",
