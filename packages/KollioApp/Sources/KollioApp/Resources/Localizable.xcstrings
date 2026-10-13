@@ -1,6 +1,24 @@
 {
   "sourceLanguage": "fr",
   "strings": {
+    "spatial.camera.centerSelected": {
+      "comment": "Explicit camera centering of selected canvas card (does not change document)",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Centrer sur la carte"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Center on card"
+          }
+        }
+      }
+    },
     "spatial.move.controls": {
       "comment": "Spatial Ink directional movement; VoiceOver and keyboard controls",
       "extractionState": "manual",

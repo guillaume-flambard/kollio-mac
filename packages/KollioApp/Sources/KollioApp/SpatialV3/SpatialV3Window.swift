@@ -16,6 +16,7 @@ struct SpatialV3WindowView: View {
     @State private var editDraft = ""
     @State private var editVersion: Int?
     @State private var relationTargetID = ""
+    @State private var focusRequest = 0
     @State private var editFeedback: String?
 
 
@@ -96,6 +97,9 @@ struct SpatialV3WindowView: View {
         depth = 2
         focusedGroup = nil
         selectedID = node.id
+        // Navigation through search/history is an explicit request to see
+        // another card. Clicking a card in place must never recenter the world.
+        focusRequest += 1
         if focusHistory.last != node.id { focusHistory.append(node.id) }
         if focusHistory.count > 12 { focusHistory.removeFirst() }
     }
@@ -177,9 +181,13 @@ struct SpatialV3WindowView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text("◇  Kollio")
+        // The canvas plus its selected-card actions may exceed the window height.
+        // Scroll the content instead of vertically centering and clipping the
+        // header and inspector off-screen on smaller macOS windows.
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Text("◇  Kollio")
                     .font(.system(size: 17, weight: .bold))
                 Text("Spatial Ink V3")
                     .font(.caption)
@@ -338,6 +346,7 @@ struct SpatialV3WindowView: View {
                         edges: visibleEdges,
                         selectedID: $selectedID,
                         spotlightIDs: spotlightIDs,
+                        focusRequest: focusRequest,
                         instanceIDByVisualID: realScene?.instanceIDByVisualID ?? [:],
                         onMoveOccurrence: { instanceID, delta in
                             moveSelectedOccurrence(instanceID, by: delta)
@@ -385,6 +394,10 @@ struct SpatialV3WindowView: View {
                                 VStack(alignment: .trailing, spacing: 9) {
                                     Button("Modifier") { beginEdit(selected.id) }
                                         .accessibilityIdentifier("spatial-v3-edit")
+                                    Button(L10n.callAsFunction("spatial.camera.centerSelected")) {
+                                        focusRequest += 1
+                                    }
+                                    .accessibilityIdentifier("spatial-v3-center-selected")
                                     if let instanceID = realScene?.instanceIDByVisualID[selected.id] {
                                         HStack(spacing: 5) {
                                             ForEach(SpatialNudgeDirection.allCases) { direction in
@@ -453,8 +466,10 @@ struct SpatialV3WindowView: View {
             }
             .padding(.horizontal, 28)
             .padding(.vertical, 24)
-            Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
+        .accessibilityIdentifier("spatial-v3-document-scroll")
         .background(KollioV3Tokens.Light.paper)
         .foregroundStyle(KollioV3Tokens.Light.ink)
         .preferredColorScheme(.light)
@@ -467,6 +482,7 @@ struct SpatialV3Stage: View {
     let edges: [SpatialV3Edge]
     @Binding var selectedID: String?
     let spotlightIDs: Set<String>?
+    let focusRequest: Int
     /// Only real authored instances can move; fixture and derived cards cannot.
     let instanceIDByVisualID: [String: String]
     let onMoveOccurrence: (String, Position) -> Void
@@ -474,8 +490,8 @@ struct SpatialV3Stage: View {
     // @GestureState clears itself on cancellation, view removal and completed
     // gestures. No document mutation can occur until onEnded fires.
     @GestureState private var activeDrag: SpatialActiveDrag?
+    @GestureState private var panPreview = CGSize.zero
     @State private var camera = SpatialV3Camera()
-    @State private var lastDrag = CGSize.zero
     @State private var lastPinch: CGFloat = 1
     @State private var cameraEdited = false
 
@@ -557,6 +573,13 @@ struct SpatialV3Stage: View {
         camera = camera.zoomed(by: factor, around: CGPoint(x: size.width / 2, y: size.height / 2))
         cameraEdited = true
     }
+    private func centerSelected(in size: CGSize) {
+        guard let selectedID, let target = allNodes.first(where: { $0.id == selectedID }) else { return }
+        let worldPosition = CGPoint(x: target.x * SpatialV3Camera.world.width - contentOrigin.x,
+                                    y: target.y * SpatialV3Camera.world.height - contentOrigin.y)
+        camera = camera.centered(on: worldPosition, in: size)
+        cameraEdited = true
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -566,14 +589,16 @@ struct SpatialV3Stage: View {
                         .contentShape(Rectangle())
                         .gesture(
                             DragGesture(minimumDistance: 5)
-                                .onChanged { value in
-                                    let deltaX = value.translation.width - lastDrag.width
-                                    let deltaY = value.translation.height - lastDrag.height
-                                    camera = camera.panned(dx: deltaX, dy: deltaY)
-                                    lastDrag = value.translation
+                                .updating($panPreview) { value, state, _ in
+                                    // No persisted gesture delta. An interrupted background pan
+                                    // snaps back cleanly, rather than leaking into the next pan.
+                                    state = value.translation
+                                }
+                                .onEnded { value in
+                                    camera = camera.panned(dx: value.translation.width,
+                                                           dy: value.translation.height)
                                     cameraEdited = true
                                 }
-                                .onEnded { _ in lastDrag = .zero }
                         )
                     Canvas { context, size in
                         let step: CGFloat = 26
@@ -622,13 +647,14 @@ struct SpatialV3Stage: View {
                 }
                 .frame(width: canvasSize.width, height: canvasSize.height)
                 .scaleEffect(camera.zoom, anchor: .topLeading)
-                .offset(x: camera.x, y: camera.y)
+                .offset(x: camera.x + panPreview.width,
+                        y: camera.y + panPreview.height)
                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
                 .clipped()
                 .simultaneousGesture(
                     MagnifyGesture()
                         .onChanged { value in
-                            guard activeDrag == nil else { return }
+                            guard activeDrag == nil, panPreview == .zero else { return }
                             let delta = value.magnification / lastPinch
                             camera = camera.zoomed(by: delta, around: CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2))
                             lastPinch = value.magnification
@@ -679,19 +705,11 @@ struct SpatialV3Stage: View {
             }
             .coordinateSpace(name: "spatial-v3-screen")
             .onAppear { fit(geometry.size) }
-            .onChange(of: selectedID) { _, target in
-                guard let target, let node = allNodes.first(where: { $0.id == target }) else { return }
-                let zoom = max(0.8, min(1.2, camera.zoom))
-                let x = node.x * SpatialV3Camera.world.width - contentOrigin.x
-                let y = node.y * SpatialV3Camera.world.height - contentOrigin.y
+            .onChange(of: focusRequest) { _, _ in
+                // Camera follows only an explicit navigation or Center command.
                 withAnimation(.easeInOut(duration: 0.22)) {
-                    camera = SpatialV3Camera(
-                        zoom: zoom,
-                        x: geometry.size.width / 2 - x * zoom,
-                        y: geometry.size.height / 2 - y * zoom
-                    )
+                    centerSelected(in: geometry.size)
                 }
-                cameraEdited = true
             }
             .onChange(of: nodes.count) { _, _ in
                 if !cameraEdited { fit(geometry.size) }
