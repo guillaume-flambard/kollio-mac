@@ -18,6 +18,7 @@ Rejouer le parcours de fermeture sur une vraie `NSWindow` avec `NSHostingView` e
 - **PASS** : après correctif, 6/6 tests natifs ciblés (C2.13 + C2.14) et **393/393 tests KollioApp dans 45 suites**.
 - **PASS** : synchronisation du générateur `scripts/sync-xcodeproj.py`, puis vrai build Xcode `Kollio` (Debug, macOS) réussi. Sans la synchronisation, Xcode ne compilait pas les sources `SpatialV3`, malgré la suite SwiftPM verte.
 - **PASS** : correction des avertissements d'isolation `@MainActor` sur le proxy de délégué AppKit ; plus d'avertissement Swift de ce code au build Xcode.
+- **PASS** : nouveau garde-fou CI régénérant le `.xcodeproj` puis refusant tout diff, suivi d'une vraie compilation `xcodebuild` avant les tests SwiftPM. Vérification locale de l'idempotence du générateur réussie.
 - La CI de C2.13 (run 38405494112) est verte ; la nouvelle CI de C2.14 devra encore être observée après publication.
 
 ## Limites
