@@ -74,3 +74,75 @@ struct SpatialV3CameraTests {
         #expect(next.zoom == camera.zoom)
     }
 }
+
+@Suite("Spatial C2.15 — interruptible pinch without stale zoom")
+struct SpatialPinchTransactionTests {
+    private let viewport = CGSize(width: 900, height: 700)
+
+    @Test("A changed gesture previews without mutating the baseline")
+    func previewIsEphemeral() {
+        let baseline = SpatialV3Camera(zoom: 0.75, x: -100, y: 42)
+        let preview = SpatialPinchTransaction.camera(
+            from: baseline, magnification: 1.8, viewport: viewport, allowed: true
+        )
+        #expect(preview.zoom > baseline.zoom)
+        #expect(baseline == SpatialV3Camera(zoom: 0.75, x: -100, y: 42))
+        // @GestureState resets to 1 when cancelled: the rendered value returns
+        // to the untouched baseline, and a new gesture starts with a fresh 1.
+        let cancelled = SpatialPinchTransaction.camera(
+            from: baseline, magnification: 1, viewport: viewport, allowed: true
+        )
+        #expect(cancelled == baseline)
+        let next = SpatialPinchTransaction.camera(
+            from: baseline, magnification: 1.15, viewport: viewport, allowed: true
+        )
+        #expect(abs(next.zoom - baseline.zoom * 1.15) < 0.00001)
+    }
+
+    @Test("A completed gesture applies total magnification just once")
+    func commitsOnceWithAnchor() {
+        let initial = SpatialV3Camera(zoom: 0.8, x: -30, y: 80)
+        let committed = SpatialPinchTransaction.camera(
+            from: initial, magnification: 1.5, viewport: viewport, allowed: true
+        )
+        #expect(abs(committed.zoom - 1.2) < 0.00001)
+        let center = CGPoint(x: viewport.width / 2, y: viewport.height / 2)
+        #expect(abs((center.x - initial.x) / initial.zoom
+                    - (center.x - committed.x) / committed.zoom) < 0.00001)
+        #expect(abs((center.y - initial.y) / initial.zoom
+                    - (center.y - committed.y) / committed.zoom) < 0.00001)
+    }
+
+    @Test("A card drag or background pan disallows an overlapping pinch")
+    func competingGestures() {
+        let baseline = SpatialV3Camera(zoom: 1.1, x: 16, y: -44)
+        #expect(SpatialPinchTransaction.camera(
+            from: baseline, magnification: 2, viewport: viewport, allowed: false
+        ) == baseline)
+    }
+
+    @Test("Invalid magnification or viewport cannot poison camera state")
+    func invalidInput() {
+        let baseline = SpatialV3Camera()
+        for factor: CGFloat in [0, -1, .nan, .infinity] {
+            #expect(SpatialPinchTransaction.camera(
+                from: baseline, magnification: factor, viewport: viewport, allowed: true
+            ) == baseline)
+        }
+        #expect(SpatialPinchTransaction.camera(
+            from: baseline, magnification: 2,
+            viewport: .zero, allowed: true
+        ) == baseline)
+    }
+
+    @Test("Preview and final camera obey the same zoom limits")
+    func limits() {
+        let baseline = SpatialV3Camera()
+        #expect(SpatialPinchTransaction.camera(
+            from: baseline, magnification: 100, viewport: viewport, allowed: true
+        ).zoom == SpatialV3Camera.maxZoom)
+        #expect(SpatialPinchTransaction.camera(
+            from: baseline, magnification: 0.001, viewport: viewport, allowed: true
+        ).zoom == SpatialV3Camera.minZoom)
+    }
+}

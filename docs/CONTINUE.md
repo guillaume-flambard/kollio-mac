@@ -10,6 +10,10 @@ model. An intelligence source proposes a patch; it never regenerates the world.
 
 The direction is [PRODUCT_BLUEPRINT.md](PRODUCT_BLUEPRINT.md). Read it once, not every task.
 
+## Spatial Ink V3 — C2.15 STAR loop
+
+C2.15 addresses interrupted native trackpad pinch zoom. SwiftUI `@GestureState` now owns a temporary magnification preview; `SpatialPinchTransaction` applies the total gesture factor around the viewport anchor, and only a valid completed pinch commits a camera change. Cancelling or losing the gesture restores the baseline; a pinch never writes domain content. It also refuses invalid factors and suppresses zoom commits during a card drag or background pan. Five tests cover cancellation, restart, single commit, anchor, arbitration and limits; **5/5 focused and 398/398 full KollioApp tests in 46 suites passed**, with a successful real Xcode macOS Debug build. Native FR/EN resting canvas captures at 900×700 passed and were visually inspected, but do not prove an actual pinch. See [C2.15 STAR](SPATIAL_STAR_C35.md). A human two-finger trackpad test, VoiceOver and actual OS gesture interruption remain separate acceptance gates. CI and final tests must pass before merge.
+
 ## Spatial Ink V3 — C2.14 STAR loop
 
 C2.14 validates an actual NSWindow/NSHostingView with a pending idea: cancel keeps the window and document, confirm closes, and reopening starts without an uncommitted draft. A close-completed marker prevents closed-but-retained windows from raising a second Cmd+Q warning; an existing AppKit delegate veto is checked before destructive confirmation. The Xcode project is regenerated from scripts/sync-xcodeproj.py to include Spatial V3, fixing previously broken Cmd+R; actor-isolation proxy warnings were also fixed. Evidence: 6/6 targeted native tests, 393/393 KollioApp tests (45 suites), and successful Xcode macOS Debug build. The GitHub workflow now checks generated Xcode project parity, builds the real macOS target and executes the opt-in native journey. See docs/SPATIAL_STAR_C34.md. Real human keyboard, VoiceOver and trackpad gestures remain unverified; there is no on-disk draft recovery.

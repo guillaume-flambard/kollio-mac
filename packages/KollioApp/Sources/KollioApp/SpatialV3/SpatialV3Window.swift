@@ -683,8 +683,8 @@ struct SpatialV3Stage: View {
     @AccessibilityFocusState private var voiceOverFocusedID: String?
     @GestureState private var activeDrag: SpatialActiveDrag?
     @GestureState private var panPreview = CGSize.zero
+    @GestureState private var pinchPreview: CGFloat = 1
     @State private var camera = SpatialV3Camera()
-    @State private var lastPinch: CGFloat = 1
     @State private var cameraEdited = false
 
     private func bounds(for nodes: [SpatialV3Node]) -> CGRect {
@@ -775,6 +775,10 @@ struct SpatialV3Stage: View {
 
     var body: some View {
         GeometryReader { geometry in
+            let renderedCamera = SpatialPinchTransaction.camera(
+                from: camera, magnification: pinchPreview, viewport: geometry.size,
+                allowed: activeDrag == nil && panPreview == .zero
+            )
             ZStack(alignment: .bottomTrailing) {
                 ZStack {
                     Color.clear
@@ -838,27 +842,37 @@ struct SpatialV3Stage: View {
                     }
                 }
                 .frame(width: canvasSize.width, height: canvasSize.height)
-                .scaleEffect(camera.zoom, anchor: .topLeading)
-                .offset(x: camera.x + panPreview.width,
-                        y: camera.y + panPreview.height)
+                .scaleEffect(renderedCamera.zoom, anchor: .topLeading)
+                .offset(x: renderedCamera.x + panPreview.width,
+                        y: renderedCamera.y + panPreview.height)
                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
                 .clipped()
                 .simultaneousGesture(
                     MagnifyGesture()
-                        .onChanged { value in
-                            guard activeDrag == nil, panPreview == .zero else { return }
-                            let delta = value.magnification / lastPinch
-                            camera = camera.zoomed(by: delta, around: CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2))
-                            lastPinch = value.magnification
-                            cameraEdited = true
+                        .updating($pinchPreview) { value, state, _ in
+                            // The viewport is only previewed until release.
+                            // Interrupted gestures reset this state without a
+                            // stale magnification leaking into the next pinch.
+                            state = activeDrag == nil && panPreview == .zero
+                                ? value.magnification : 1
                         }
-                        .onEnded { _ in lastPinch = 1 }
+                        .onEnded { value in
+                            guard activeDrag == nil && panPreview == .zero else { return }
+                            let next = SpatialPinchTransaction.camera(
+                                from: camera, magnification: value.magnification,
+                                viewport: geometry.size, allowed: true
+                            )
+                            if next != camera {
+                                camera = next
+                                cameraEdited = true
+                            }
+                        }
                 )
 
                 HStack(spacing: 5) {
                     Button("−") { zoom(1 / 1.2, in: geometry.size) }
                         .accessibilityLabel(copy.text("spatial.camera.zoomOut"))
-                    Text("\(Int((camera.zoom * 100).rounded())) %")
+                    Text("\(Int((renderedCamera.zoom * 100).rounded())) %")
                         .monospacedDigit()
                         .font(.caption2)
                         .frame(minWidth: 40)
