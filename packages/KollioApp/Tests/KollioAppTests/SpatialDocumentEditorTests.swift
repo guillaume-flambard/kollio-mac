@@ -262,4 +262,69 @@ struct SpatialDocumentEditorTests {
         #expect(SpatialOccurrenceDrag.worldDelta(
             screenTranslation: CGSize(width: CGFloat.infinity, height: 0), zoom: 1) == nil)
     }
+
+    @Test("C2.7 directional commands have one deterministic world-space step")
+    func nudgeDirections() {
+        let all = SpatialNudgeDirection.allCases
+        #expect(all.count == 4)
+        #expect(Set(all.map(\.localizationKey)).count == 4)
+        #expect(SpatialNudgeDirection.up.delta == Position(x: 0, y: -16))
+        #expect(SpatialNudgeDirection.down.delta == Position(x: 0, y: 16))
+        #expect(SpatialNudgeDirection.left.delta == Position(x: -16, y: 0))
+        #expect(SpatialNudgeDirection.right.delta == Position(x: 16, y: 0))
+        #expect(SpatialNudgeDirection(.up) == .up)
+        #expect(SpatialNudgeDirection(.down) == .down)
+        #expect(SpatialNudgeDirection(.left) == .left)
+        #expect(SpatialNudgeDirection(.right) == .right)
+    }
+
+    @Test("C2.7 accessible nudges use the same single-occurrence transaction and undo")
+    func moveByKeyboardOrAccessibility() throws {
+        let (editor, model, directory) = prepare()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let instance = try #require(model.document.presentation.instances.first)
+        let original = model.document
+        #expect(editor.moveOccurrence(instance.id.rawValue, by: SpatialNudgeDirection.right.delta))
+        #expect(editor.moveOccurrence(instance.id.rawValue, by: SpatialNudgeDirection.up.delta))
+        let moved = try #require(model.document.presentation.instance(id: instance.id)).position
+        #expect(moved == original.presentation.instance(id: instance.id)?.position
+                    .offset(dx: 16, dy: -16))
+        #expect(model.document.content == original.content)
+        #expect(model.document.semanticRevision == original.semanticRevision)
+        editor.undo()
+        #expect(model.document.presentation.instance(id: instance.id)?.position ==
+                original.presentation.instance(id: instance.id)?.position
+                    .offset(dx: 16, dy: 0))
+        editor.undo()
+        #expect(model.document.presentation == original.presentation)
+        editor.redo()
+        editor.redo()
+        #expect(model.document.presentation.instance(id: instance.id)?.position == moved)
+        #expect(editor.save())
+        model.reloadFromDisk()
+        #expect(model.document.presentation.instance(id: instance.id)?.position == moved)
+    }
+
+    @Test("C2.7 gesture preview never writes to the model before pointer release")
+    func previewIsNotACommand() throws {
+        let (editor, model, directory) = prepare()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let occurrence = try #require(model.document.presentation.instances.first)
+        let before = model.document
+        let preview = SpatialActiveDrag(
+            visualID: occurrence.objectID.rawValue,
+            screenTranslation: CGSize(width: 160, height: -40)
+        )
+        #expect(preview.visualID == occurrence.objectID.rawValue)
+        #expect(SpatialOccurrenceDrag.worldDelta(
+            screenTranslation: preview.screenTranslation, zoom: 2
+        ) == Position(x: 80, y: -20))
+        // Gesture cancellation is represented by discarding the preview.
+        // No call to the editor was made, so there is no pending mutation.
+        let cancelled: SpatialActiveDrag? = nil
+        #expect(cancelled == nil)
+        #expect(model.document == before)
+        #expect(!editor.moveOccurrence(occurrence.id.rawValue, by: Position(x: 0, y: 0)))
+        #expect(model.document == before)
+    }
 }

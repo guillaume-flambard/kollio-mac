@@ -162,6 +162,13 @@ struct SpatialV3WindowView: View {
         if created != nil { relationTargetID = "" }
     }
 
+    private func moveSelectedOccurrence(_ instanceID: String, by delta: Position) {
+        guard let model else { return }
+        let applied = SpatialDocumentEditor(model: model)
+            .moveOccurrence(instanceID, by: delta)
+        editFeedback = L10n.callAsFunction(applied ? "spatial.drag.saved" : "spatial.drag.refused")
+    }
+
     private func saveDocument() {
         guard let model else { return }
         editFeedback = SpatialDocumentEditor(model: model).save()
@@ -333,12 +340,7 @@ struct SpatialV3WindowView: View {
                         spotlightIDs: spotlightIDs,
                         instanceIDByVisualID: realScene?.instanceIDByVisualID ?? [:],
                         onMoveOccurrence: { instanceID, delta in
-                            guard let model else { return }
-                            let applied = SpatialDocumentEditor(model: model)
-                                .moveOccurrence(instanceID, by: delta)
-                            editFeedback = applied
-                                ? L10n.callAsFunction("spatial.drag.saved")
-                                : L10n.callAsFunction("spatial.drag.refused")
+                            moveSelectedOccurrence(instanceID, by: delta)
                         }
                     )
                     .frame(minWidth: 900, minHeight: 580)
@@ -383,6 +385,22 @@ struct SpatialV3WindowView: View {
                                 VStack(alignment: .trailing, spacing: 9) {
                                     Button("Modifier") { beginEdit(selected.id) }
                                         .accessibilityIdentifier("spatial-v3-edit")
+                                    if let instanceID = realScene?.instanceIDByVisualID[selected.id] {
+                                        HStack(spacing: 5) {
+                                            ForEach(SpatialNudgeDirection.allCases) { direction in
+                                                Button {
+                                                    moveSelectedOccurrence(instanceID, by: direction.delta)
+                                                } label: {
+                                                    Image(systemName: direction.symbol)
+                                                }
+                                                .accessibilityLabel(L10n.callAsFunction(direction.localizationKey))
+                                                .help(L10n.callAsFunction(direction.localizationKey))
+                                                .accessibilityIdentifier("spatial-v3-move-\(direction.rawValue)")
+                                            }
+                                        }
+                                        .accessibilityElement(children: .contain)
+                                        .accessibilityLabel(L10n.callAsFunction("spatial.move.controls"))
+                                    }
                                     if !relationTargets.isEmpty {
                                         Picker("Associer à", selection: $relationTargetID) {
                                             Text("Choisir un objet").tag("")
@@ -453,8 +471,9 @@ struct SpatialV3Stage: View {
     let instanceIDByVisualID: [String: String]
     let onMoveOccurrence: (String, Position) -> Void
 
-    @State private var movingVisualID: String?
-    @State private var movingScreenTranslation = CGSize.zero
+    // @GestureState clears itself on cancellation, view removal and completed
+    // gestures. No document mutation can occur until onEnded fires.
+    @GestureState private var activeDrag: SpatialActiveDrag?
     @State private var camera = SpatialV3Camera()
     @State private var lastDrag = CGSize.zero
     @State private var lastPinch: CGFloat = 1
@@ -492,15 +511,16 @@ struct SpatialV3Stage: View {
     }
 
     private var movingWorldDelta: CGSize {
-        guard let delta = SpatialOccurrenceDrag.worldDelta(
-            screenTranslation: movingScreenTranslation, zoom: camera.zoom
-        ) else { return .zero }
+        guard let activeDrag,
+              let delta = SpatialOccurrenceDrag.worldDelta(
+                screenTranslation: activeDrag.screenTranslation, zoom: camera.zoom
+              ) else { return .zero }
         return CGSize(width: delta.x, height: delta.y)
     }
 
     @ViewBuilder
     private func drawing(_ node: SpatialV3Node) -> some View {
-        let isMoving = movingVisualID == node.id
+        let isMoving = activeDrag?.visualID == node.id
         SpatialV3MeaningNode(node: node, selected: selectedID == node.id) {
             selectedID = selectedID == node.id ? nil : node.id
         }
@@ -513,22 +533,17 @@ struct SpatialV3Stage: View {
     }
 
     private func moveGesture(for visualID: String, instanceID: String) -> some Gesture {
-        DragGesture(minimumDistance: 5, coordinateSpace: .named("spatial-v3-screen"))
-            .onChanged { value in
-                guard movingVisualID == nil || movingVisualID == visualID else { return }
-                movingVisualID = visualID
-                movingScreenTranslation = value.translation
+        DragGesture(minimumDistance: 6, coordinateSpace: .named("spatial-v3-screen"))
+            .updating($activeDrag) { value, state, _ in
+                // The preview is ephemeral. If the pointer gesture gets
+                // cancelled, SwiftUI resets the state to nil automatically.
+                state = SpatialActiveDrag(visualID: visualID,
+                                          screenTranslation: value.translation)
             }
             .onEnded { value in
-                defer {
-                    movingVisualID = nil
-                    movingScreenTranslation = .zero
-                }
-                guard movingVisualID == visualID,
-                      let delta = SpatialOccurrenceDrag.worldDelta(
-                          screenTranslation: value.translation, zoom: camera.zoom
-                      ),
-                      abs(delta.x) > 0.5 || abs(delta.y) > 0.5
+                guard let delta = SpatialOccurrenceDrag.worldDelta(
+                    screenTranslation: value.translation, zoom: camera.zoom
+                ), abs(delta.x) > 0.5 || abs(delta.y) > 0.5
                 else { return }
                 onMoveOccurrence(instanceID, delta)
             }
@@ -575,7 +590,7 @@ struct SpatialV3Stage: View {
                     ForEach(edges) { edge in
                         SpatialV3Branch(
                             edge: edge, origin: contentOrigin,
-                            movingVisualID: movingVisualID, movingWorldDelta: movingWorldDelta
+                            movingVisualID: activeDrag?.visualID, movingWorldDelta: movingWorldDelta
                         )
                         .opacity(spotlightIDs == nil || spotlightIDs?.contains(edge.source) == true
                             || spotlightIDs?.contains(edge.target) == true ? 1 : 0.09)
@@ -584,6 +599,22 @@ struct SpatialV3Stage: View {
                         if let instanceID = instanceIDByVisualID[node.id] {
                             drawing(node)
                                 .highPriorityGesture(moveGesture(for: node.id, instanceID: instanceID))
+                                .onMoveCommand { direction in
+                                    guard let direction = SpatialNudgeDirection(direction) else { return }
+                                    onMoveOccurrence(instanceID, direction.delta)
+                                }
+                                .accessibilityAction(named: Text(L10n.callAsFunction("spatial.move.up"))) {
+                                    onMoveOccurrence(instanceID, SpatialNudgeDirection.up.delta)
+                                }
+                                .accessibilityAction(named: Text(L10n.callAsFunction("spatial.move.down"))) {
+                                    onMoveOccurrence(instanceID, SpatialNudgeDirection.down.delta)
+                                }
+                                .accessibilityAction(named: Text(L10n.callAsFunction("spatial.move.left"))) {
+                                    onMoveOccurrence(instanceID, SpatialNudgeDirection.left.delta)
+                                }
+                                .accessibilityAction(named: Text(L10n.callAsFunction("spatial.move.right"))) {
+                                    onMoveOccurrence(instanceID, SpatialNudgeDirection.right.delta)
+                                }
                         } else {
                             drawing(node)
                         }
@@ -597,6 +628,7 @@ struct SpatialV3Stage: View {
                 .simultaneousGesture(
                     MagnifyGesture()
                         .onChanged { value in
+                            guard activeDrag == nil else { return }
                             let delta = value.magnification / lastPinch
                             camera = camera.zoomed(by: delta, around: CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2))
                             lastPinch = value.magnification
@@ -758,6 +790,41 @@ private struct SpatialV3MeaningNode: View {
         .buttonStyle(.plain)
         .accessibilityLabel("\(node.eyebrow) : \(node.label). \(node.status). Afficher les détails.")
         .accessibilityIdentifier("spatial-v3-node-\(node.id)")
+    }
+}
+
+/// Immutable gesture preview: never persisted. SwiftUI resets @GestureState
+/// on cancellation instead of waiting for an onEnded that will never fire.
+struct SpatialActiveDrag: Equatable {
+    let visualID: String
+    let screenTranslation: CGSize
+}
+
+/// Same one-instance command from focused arrow keys, the inspector controls
+/// and VoiceOver accessibility actions. Fixed world step, independent of zoom.
+enum SpatialNudgeDirection: String, CaseIterable, Identifiable {
+    case up, down, left, right
+
+    var id: String { rawValue }
+    var localizationKey: String { "spatial.move.\(rawValue)" }
+    var symbol: String { "arrow.\(rawValue)" }
+    var delta: Position {
+        switch self {
+        case .up: Position(x: 0, y: -16)
+        case .down: Position(x: 0, y: 16)
+        case .left: Position(x: -16, y: 0)
+        case .right: Position(x: 16, y: 0)
+        }
+    }
+
+    init?(_ command: MoveCommandDirection) {
+        switch command {
+        case .up: self = .up
+        case .down: self = .down
+        case .left: self = .left
+        case .right: self = .right
+        @unknown default: return nil
+        }
     }
 }
 
