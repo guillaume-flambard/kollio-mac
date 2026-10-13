@@ -10,6 +10,10 @@ model. An intelligence source proposes a patch; it never regenerates the world.
 
 The direction is [PRODUCT_BLUEPRINT.md](PRODUCT_BLUEPRINT.md). Read it once, not every task.
 
+## Spatial Ink V3 — C2.17 STAR loop
+
+C2.17 corrects CAN-01 pinch focal anchoring: Spatial Ink uses the actual start point of SwiftUI MagnifyGesture in the viewport for both the cancellable @GestureState preview and the final camera commit, not the center of the window. A pure SpatialPinchPreview converts the normalized finger origin once; invalid/nonfinite anchors cannot poison camera state, and C2.16 scroll routing remains disabled during an active pinch. Verified **3/3 targeted tests and 405/405 KollioApp tests in 48 suites**. A full Swift 6 Xcode Debug build and native 900×700 FR/EN rest-state captures passed; GitHub CI is the remaining remote gate. See [C2.17 STAR](SPATIAL_STAR_C37.md). Physical trackpad feel, focus-loss interruptions and VoiceOver remain unverified by a person. Next C2.18: keyboard/VoiceOver focus and small-window navigation acceptance.
+
 ## Spatial Ink V3 — C2.16 STAR loop
 
 C2.16 implements two-finger precise scroll over the Spatial Ink viewport via a window-local, lifecycle-managed AppKit event observer that does not hit-test. It ignores other windows, outside-viewport input, momentum, system shortcut modifiers and competing pinch/card/background-drag gestures; camera moves in screen points with no document mutation. Verified **3/3 pure policy tests, 402/402 KollioApp tests in 47 suites**, and **2/2 real NSHostingView native acceptance tests** run sequentially, including scroll routing that changes the rendered image but not the canonical document. The CI now runs native window tests with `--no-parallel` to avoid AppKit parallel harness crashes. See [C2.16 STAR](SPATIAL_STAR_C36.md). Real macOS Debug Xcode build succeeded, and native FR/EN 900x700 captures were visually inspected (kept outside Git at review/c36/evidence/). GitHub CI must pass before merge; physical trackpad and VoiceOver still require hands-on acceptance. Next C2.17: physical/focus-loss gesture acceptance and remediation of measured issues.

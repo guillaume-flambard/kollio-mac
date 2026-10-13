@@ -683,7 +683,7 @@ struct SpatialV3Stage: View {
     @AccessibilityFocusState private var voiceOverFocusedID: String?
     @GestureState private var activeDrag: SpatialActiveDrag?
     @GestureState private var panPreview = CGSize.zero
-    @GestureState private var pinchPreview: CGFloat = 1
+    @GestureState private var pinchPreview: SpatialPinchPreview?
     @State private var camera = SpatialV3Camera()
     @State private var cameraEdited = false
 
@@ -776,7 +776,10 @@ struct SpatialV3Stage: View {
     var body: some View {
         GeometryReader { geometry in
             let renderedCamera = SpatialPinchTransaction.camera(
-                from: camera, magnification: pinchPreview, viewport: geometry.size,
+                from: camera,
+                magnification: pinchPreview?.magnification ?? 1,
+                viewport: geometry.size,
+                anchor: pinchPreview?.anchor,
                 allowed: activeDrag == nil && panPreview == .zero
             )
             ZStack(alignment: .bottomTrailing) {
@@ -853,14 +856,29 @@ struct SpatialV3Stage: View {
                             // The viewport is only previewed until release.
                             // Interrupted gestures reset this state without a
                             // stale magnification leaking into the next pinch.
-                            state = activeDrag == nil && panPreview == .zero
-                                ? value.magnification : 1
+                            guard activeDrag == nil && panPreview == .zero else {
+                                state = nil
+                                return
+                            }
+                            state = SpatialPinchPreview(
+                                magnification: value.magnification,
+                                unitAnchor: CGPoint(x: value.startAnchor.x,
+                                                    y: value.startAnchor.y),
+                                viewport: geometry.size
+                            )
                         }
                         .onEnded { value in
                             guard activeDrag == nil && panPreview == .zero else { return }
+                            let finished = SpatialPinchPreview(
+                                magnification: value.magnification,
+                                unitAnchor: CGPoint(x: value.startAnchor.x,
+                                                    y: value.startAnchor.y),
+                                viewport: geometry.size
+                            )
                             let next = SpatialPinchTransaction.camera(
-                                from: camera, magnification: value.magnification,
-                                viewport: geometry.size, allowed: true
+                                from: camera, magnification: finished.magnification,
+                                viewport: geometry.size, anchor: finished.anchor,
+                                allowed: true
                             )
                             if next != camera {
                                 camera = next
@@ -915,7 +933,7 @@ struct SpatialV3Stage: View {
                 // inside this viewport. The outer document ScrollView and its
                 // text inputs retain native scrolling outside the canvas.
                 SpatialTrackpadScrollCapture(
-                    canPan: activeDrag == nil && panPreview == .zero && pinchPreview == 1
+                    canPan: activeDrag == nil && panPreview == .zero && pinchPreview == nil
                 ) { delta in
                     camera = camera.panned(dx: delta.width, dy: delta.height)
                     cameraEdited = true
