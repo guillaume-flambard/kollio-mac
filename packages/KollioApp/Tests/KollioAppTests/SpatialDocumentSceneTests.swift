@@ -54,6 +54,28 @@ struct SpatialDocumentSceneTests {
         #expect(try Data(contentsOf: url) == originalBytes)
     }
 
+    @Test("The same active KollioModel projects newly loaded and cleared documents")
+    @MainActor
+    func followsActiveModel() {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("kollio-c2-live-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let model = KollioModel.deterministicModel(
+            document: KollioDocument(),
+            fileStore: DocumentFileStore(directory: directory)
+        )
+        #expect(SpatialDocumentScene(projection: SpatialDocumentProjection(document: model.document)).nodes.isEmpty)
+        model.loadDemo()
+        let sarah = SpatialDocumentScene(projection: SpatialDocumentProjection(document: model.document))
+        #expect(sarah.nodes.count == model.document.content.count)
+        #expect(sarah.edges.count == model.document.relationships.count)
+        #expect(!sarah.nodes.isEmpty)
+        model.newDocument()
+        let cleared = SpatialDocumentScene(projection: SpatialDocumentProjection(document: model.document))
+        #expect(cleared.nodes.isEmpty)
+        #expect(cleared.edges.isEmpty)
+    }
+
     @Test("Empty documents stay empty, without demo content")
     func emptyDocument() {
         let document = KollioDocument()
