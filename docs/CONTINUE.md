@@ -10,6 +10,10 @@ model. An intelligence source proposes a patch; it never regenerates the world.
 
 The direction is [PRODUCT_BLUEPRINT.md](PRODUCT_BLUEPRINT.md). Read it once, not every task.
 
+## Spatial Ink V3 — C2.14 STAR loop
+
+C2.14 validates an actual NSWindow/NSHostingView with a pending idea: cancel keeps the window and document, confirm closes, and reopening starts without an uncommitted draft. A close-completed marker prevents closed-but-retained windows from raising a second Cmd+Q warning; an existing AppKit delegate veto is checked before destructive confirmation. The Xcode project is regenerated from scripts/sync-xcodeproj.py to include Spatial V3, fixing previously broken Cmd+R; actor-isolation proxy warnings were also fixed. Evidence: 6/6 targeted native tests, 393/393 KollioApp tests (45 suites), and successful Xcode macOS Debug build. The GitHub workflow now executes the opt-in native journey. See docs/SPATIAL_STAR_C34.md. Real human keyboard, VoiceOver and trackpad gestures remain unverified; there is no on-disk draft recovery.
+
 ## Spatial Ink V3 — C2.13 STAR loop
 
 C2.13 adds a native macOS window-close and Cmd+Q safeguard for unconfirmed Spatial Ink input, preserving the original NSWindow delegate's veto and requiring explicit consent before discarding window-local drafts. It does **not** silently save draft text to the canonical document or to disk. Five targeted native guard tests passed; the full KollioApp suite passed **392/392 tests in 44 suites**; OpenSpec generated views, String Catalog JSON, Swift syntax and diff checks passed. See [C2.13 STAR report](SPATIAL_STAR_C33.md). Native physical close buttons, focus, VoiceOver and real keyboard/trackpad remain human acceptance gates; do not claim disk recovery or forced-quit recovery. Next C2.14: end-to-end window/quit interaction review and potential opt-in draft recovery policy.

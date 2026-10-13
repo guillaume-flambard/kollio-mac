@@ -19,3 +19,7 @@ jobs:
         run: swift build --package-path packages/KollioApp
       - name: Validate native spatial and document projection
         run: swift test --package-path packages/KollioApp --filter Spatial
+      - name: Exercise native close and reopen journey
+        env:
+          KOLLIO_SPATIAL_C34_NATIVE: '1'
+        run: swift test --package-path packages/KollioApp --filter SpatialNativeWindowJourneyTests

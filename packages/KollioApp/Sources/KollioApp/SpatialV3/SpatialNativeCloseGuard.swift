@@ -27,6 +27,7 @@ struct SpatialNativeCloseGuard: NSViewRepresentable {
         testConfirmation: ((Int, SpatialV3Copy) -> Bool)? = nil
     ) -> Bool {
         let guards = windows.compactMap { $0.delegate as? SpatialNativeCloseDelegate }
+            .filter { !$0.hasClosed }
         let total = guards.reduce(0) { $0 + max(0, $1.pendingCount) }
         guard total > 0, let copy = guards.first?.copy else { return true }
         if let testConfirmation { return testConfirmation(total, copy) }
@@ -73,6 +74,7 @@ final class SpatialNativeCloseDelegate: NSObject, NSWindowDelegate {
     private weak var observedWindow: NSWindow?
     private weak var previousDelegate: (any NSWindowDelegate)?
     var pendingCount = 0
+    private(set) var hasClosed = false
     var copy = SpatialV3Copy(languageCode: nil)
     /// Injectable only for deterministic native tests; default uses NSAlert.
     var testConfirmation: (() -> Bool)?
@@ -81,6 +83,7 @@ final class SpatialNativeCloseDelegate: NSObject, NSWindowDelegate {
         if observedWindow === window && window.delegate === self { return }
         detach()
         observedWindow = window
+        hasClosed = false
         previousDelegate = window.delegate
         window.delegate = self
     }
@@ -94,6 +97,8 @@ final class SpatialNativeCloseDelegate: NSObject, NSWindowDelegate {
     }
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
+        // A native delegate veto must win before asking to lose a draft.
+        guard previousDelegate?.windowShouldClose?(sender) ?? true else { return false }
         if pendingCount > 0 {
             let confirmed = testConfirmation?() ?? Self.confirm(
                 title: copy.text("spatial.close.title"),
@@ -103,16 +108,29 @@ final class SpatialNativeCloseDelegate: NSObject, NSWindowDelegate {
             )
             if !confirmed { return false }
         }
-        return previousDelegate?.windowShouldClose?(sender) ?? true
+        return true
     }
 
-    override func responds(to selector: Selector!) -> Bool {
-        super.responds(to: selector) || previousDelegate?.responds(to: selector) == true
+    func windowWillClose(_ notification: Notification) {
+        // A confirmed close can leave a retained NSWindow in NSApp.windows.
+        // Exclude it from future Cmd+Q counts, including last-window quit.
+        hasClosed = true
+        previousDelegate?.windowWillClose?(notification)
     }
 
-    override func forwardingTarget(for selector: Selector!) -> Any? {
-        if previousDelegate?.responds(to: selector) == true {
-            return previousDelegate
+    nonisolated override func responds(to selector: Selector!) -> Bool {
+        if super.responds(to: selector) { return true }
+        // NSObject's selector lookup is nonisolated, but the AppKit window
+        // delegate belongs to the main actor. Keep the bridge explicit.
+        return MainActor.assumeIsolated {
+            previousDelegate?.responds(to: selector) == true
+        }
+    }
+
+    nonisolated override func forwardingTarget(for selector: Selector!) -> Any? {
+        let forwardingDelegate = MainActor.assumeIsolated { previousDelegate }
+        if forwardingDelegate?.responds(to: selector) == true {
+            return forwardingDelegate
         }
         return super.forwardingTarget(for: selector)
     }
