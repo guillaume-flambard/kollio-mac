@@ -330,7 +330,16 @@ struct SpatialV3WindowView: View {
                         allNodes: focusedGroup == nil ? allNodes : visibleNodes,
                         edges: visibleEdges,
                         selectedID: $selectedID,
-                        spotlightIDs: spotlightIDs
+                        spotlightIDs: spotlightIDs,
+                        instanceIDByVisualID: realScene?.instanceIDByVisualID ?? [:],
+                        onMoveOccurrence: { instanceID, delta in
+                            guard let model else { return }
+                            let applied = SpatialDocumentEditor(model: model)
+                                .moveOccurrence(instanceID, by: delta)
+                            editFeedback = applied
+                                ? L10n.callAsFunction("spatial.drag.saved")
+                                : L10n.callAsFunction("spatial.drag.refused")
+                        }
                     )
                     .frame(minWidth: 900, minHeight: 580)
                 }
@@ -412,7 +421,7 @@ struct SpatialV3WindowView: View {
                     } else {
                         Text(model == nil
                              ? "Sélectionne un objet pour lire son sens et sa provenance. Replier ne supprime rien."
-                             : "Sélectionne un objet pour le modifier ou le relier à un autre.")
+                             : L10n.callAsFunction("spatial.drag.hint"))
                             .font(.caption)
                             .foregroundStyle(KollioV3Tokens.Light.muted)
                     }
@@ -440,7 +449,12 @@ struct SpatialV3Stage: View {
     let edges: [SpatialV3Edge]
     @Binding var selectedID: String?
     let spotlightIDs: Set<String>?
+    /// Only real authored instances can move; fixture and derived cards cannot.
+    let instanceIDByVisualID: [String: String]
+    let onMoveOccurrence: (String, Position) -> Void
 
+    @State private var movingVisualID: String?
+    @State private var movingScreenTranslation = CGSize.zero
     @State private var camera = SpatialV3Camera()
     @State private var lastDrag = CGSize.zero
     @State private var lastPinch: CGFloat = 1
@@ -475,6 +489,49 @@ struct SpatialV3Stage: View {
     private var canvasSize: CGSize {
         CGSize(width: max(SpatialV3Camera.world.width, fullBounds.maxX - contentOrigin.x),
                height: max(SpatialV3Camera.world.height, fullBounds.maxY - contentOrigin.y))
+    }
+
+    private var movingWorldDelta: CGSize {
+        guard let delta = SpatialOccurrenceDrag.worldDelta(
+            screenTranslation: movingScreenTranslation, zoom: camera.zoom
+        ) else { return .zero }
+        return CGSize(width: delta.x, height: delta.y)
+    }
+
+    @ViewBuilder
+    private func drawing(_ node: SpatialV3Node) -> some View {
+        let isMoving = movingVisualID == node.id
+        SpatialV3MeaningNode(node: node, selected: selectedID == node.id) {
+            selectedID = selectedID == node.id ? nil : node.id
+        }
+        .opacity(spotlightIDs == nil || spotlightIDs?.contains(node.id) == true ? 1 : 0.17)
+        .position(x: SpatialV3Camera.world.width * node.x - contentOrigin.x,
+                  y: SpatialV3Camera.world.height * node.y - contentOrigin.y)
+        .offset(x: isMoving ? movingWorldDelta.width : 0,
+                y: isMoving ? movingWorldDelta.height : 0)
+        .zIndex(isMoving ? 10 : 0)
+    }
+
+    private func moveGesture(for visualID: String, instanceID: String) -> some Gesture {
+        DragGesture(minimumDistance: 5, coordinateSpace: .named("spatial-v3-screen"))
+            .onChanged { value in
+                guard movingVisualID == nil || movingVisualID == visualID else { return }
+                movingVisualID = visualID
+                movingScreenTranslation = value.translation
+            }
+            .onEnded { value in
+                defer {
+                    movingVisualID = nil
+                    movingScreenTranslation = .zero
+                }
+                guard movingVisualID == visualID,
+                      let delta = SpatialOccurrenceDrag.worldDelta(
+                          screenTranslation: value.translation, zoom: camera.zoom
+                      ),
+                      abs(delta.x) > 0.5 || abs(delta.y) > 0.5
+                else { return }
+                onMoveOccurrence(instanceID, delta)
+            }
     }
 
     private func fit(_ size: CGSize) {
@@ -516,16 +573,20 @@ struct SpatialV3Stage: View {
                     }
                     .allowsHitTesting(false)
                     ForEach(edges) { edge in
-                        SpatialV3Branch(edge: edge, origin: contentOrigin)
-                            .opacity(spotlightIDs == nil || edge.source == selectedID || edge.target == selectedID ? 1 : 0.09)
+                        SpatialV3Branch(
+                            edge: edge, origin: contentOrigin,
+                            movingVisualID: movingVisualID, movingWorldDelta: movingWorldDelta
+                        )
+                        .opacity(spotlightIDs == nil || spotlightIDs?.contains(edge.source) == true
+                            || spotlightIDs?.contains(edge.target) == true ? 1 : 0.09)
                     }
                     ForEach(nodes) { node in
-                        SpatialV3MeaningNode(node: node, selected: selectedID == node.id) {
-                            selectedID = selectedID == node.id ? nil : node.id
+                        if let instanceID = instanceIDByVisualID[node.id] {
+                            drawing(node)
+                                .highPriorityGesture(moveGesture(for: node.id, instanceID: instanceID))
+                        } else {
+                            drawing(node)
                         }
-                        .opacity(spotlightIDs == nil || spotlightIDs?.contains(node.id) == true ? 1 : 0.17)
-                        .position(x: SpatialV3Camera.world.width * node.x - contentOrigin.x,
-                                  y: SpatialV3Camera.world.height * node.y - contentOrigin.y)
                     }
                 }
                 .frame(width: canvasSize.width, height: canvasSize.height)
@@ -584,6 +645,7 @@ struct SpatialV3Stage: View {
                 .padding(20)
                 .allowsHitTesting(false)
             }
+            .coordinateSpace(name: "spatial-v3-screen")
             .onAppear { fit(geometry.size) }
             .onChange(of: selectedID) { _, target in
                 guard let target, let node = allNodes.first(where: { $0.id == target }) else { return }
@@ -612,12 +674,26 @@ struct SpatialV3Stage: View {
 private struct SpatialV3Branch: View {
     let edge: SpatialV3Edge
     let origin: CGPoint
+    let movingVisualID: String?
+    let movingWorldDelta: CGSize
 
     var body: some View {
         Path { path in
-            guard let first = edge.points.first else { return }
-            path.move(to: CGPoint(x: first.x - origin.x, y: first.y - origin.y))
-            for point in edge.points.dropFirst() {
+            var points = edge.points
+            guard !points.isEmpty else { return }
+            // Keep both endpoints attached to the moving card in the live
+            // preview. Reroute fully from the committed document on release.
+            if edge.source == movingVisualID {
+                points[0].x += movingWorldDelta.width
+                points[0].y += movingWorldDelta.height
+            }
+            if edge.target == movingVisualID {
+                let last = points.count - 1
+                points[last].x += movingWorldDelta.width
+                points[last].y += movingWorldDelta.height
+            }
+            path.move(to: CGPoint(x: points[0].x - origin.x, y: points[0].y - origin.y))
+            for point in points.dropFirst() {
                 path.addLine(to: CGPoint(x: point.x - origin.x, y: point.y - origin.y))
             }
         }
@@ -682,5 +758,17 @@ private struct SpatialV3MeaningNode: View {
         .buttonStyle(.plain)
         .accessibilityLabel("\(node.eyebrow) : \(node.label). \(node.status). Afficher les détails.")
         .accessibilityIdentifier("spatial-v3-node-\(node.id)")
+    }
+}
+
+/// A drag happens in the viewport's screen coordinates. Persistence is in
+/// document world coordinates: camera translation never enters this delta.
+enum SpatialOccurrenceDrag {
+    static func worldDelta(screenTranslation: CGSize, zoom: CGFloat) -> Position? {
+        guard zoom.isFinite, zoom > 0,
+              screenTranslation.width.isFinite, screenTranslation.height.isFinite else {
+            return nil
+        }
+        return Position(x: screenTranslation.width / zoom, y: screenTranslation.height / zoom)
     }
 }

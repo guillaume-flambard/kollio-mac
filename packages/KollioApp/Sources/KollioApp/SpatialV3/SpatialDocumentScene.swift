@@ -14,6 +14,7 @@ struct SpatialDocumentScene {
     let edges: [SpatialV3Edge]
     /// Only the view owns these visual identities. They never enter the file.
     let objectIDByVisualID: [String: String]
+    let instanceIDByVisualID: [String: String]
     let visualIDsByObjectID: [String: [String]]
 
     func objectID(for visualID: String) -> String? { objectIDByVisualID[visualID] }
@@ -23,6 +24,7 @@ struct SpatialDocumentScene {
     private struct Renderable {
         let visualID: String
         let objectID: String
+        let instanceID: String?
         let authored: CGPoint?
     }
 
@@ -43,7 +45,9 @@ struct SpatialDocumentScene {
         for node in projection.nodes {
             let visible = node.occurrences.filter { !$0.isHidden }
             if node.occurrences.isEmpty {
-                renderables.append(Renderable(visualID: node.id, objectID: node.id, authored: nil))
+                renderables.append(Renderable(
+                    visualID: node.id, objectID: node.id, instanceID: nil, authored: nil
+                ))
                 usedIDs.insert(node.id)
             }
             for (index, occurrence) in visible.enumerated() {
@@ -58,11 +62,15 @@ struct SpatialDocumentScene {
                 renderables.append(Renderable(
                     visualID: candidate,
                     objectID: node.id,
+                    instanceID: occurrence.id,
                     authored: CGPoint(x: occurrence.position.x, y: occurrence.position.y)
                 ))
             }
         }
         objectIDByVisualID = Dictionary(uniqueKeysWithValues: renderables.map { ($0.visualID, $0.objectID) })
+        instanceIDByVisualID = Dictionary(uniqueKeysWithValues: renderables.compactMap { item in
+            item.instanceID.map { (item.visualID, $0) }
+        })
         let groupedVisualIDs = Dictionary(grouping: renderables, by: \.objectID)
             .mapValues { $0.map(\.visualID) }
         visualIDsByObjectID = groupedVisualIDs
