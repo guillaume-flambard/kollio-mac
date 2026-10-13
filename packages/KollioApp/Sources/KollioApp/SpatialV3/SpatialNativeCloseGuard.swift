@@ -72,7 +72,11 @@ final class SpatialCloseObservationView: NSView {
 @MainActor
 final class SpatialNativeCloseDelegate: NSObject, NSWindowDelegate {
     private weak var observedWindow: NSWindow?
-    private weak var previousDelegate: (any NSWindowDelegate)?
+    // NSObject forwarding hooks are nonisolated even though AppKit invokes
+    // window delegates on the UI thread. Keep the reference explicitly unsafe
+    // to bridge that Objective-C boundary without exporting a non-Sendable
+    // delegate from MainActor.assumeIsolated (rejected by Swift 6 CI).
+    nonisolated(unsafe) private weak var previousDelegate: (any NSWindowDelegate)?
     var pendingCount = 0
     private(set) var hasClosed = false
     var copy = SpatialV3Copy(languageCode: nil)
@@ -119,18 +123,12 @@ final class SpatialNativeCloseDelegate: NSObject, NSWindowDelegate {
     }
 
     nonisolated override func responds(to selector: Selector!) -> Bool {
-        if super.responds(to: selector) { return true }
-        // NSObject's selector lookup is nonisolated, but the AppKit window
-        // delegate belongs to the main actor. Keep the bridge explicit.
-        return MainActor.assumeIsolated {
-            previousDelegate?.responds(to: selector) == true
-        }
+        super.responds(to: selector) || previousDelegate?.responds(to: selector) == true
     }
 
     nonisolated override func forwardingTarget(for selector: Selector!) -> Any? {
-        let forwardingDelegate = MainActor.assumeIsolated { previousDelegate }
-        if forwardingDelegate?.responds(to: selector) == true {
-            return forwardingDelegate
+        if previousDelegate?.responds(to: selector) == true {
+            return previousDelegate
         }
         return super.forwardingTarget(for: selector)
     }
