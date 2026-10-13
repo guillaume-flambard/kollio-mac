@@ -10,6 +10,10 @@ model. An intelligence source proposes a patch; it never regenerates the world.
 
 The direction is [PRODUCT_BLUEPRINT.md](PRODUCT_BLUEPRINT.md). Read it once, not every task.
 
+## Spatial Ink V3 — C2.10 STAR loop
+
+C2.10 continues C2.9 with a native FR/EN Browse cards menu, relation-first deterministic reading order, and explicit keyboard/VoiceOver focus after chosen navigation. Confirmed 381/381 KollioApp tests in 43 suites, and two real 900x700 NSHostingView captures FR/EN. Selection does not mutate the document. See [C2.10 STAR record](SPATIAL_STAR_C30.md). Real VoiceOver, keyboard focus delivery and trackpad use remain unverified by a person. Next: C2.11 — Escape hierarchy and recoverable editing drafts per CAN-02/CAN-04.
+
 ## Spatial Ink V3 — STAR loop (2026-10-13)
 
 C2.8 is in [PR #12](https://github.com/guillaume-flambard/kollio-mac/pull/12), with the native CI green and isolated FR/EN-independent macOS screenshots. C2.9 is the next stacked branch (`feat/spatial-v3-c29-a11y-l10n`, based on C2.8): native document-localized controls, explicit compiled `.lproj` lookup, no implicit arrow-key movement, VoiceOver selected state, and Reduce Motion camera focus. Verified 378/378 KollioApp tests in 42 suites, plus two real NSHostingView captures (French and English), kept out of Git. See [STAR record](SPATIAL_STAR_C29.md). Real trackpad / keyboard focus and VoiceOver tests remain human-gated. Next: C2.10 focus and accessibility hierarchy, then remaining spec gaps; do not merge stacked branches without the necessary CI and review.

@@ -261,9 +261,26 @@ struct SpatialV3WindowView: View {
                 }
                 if stressMode || model != nil {
                     VStack(alignment: .leading, spacing: 8) {
-                        TextField(copy.text("spatial.search"), text: $search)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: 330)
+                        HStack(spacing: 10) {
+                            TextField(copy.text("spatial.search"), text: $search)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(maxWidth: 330)
+                            // Native menu is a full non-pointer route through the
+                            // actual visible graph, even when no search is typed.
+                            // Selection is explicit: opening it never mutates a document.
+                            Menu(copy.format("spatial.navigation.count", visibleNodes.count)) {
+                                ForEach(SpatialV3ReadingOrder.ordered(visibleNodes, edges: visibleEdges)) { node in
+                                    Button("\(copy.kind(node.eyebrow)) · \(node.label)") {
+                                        navigate(to: node)
+                                    }
+                                    .accessibilityIdentifier("spatial-v3-navigate-\(node.id)")
+                                }
+                            }
+                            .disabled(visibleNodes.isEmpty)
+                            .accessibilityLabel(copy.text("spatial.navigation.label"))
+                            .accessibilityHint(copy.text("spatial.navigation.hint"))
+                            .accessibilityIdentifier("spatial-v3-navigator")
+                        }
                         if !search.isEmpty {
                             ScrollView(.horizontal) {
                                 HStack {
@@ -492,6 +509,8 @@ struct SpatialV3Stage: View {
     // @GestureState clears itself on cancellation, view removal and completed
     // gestures. No document mutation can occur until onEnded fires.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @FocusState private var keyboardFocusedID: String?
+    @AccessibilityFocusState private var voiceOverFocusedID: String?
     @GestureState private var activeDrag: SpatialActiveDrag?
     @GestureState private var panPreview = CGSize.zero
     @State private var camera = SpatialV3Camera()
@@ -626,6 +645,8 @@ struct SpatialV3Stage: View {
                     ForEach(nodes) { node in
                         if let instanceID = instanceIDByVisualID[node.id] {
                             drawing(node)
+                                .focused($keyboardFocusedID, equals: node.id)
+                                .accessibilityFocused($voiceOverFocusedID, equals: node.id)
                                 .highPriorityGesture(moveGesture(for: node.id, instanceID: instanceID))
                                 .accessibilityAction(named: Text(copy.text("spatial.move.up"))) {
                                     onMoveOccurrence(instanceID, SpatialNudgeDirection.up.delta)
@@ -641,6 +662,8 @@ struct SpatialV3Stage: View {
                                 }
                         } else {
                             drawing(node)
+                                .focused($keyboardFocusedID, equals: node.id)
+                                .accessibilityFocused($voiceOverFocusedID, equals: node.id)
                         }
                     }
                 }
@@ -705,6 +728,12 @@ struct SpatialV3Stage: View {
             .coordinateSpace(name: "spatial-v3-screen")
             .onAppear { fit(geometry.size) }
             .onChange(of: focusRequest) { _, _ in
+                // A menu choice follows the object and moves keyboard/VoiceOver
+                // focus with it. Merely clicking a card does not steal focus.
+                if let selectedID, nodes.contains(where: { $0.id == selectedID }) {
+                    keyboardFocusedID = selectedID
+                    voiceOverFocusedID = selectedID
+                }
                 // Camera follows only an explicit navigation or Center command.
                 if reduceMotion {
                     centerSelected(in: geometry.size)
@@ -761,6 +790,56 @@ private struct SpatialV3Branch: View {
     }
 }
 
+
+/// A predictable reading route through graph relations, then document
+/// position. This navigation-only projection never writes positions or content.
+enum SpatialV3ReadingOrder {
+    static func ordered(_ nodes: [SpatialV3Node], edges: [SpatialV3Edge]) -> [SpatialV3Node] {
+        let byID = Dictionary(uniqueKeysWithValues: nodes.map { ($0.id, $0) })
+        func less(_ lhs: SpatialV3Node, _ rhs: SpatialV3Node) -> Bool {
+            let ly = lhs.y.isFinite ? lhs.y : .infinity
+            let ry = rhs.y.isFinite ? rhs.y : .infinity
+            if ly != ry { return ly < ry }
+            let lx = lhs.x.isFinite ? lhs.x : .infinity
+            let rx = rhs.x.isFinite ? rhs.x : .infinity
+            if lx != rx { return lx < rx }
+            return lhs.id < rhs.id
+        }
+        let anchors = nodes.sorted(by: less)
+        var inbound: [String: Int] = [:]
+        var outgoing: [String: Set<String>] = [:]
+        for edge in edges where edge.source != edge.target
+            && byID[edge.source] != nil && byID[edge.target] != nil {
+            if outgoing[edge.source, default: []].insert(edge.target).inserted {
+                inbound[edge.target, default: 0] += 1
+            }
+        }
+        var visited: Set<String> = []
+        var result: [SpatialV3Node] = []
+        func visit(_ anchor: SpatialV3Node) {
+            guard visited.insert(anchor.id).inserted else { return }
+            var queue = [anchor.id]
+            var head = 0
+            while head < queue.count {
+                let current = queue[head]
+                head += 1
+                guard let node = byID[current] else { continue }
+                result.append(node)
+                let successors = (outgoing[current] ?? [])
+                    .compactMap { byID[$0] }.sorted(by: less)
+                for successor in successors where visited.insert(successor.id).inserted {
+                    queue.append(successor.id)
+                }
+            }
+        }
+        for anchor in anchors where inbound[anchor.id, default: 0] == 0 {
+            visit(anchor)
+        }
+        // Cycles and disconnected cards remain reachable, even without roots.
+        for anchor in anchors { visit(anchor) }
+        return result
+    }
+}
 
 /// Native spatial controls follow the document language, never translate its
 /// authored content, and keep the preview in the system interface language.

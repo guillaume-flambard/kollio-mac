@@ -1,6 +1,60 @@
 {
   "sourceLanguage": "fr",
   "strings": {
+    "spatial.navigation.count": {
+      "comment": "Native non-pointer graph navigation for Spatial Ink",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parcourir %d cartes"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browse %d cards"
+          }
+        }
+      }
+    },
+    "spatial.navigation.label": {
+      "comment": "Native non-pointer graph navigation for Spatial Ink",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parcourir les cartes du document"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browse document cards"
+          }
+        }
+      }
+    },
+    "spatial.navigation.hint": {
+      "comment": "Native non-pointer graph navigation for Spatial Ink",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cartes ordonnées par relations, puis par position. Choisir une carte pour la retrouver."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cards are ordered by relations, then by position. Choose a card to focus it."
+          }
+        }
+      }
+    },
     "spatial.node.selected": {
       "comment": "Native Spatial Ink VoiceOver selection state",
       "extractionState": "manual",
