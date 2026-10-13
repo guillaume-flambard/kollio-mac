@@ -4,7 +4,7 @@ on:
     paths:
       - 'packages/KollioApp/Sources/KollioApp/SpatialV3/**'
       - 'packages/KollioApp/Sources/KollioApp/App/KollioApp.swift'
-      - 'packages/KollioApp/Tests/KollioAppTests/SpatialV3*'
+      - 'packages/KollioApp/Tests/KollioAppTests/Spatial*'
       - '.github/workflows/spatial-v3.yml'
   workflow_dispatch:
 permissions:

@@ -1,4 +1,5 @@
 import SwiftUI
+import KollioCore
 
 /// An isolated native preview of the shared Spatial Ink contract.
 /// Does not alter existing .kollio documents, app state or persistence.
@@ -10,6 +11,13 @@ struct SpatialV3WindowView: View {
     @State private var focusHistory: [String] = []
     @State private var search = ""
     @State private var focusedGroup: Int? = nil
+    @State private var newIdeaDraft = ""
+    @State private var editingID: String?
+    @State private var editDraft = ""
+    @State private var editVersion: Int?
+    @State private var relationTargetID = ""
+    @State private var editFeedback: String?
+
 
     /// Demo-only initial state for deterministic Web/Mac screenshot comparisons.
     /// The actual native app continues to open with the initial three-node state.
@@ -80,6 +88,58 @@ struct SpatialV3WindowView: View {
         visibleNodes.first { $0.id == selectedID }
     }
 
+    private func addIdea() {
+        guard let model else { return }
+        let editor = SpatialDocumentEditor(model: model)
+        if let created = editor.createIdea(newIdeaDraft, near: selectedID) {
+            newIdeaDraft = ""
+            depth = 2
+            selectedID = created.rawValue
+            focusedGroup = nil
+            editFeedback = "Idée ajoutée au document. Pense à enregistrer."
+        } else {
+            editFeedback = "Impossible de créer cette idée. Saisis un texte non vide."
+        }
+    }
+
+    private func beginEdit(_ id: String) {
+        guard let model, let object = model.object(ObjectID(id)) else { return }
+        editingID = id
+        editVersion = object.objectVersion
+        editDraft = object.text.resolve(languageCode: model.languageCode)
+        editFeedback = nil
+    }
+
+    private func finishEdit() {
+        guard let model, let editingID, let editVersion else { return }
+        let succeeded = SpatialDocumentEditor(model: model)
+            .updateText(editDraft, of: editingID, expectedVersion: editVersion)
+        if succeeded {
+            self.editingID = nil
+            self.editVersion = nil
+            editFeedback = "Modification appliquée. Pense à enregistrer."
+        } else {
+            editFeedback = "Conflit ou texte invalide : la modification n'a pas été appliquée."
+        }
+    }
+
+    private func addAssociation(from sourceID: String) {
+        guard let model else { return }
+        let created = SpatialDocumentEditor(model: model)
+            .associate(sourceID, with: relationTargetID)
+        editFeedback = created == nil
+            ? "Relation refusée : vérifie la cible ou l'existence d'un lien identique."
+            : "Association ajoutée. Pense à enregistrer."
+        if created != nil { relationTargetID = "" }
+    }
+
+    private func saveDocument() {
+        guard let model else { return }
+        editFeedback = SpatialDocumentEditor(model: model).save()
+            ? "Document enregistré dans son fichier .kollio."
+            : "Échec de l'enregistrement : vérifie le document et le stockage."
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
@@ -92,7 +152,7 @@ struct SpatialV3WindowView: View {
                     .padding(.vertical, 5)
                     .background(KollioV3Tokens.Light.accentSoft, in: RoundedRectangle(cornerRadius: 7))
                 Spacer()
-                Text(model == nil ? "Native macOS preview · Shared fixture" : "Document .kollio · Lecture seule")
+                Text(model == nil ? "Native macOS preview · Shared fixture" : "Document .kollio · Édition locale")
                     .font(.caption)
                     .foregroundStyle(KollioV3Tokens.Light.muted)
             }
@@ -124,6 +184,33 @@ struct SpatialV3WindowView: View {
                         .buttonStyle(.borderedProminent)
                         .tint(KollioV3Tokens.Light.accent)
                         .accessibilityIdentifier("spatial-v3-expand")
+                    }
+                }
+                if model != nil {
+                    HStack(spacing: 10) {
+                        TextField("Nouvelle idée…", text: $newIdeaDraft)
+                            .textFieldStyle(.roundedBorder)
+                            .accessibilityIdentifier("spatial-v3-create-input")
+                        Button("Ajouter l'idée") { addIdea() }
+                            .disabled(newIdeaDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            .accessibilityIdentifier("spatial-v3-create")
+                        Button("Enregistrer") { saveDocument() }
+                            .accessibilityIdentifier("spatial-v3-save")
+                        if let model {
+                            Button("Annuler") { SpatialDocumentEditor(model: model).undo() }
+                                .disabled(!model.canUndo)
+                                .accessibilityIdentifier("spatial-v3-undo")
+                            Button("Rétablir") { SpatialDocumentEditor(model: model).redo() }
+                                .disabled(!model.canRedo)
+                                .accessibilityIdentifier("spatial-v3-redo")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    if let editFeedback {
+                        Text(editFeedback)
+                            .font(.caption)
+                            .foregroundStyle(KollioV3Tokens.Light.muted)
+                            .accessibilityIdentifier("spatial-v3-edit-status")
                     }
                 }
                 if stressMode || model != nil {
@@ -203,7 +290,7 @@ struct SpatialV3WindowView: View {
                     .background(KollioV3Tokens.Light.accentSoft, in: RoundedRectangle(cornerRadius: 10))
                 }
                 if model != nil && allNodes.isEmpty {
-                    Text("Ce document est vide. Ajoute du contenu dans la fenêtre Kollio principale pour le voir ici.")
+                    Text("Ce document est vide. Saisis une idée dans le champ ci-dessus pour commencer.")
                         .font(.callout)
                         .foregroundStyle(KollioV3Tokens.Light.muted)
                         .accessibilityIdentifier("spatial-v3-empty-document")
@@ -223,6 +310,8 @@ struct SpatialV3WindowView: View {
                 .overlay(RoundedRectangle(cornerRadius: 18).stroke(KollioV3Tokens.Light.border))
                 .accessibilityIdentifier("spatial-v3-canvas")
                 .onChange(of: selectedID) { _, id in
+                    if editingID != id { editingID = nil; editVersion = nil }
+                    relationTargetID = ""
                     if let id, focusHistory.last != id {
                         focusHistory.append(id)
                         if focusHistory.count > 12 { focusHistory.removeFirst() }
@@ -243,14 +332,49 @@ struct SpatialV3WindowView: View {
                                     .foregroundStyle(KollioV3Tokens.Light.muted)
                             }
                             Spacer()
+                            if model != nil {
+                                VStack(alignment: .trailing, spacing: 9) {
+                                    Button("Modifier") { beginEdit(selected.id) }
+                                        .accessibilityIdentifier("spatial-v3-edit")
+                                    if allNodes.count > 1 {
+                                        Picker("Associer à", selection: $relationTargetID) {
+                                            Text("Choisir un objet").tag("")
+                                            ForEach(allNodes.filter { $0.id != selected.id }) { target in
+                                                Text(target.label).tag(target.id)
+                                            }
+                                        }
+                                        .frame(maxWidth: 245)
+                                        .accessibilityIdentifier("spatial-v3-relation-target")
+                                        Button("Créer l'association") { addAssociation(from: selected.id) }
+                                            .disabled(relationTargetID.isEmpty || relationTargetID == selected.id)
+                                            .accessibilityIdentifier("spatial-v3-link")
+                                    }
+                                }
+                                .buttonStyle(.bordered)
+                            }
                             Button("Fermer") { selectedID = nil }
                                 .buttonStyle(.bordered)
                         }
                         .padding(14)
                         .background(KollioV3Tokens.Light.surface, in: RoundedRectangle(cornerRadius: 12))
                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(KollioV3Tokens.Light.border))
+                        if model != nil && editingID == selected.id {
+                            HStack(spacing: 8) {
+                                TextField("Modifier le texte de l'objet", text: $editDraft)
+                                    .textFieldStyle(.roundedBorder)
+                                    .accessibilityIdentifier("spatial-v3-edit-input")
+                                Button("Valider") { finishEdit() }
+                                    .disabled(editDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                                    .accessibilityIdentifier("spatial-v3-edit-confirm")
+                                Button("Annuler") { editingID = nil; editVersion = nil }
+                                    .accessibilityIdentifier("spatial-v3-edit-cancel")
+                            }
+                            .buttonStyle(.bordered)
+                        }
                     } else {
-                        Text("Sélectionne un objet pour lire son sens et sa provenance. Replier ne supprime rien.")
+                        Text(model == nil
+                             ? "Sélectionne un objet pour lire son sens et sa provenance. Replier ne supprime rien."
+                             : "Sélectionne un objet pour le modifier ou le relier à un autre.")
                             .font(.caption)
                             .foregroundStyle(KollioV3Tokens.Light.muted)
                     }
@@ -258,7 +382,7 @@ struct SpatialV3WindowView: View {
                 .frame(minHeight: 65, alignment: .topLeading)
                 Text(model == nil
                      ? "Prévisualisation uniquement · Aucune IA ni mutation de document activée."
-                     : "Lecture seule du document actif · Aucun enregistrement ni modification depuis Spatial Ink.")
+                     : "Édition locale via commandes Kollio · Enregistrer pour conserver les modifications.")
                     .font(.caption2)
                     .foregroundStyle(KollioV3Tokens.Light.muted)
             }
