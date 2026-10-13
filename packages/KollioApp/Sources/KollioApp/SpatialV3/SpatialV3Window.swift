@@ -22,7 +22,7 @@ struct SpatialV3WindowView: View {
     }
 
     private var realScene: SpatialDocumentScene? {
-        model.map { SpatialDocumentScene(projection: SpatialDocumentProjection(document: $0.document)) }
+        model.map { SpatialDocumentScene(projection: SpatialDocumentProjection(document: $0.document, languageCode: $0.languageCode)) }
     }
     private var allNodes: [SpatialV3Node] {
         if let realScene { return realScene.nodes }

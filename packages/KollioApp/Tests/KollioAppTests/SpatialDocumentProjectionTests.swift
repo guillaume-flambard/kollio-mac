@@ -27,6 +27,23 @@ struct SpatialDocumentProjectionTests {
         #expect(document == original)
     }
 
+    @Test("Real document text respects the active interface language")
+    func localizedRead() {
+        let document = SarahFixture.document()
+        let english = SpatialDocumentProjection(document: document, languageCode: "en")
+        let french = SpatialDocumentProjection(document: document, languageCode: "fr")
+        for node in english.nodes {
+            let source = document.content[ObjectID(node.id)]
+            #expect(node.label == source?.text.resolve(languageCode: "en"))
+        }
+        for node in french.nodes {
+            let source = document.content[ObjectID(node.id)]
+            #expect(node.label == source?.text.resolve(languageCode: "fr"))
+        }
+        #expect(english.nodes.map(\.id) == french.nodes.map(\.id))
+        #expect(english.edges.map(\.id) == french.edges.map(\.id))
+    }
+
     @Test("Empty document projects without inventing content")
     func emptyDocument() {
         let document = KollioDocument()

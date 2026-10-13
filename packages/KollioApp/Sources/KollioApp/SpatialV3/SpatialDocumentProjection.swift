@@ -27,7 +27,7 @@ struct SpatialDocumentProjection {
     let nodes: [Node]
     let edges: [Edge]
 
-    init(document: KollioDocument) {
+    init(document: KollioDocument, languageCode: String = "fr") {
         documentID = document.documentId
         revision = document.revision
         semanticRevision = document.semanticRevision
@@ -35,8 +35,8 @@ struct SpatialDocumentProjection {
             Node(
                 id: object.id.rawValue,
                 kind: object.kind.rawValue,
-                label: object.text.text,
-                detail: object.detail?.text,
+                label: object.text.resolve(languageCode: languageCode),
+                detail: object.detail?.resolve(languageCode: languageCode),
                 isSetAside: object.isSetAside,
                 authoredPositions: document.presentation.instances
                     .filter { $0.objectID == object.id }
@@ -49,7 +49,7 @@ struct SpatialDocumentProjection {
                 source: relation.from.rawValue,
                 target: relation.to.rawValue,
                 kind: relation.kind.rawValue,
-                label: relation.label?.text
+                label: relation.label?.resolve(languageCode: languageCode)
             )
         }
     }
