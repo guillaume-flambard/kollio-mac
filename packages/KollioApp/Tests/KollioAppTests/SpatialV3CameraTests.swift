@@ -211,3 +211,80 @@ struct SpatialTrackpadScrollTests {
 
 
 }
+
+@Suite("Spatial C2.17 — pinch follows the actual fingers")
+struct SpatialPinchAnchorTests {
+    let viewport = CGSize(width: 900, height: 700)
+
+    @Test("Off-centre pinch preserves the world point under the gesture's origin")
+    func actualFingerAnchorDoesNotJump() {
+        let original = SpatialV3Camera(zoom: 0.71, x: -180, y: 36)
+        let focal = SpatialPinchPreview(
+            magnification: 1.85,
+            unitAnchor: CGPoint(x: 0.18, y: 0.78),
+            viewport: viewport
+        )
+        #expect(focal.anchor == CGPoint(x: 162, y: 546))
+        let preview = SpatialPinchTransaction.camera(
+            from: original, magnification: focal.magnification,
+            viewport: viewport, anchor: focal.anchor, allowed: true
+        )
+        #expect(preview.zoom > original.zoom)
+        #expect(abs((focal.anchor.x - preview.x) / preview.zoom
+                    - (focal.anchor.x - original.x) / original.zoom) < 0.00001)
+        #expect(abs((focal.anchor.y - preview.y) / preview.zoom
+                    - (focal.anchor.y - original.y) / original.zoom) < 0.00001)
+        #expect(original == SpatialV3Camera(zoom: 0.71, x: -180, y: 36))
+    }
+
+    @Test("Preview and final commit use exactly the same anchored transform")
+    func stablePreviewAndCommit() {
+        let initial = SpatialV3Camera(zoom: 1.1, x: 80, y: -44)
+        let gesture = SpatialPinchPreview(
+            magnification: 0.55,
+            unitAnchor: CGPoint(x: 0.93, y: 0.08),
+            viewport: viewport
+        )
+        let temporary = SpatialPinchTransaction.camera(
+            from: initial, magnification: gesture.magnification,
+            viewport: viewport, anchor: gesture.anchor, allowed: true
+        )
+        let committed = SpatialPinchTransaction.camera(
+            from: initial, magnification: gesture.magnification,
+            viewport: viewport, anchor: gesture.anchor, allowed: true
+        )
+        #expect(temporary == committed)
+        #expect(SpatialPinchTransaction.camera(
+            from: initial, magnification: 1, viewport: viewport,
+            anchor: gesture.anchor, allowed: true
+        ) == initial)
+        // Cancelled @GestureState returns to no preview, not a stale anchor.
+        let newGesture = SpatialPinchPreview(
+            magnification: 1.15,
+            unitAnchor: CGPoint(x: 0.25, y: 0.3),
+            viewport: viewport
+        )
+        #expect(newGesture.anchor != gesture.anchor)
+        #expect(initial.zoom == 1.1)
+    }
+
+    @Test("Invalid or out-of-viewport pinch focal points cannot change camera state")
+    func invalidAnchorsAreRejected() {
+        let initial = SpatialV3Camera(zoom: 0.9, x: -30, y: -50)
+        for focal in [
+            CGPoint(x: -1, y: 100), CGPoint(x: 901, y: 20),
+            CGPoint(x: 20, y: 701), CGPoint(x: CGFloat.nan, y: 5),
+            CGPoint(x: 5, y: CGFloat.infinity)
+        ] {
+            #expect(SpatialPinchTransaction.camera(
+                from: initial, magnification: 1.4, viewport: viewport,
+                anchor: focal, allowed: true
+            ) == initial)
+        }
+        #expect(SpatialPinchTransaction.camera(
+            from: initial, magnification: 1.4,
+            viewport: CGSize(width: CGFloat.infinity, height: 700),
+            anchor: CGPoint(x: 30, y: 50), allowed: true
+        ) == initial)
+    }
+}
