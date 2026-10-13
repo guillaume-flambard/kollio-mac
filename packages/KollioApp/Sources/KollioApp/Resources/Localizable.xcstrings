@@ -1,6 +1,96 @@
 {
   "sourceLanguage": "fr",
   "strings": {
+    "spatial.move.controls": {
+      "comment": "Spatial Ink directional movement; VoiceOver and keyboard controls",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move selected card"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplacer la carte sélectionnée"
+          }
+        }
+      }
+    },
+    "spatial.move.down": {
+      "comment": "Spatial Ink directional movement; VoiceOver and keyboard controls",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move card down by 16 units"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplacer la carte de 16 unités vers le bas"
+          }
+        }
+      }
+    },
+    "spatial.move.left": {
+      "comment": "Spatial Ink directional movement; VoiceOver and keyboard controls",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move card left by 16 units"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplacer la carte de 16 unités vers la gauche"
+          }
+        }
+      }
+    },
+    "spatial.move.right": {
+      "comment": "Spatial Ink directional movement; VoiceOver and keyboard controls",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move card right by 16 units"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplacer la carte de 16 unités vers la droite"
+          }
+        }
+      }
+    },
+    "spatial.move.up": {
+      "comment": "Spatial Ink directional movement; VoiceOver and keyboard controls",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move card up by 16 units"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplacer la carte de 16 unités vers le haut"
+          }
+        }
+      }
+    },
     "spatial.drag.hint": {
       "comment": "Spatial Ink v3 real-document instance dragging",
       "extractionState": "manual",
