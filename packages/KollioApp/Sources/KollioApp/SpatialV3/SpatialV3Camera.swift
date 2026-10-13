@@ -48,3 +48,23 @@ struct SpatialV3Camera: Equatable {
         SpatialV3Camera(zoom: zoom, x: x + dx, y: y + dy)
     }
 }
+
+
+/// Pinch magnification is relative to the *start* of its own gesture.
+/// Apply the same pure calculation during an ephemeral @GestureState preview
+/// and once on release. Cancellation therefore cannot retain a stale delta.
+enum SpatialPinchTransaction {
+    static func camera(
+        from baseline: SpatialV3Camera,
+        magnification: CGFloat,
+        viewport: CGSize,
+        allowed: Bool
+    ) -> SpatialV3Camera {
+        guard allowed, magnification.isFinite, magnification > 0,
+              viewport.width > 0, viewport.height > 0 else { return baseline }
+        return baseline.zoomed(
+            by: magnification,
+            around: CGPoint(x: viewport.width / 2, y: viewport.height / 2)
+        )
+    }
+}
