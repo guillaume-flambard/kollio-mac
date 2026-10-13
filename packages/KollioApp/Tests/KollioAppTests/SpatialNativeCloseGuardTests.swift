@@ -44,8 +44,13 @@ struct SpatialNativeCloseGuardTests {
         guardDelegate.pendingCount = 0
         #expect(guardDelegate.windowShouldClose(window) == false)
         guardDelegate.pendingCount = 1
-        guardDelegate.testConfirmation = { true }
+        var askedToLoseDraft = false
+        guardDelegate.testConfirmation = {
+            askedToLoseDraft = true
+            return true
+        }
         #expect(guardDelegate.windowShouldClose(window) == false)
+        #expect(!askedToLoseDraft)
         guardDelegate.detach()
         #expect(window.delegate === veto)
     }
