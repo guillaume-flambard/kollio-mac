@@ -44,4 +44,33 @@ struct SpatialV3CameraTests {
         #expect(panned.y == 48)
         #expect(original == SpatialV3Camera())
     }
+
+    @Test("C2.8 explicit centering preserves zoom and puts the requested card in the viewport center")
+    func explicitCentering() {
+        let original = SpatialV3Camera(zoom: 0.75, x: -220, y: 45)
+        let viewport = CGSize(width: 1060, height: 640)
+        let card = CGPoint(x: 740, y: 350)
+        let centered = original.centered(on: card, in: viewport)
+        #expect(centered.zoom == original.zoom)
+        #expect(abs(card.x * centered.zoom + centered.x - viewport.width / 2) < 0.01)
+        #expect(abs(card.y * centered.zoom + centered.y - viewport.height / 2) < 0.01)
+        #expect(original == SpatialV3Camera(zoom: 0.75, x: -220, y: 45))
+        // Selecting in place never invokes centered(on:). No camera mutation
+        // can be inferred from a selection without an explicit focus request.
+    }
+
+    @Test("C2.8 a cancelled background pan cannot leak previous gesture translation")
+    func interruptedPanHasNoAccumulatedState() {
+        let camera = SpatialV3Camera.fitted(in: CGSize(width: 950, height: 600))
+        // @GestureState previews a total displacement, then returns to zero
+        // automatically when the native gesture is cancelled.
+        let preview = camera.panned(dx: 128, dy: -64)
+        #expect(preview.x == camera.x + 128)
+        #expect(preview.y == camera.y - 64)
+        let cancelled = camera
+        let next = cancelled.panned(dx: -12, dy: 8)
+        #expect(next.x == camera.x - 12)
+        #expect(next.y == camera.y + 8)
+        #expect(next.zoom == camera.zoom)
+    }
 }

@@ -35,6 +35,15 @@ struct SpatialV3Camera: Equatable {
         )
     }
 
+    /// Explicit focus. Selecting a card in place does not call this method.
+    func centered(on point: CGPoint, in viewport: CGSize) -> SpatialV3Camera {
+        SpatialV3Camera(
+            zoom: zoom,
+            x: viewport.width / 2 - point.x * zoom,
+            y: viewport.height / 2 - point.y * zoom
+        )
+    }
+
     func panned(dx: CGFloat, dy: CGFloat) -> SpatialV3Camera {
         SpatialV3Camera(zoom: zoom, x: x + dx, y: y + dy)
     }
