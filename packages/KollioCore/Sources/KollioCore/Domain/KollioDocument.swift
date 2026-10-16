@@ -7,6 +7,8 @@ import Foundation
 public struct KollioDocument: Codable, Hashable, Sendable {
     public var schemaVersion: Int
     public var documentId: String
+    /// Authored document name. It is never translated when the interface language changes.
+    public var title: String
     /// Bumped on every accepted mutation, presentation included.
     public var revision: Int
     /// Bumped only when the meaning of the document changed.
@@ -54,6 +56,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
     public init(
         schemaVersion: Int = KollioDocument.currentSchemaVersion,
         documentId: String = UUID().uuidString,
+        title: String = "Kollio",
         revision: Int = 0,
         semanticRevision: Int = 0,
         createdAt: Date = Date(),
@@ -74,6 +77,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
     ) {
         self.schemaVersion = schemaVersion
         self.documentId = documentId
+        self.title = title
         self.revision = revision
         self.semanticRevision = semanticRevision
         self.createdAt = createdAt.kollioNormalized
@@ -98,7 +102,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
     /// 6 adds `summaries`.
     /// 7 adds `history`.
     /// 8 adds `experiments`.
-    public static let currentSchemaVersion = 8
+    public static let currentSchemaVersion = 9
 
     /// 2 added the `sources` ledger. A file written at version 1 has no `sources`
     /// key and decodes as a document with no sources, which is the truth about it.
@@ -110,7 +114,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
     /// alternating values, so a `.kollio` file stays greppable and reviewable by
     /// a human, which is the whole point of the format.
     private enum CodingKeys: String, CodingKey {
-        case schemaVersion, documentId, revision, semanticRevision, createdAt, updatedAt
+        case schemaVersion, documentId, title, revision, semanticRevision, createdAt, updatedAt
         case content, relationships, decisions, contributions, products
         case presentation, sources, claims, clarifications, comparisons, summaries
         case experiments, history
@@ -128,6 +132,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
         documentId = try container.decode(String.self, forKey: .documentId)
+        title = try container.decodeIfPresent(String.self, forKey: .title) ?? "Kollio"
         revision = try container.decode(Int.self, forKey: .revision)
         semanticRevision = try container.decode(Int.self, forKey: .semanticRevision)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
@@ -176,6 +181,7 @@ public struct KollioDocument: Codable, Hashable, Sendable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(schemaVersion, forKey: .schemaVersion)
         try container.encode(documentId, forKey: .documentId)
+        try container.encode(title, forKey: .title)
         try container.encode(revision, forKey: .revision)
         try container.encode(semanticRevision, forKey: .semanticRevision)
         try container.encode(createdAt, forKey: .createdAt)

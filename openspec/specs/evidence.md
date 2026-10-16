@@ -219,9 +219,9 @@ transparency, reduced motion — resolve in `Theme` and were read, not exercised
 | A failed extraction keeps the previous version | `SourceLedgerTests` | L3 |
 | A removed source does not delete the claim | `SourceLedgerTests` | L3 |
 | The context budget is measured, required items are never dropped | `ContextProjectionTests`, `AppleAdapterTests` | L3 |
-| The payload sent is the payload that was measured | `AppleAdapterTests.promptMatchesTheProjection` | L3 |
-| A required item that does not fit refuses, on both routes | `AppleAdapterTests.requiredOverflowIsRefused`, `bothRoutesRefuseTheSameOverflow` | L3 |
-| A narrowed answer records and states its scope | `ProposalContextScopeTests`, `ProposalScopeInterfaceTests` | L3 |
+| The payload list is the payload that was measured | `ContextProjectionTests.theListIsThePayload` | L3 |
+| A required item that does not fit refuses before both routes' shared preparation | `AppleAdapterTests.requiredOverflowIsRefused` | L3 |
+| A narrowed answer records and states its scope | `AppleAdapterTests.narrowedScopeSurvivesConversion`, `ProposalAttributionTests.narrowedScopeIsReadable` | L3 |
 | A narrowed answer was reached on a real 8192-token window | the app's own log, `KOLLIO_REVIEW=narrowed` | L3 |
 | A local-only projection cannot be sent | `ContextProjectionTests` | L3 |
 | Attaching a source is transactional and atomic | `SourceCommandTests` | L3 |

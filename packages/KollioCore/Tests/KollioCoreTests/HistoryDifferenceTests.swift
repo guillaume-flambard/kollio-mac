@@ -65,6 +65,22 @@ struct HistoryDifferenceTests {
         #expect(difference.connections[KollioID.object("cause")] == .removed(kind: .supports))
     }
 
+    @Test("Changing a relation kind carries both the old and new readings")
+    func changedRelationshipKind() {
+        let past = document()
+        var present = past
+        present.relationships[KollioID.relationship("l1")]?.kind = .contradicts
+
+        let difference = HistoryDifference.between(
+            objectID: effect, past: past, present: present, languageCode: "fr"
+        )
+
+        #expect(
+            difference.connections[KollioID.object("cause")]
+                == .changed(from: .supports, to: .contradicts)
+        )
+    }
+
     @Test("A relation read from either end is the same relation")
     func bothDirectionsCount() {
         let same = document()

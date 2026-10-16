@@ -202,6 +202,15 @@ struct HistoryPreviewView: View {
                     id: "link-\(other.rawValue)", symbol: "link.badge.minus", isAddition: false,
                     text: L10n.historyDiffLinkRemoved(kind.verb(languageCode: languageCode), other.rawValue)
                 ))
+            case .changed(let from, let to):
+                made.append(Line(
+                    id: "link-\(other.rawValue)-old", symbol: "link.badge.minus", isAddition: false,
+                    text: L10n.historyDiffLinkRemoved(from.verb(languageCode: languageCode), other.rawValue)
+                ))
+                made.append(Line(
+                    id: "link-\(other.rawValue)-new", symbol: "link.badge.plus", isAddition: true,
+                    text: L10n.historyDiffLinkAdded(to.verb(languageCode: languageCode), other.rawValue)
+                ))
             }
         }
         return made

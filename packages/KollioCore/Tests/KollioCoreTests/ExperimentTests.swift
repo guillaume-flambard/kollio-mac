@@ -74,6 +74,34 @@ struct ExperimentTests {
         #expect(store.document.experiments.experiment(KollioID.experiment("exp-1")) == nil)
     }
 
+    @Test("AC03: editing after a result appends a visible experiment revision")
+    func editingAfterAResultCreatesARevision() throws {
+        let id = KollioID.experiment("exp-1")
+        var store = DocumentStore(document: Fixture.sarah())
+        try store.apply([createCommand(id: id)])
+        try store.apply([.recordExperimentResult(RecordExperimentResult(
+            id: id,
+            observation: "Le test a traité cent prospects.",
+            measurements: [ExperimentMeasurement(value: 2.1, unit: "secondes")],
+            outcome: .conclusive(.criterionMet),
+            provenance: .human("tester")
+        ))])
+        try store.apply([.editExperiment(EditExperiment(
+            id: id,
+            question: LocalizedText("Le test tient-il aussi avec mille prospects ?"),
+            method: LocalizedText("Charger mille prospects avec tags"),
+            successCriterion: LocalizedText("Mille prospects en moins de dix secondes"),
+            expectedEvidence: [KollioID.object("sarah-viable")],
+            provenance: .human("tester")
+        ))])
+
+        let experiment = try #require(store.document.experiments.experiment(id))
+        #expect(experiment.results.count == 1)
+        #expect(experiment.revisions.count == 2)
+        #expect(experiment.revision(0)?.successCriterion.text.contains("tags arrivent") == true)
+        #expect(experiment.currentRevision.successCriterion.text.contains("dix secondes"))
+    }
+
     @Test("The same evidence linked twice is refused, not counted twice")
     func duplicatedEvidenceLinkIsRefused() {
         var store = DocumentStore(document: Fixture.sarah())

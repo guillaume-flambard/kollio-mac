@@ -60,6 +60,19 @@ struct ResultInterfaceTests {
         #expect(model.resultDraft == nil)
     }
 
+    @Test("The selected evidence can be recorded as the result source")
+    func resultKeepsItsSource() throws {
+        var model = model()
+        let source = ObjectID("object:sarah-viable")
+        let id = try builtExperiment(&model)
+        model.selection = [source]
+        model.startRecordingResult(id)
+        #expect(model.resultDraft?.sourceObjectID == source)
+        model.resultDraft?.observation = "Le test a été lu dans cette preuve."
+        #expect(model.submitResult())
+        #expect(model.experiments(on: csv).last?.results.last?.sourceObjectID == source)
+    }
+
     @Test("No observation records nothing and says why")
     func emptyObservationIsRefused() throws {
         var model = model()

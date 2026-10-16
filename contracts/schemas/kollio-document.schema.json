@@ -19,11 +19,16 @@
     "schemaVersion": {
       "type": "integer",
       "minimum": 1,
-      "maximum": 8,
-      "description": "2 added `sources`, 3 added `claims`, 4 added `clarifications`, 5 added `comparisons`, 6 added `summaries`, 7 added `history`, 8 added `experiments`. A file written before any of them is a document without them, not a broken one."
+      "maximum": 9,
+      "description": "2 added `sources`, 3 added `claims`, 4 added `clarifications`, 5 added `comparisons`, 6 added `summaries`, 7 added `history`, 8 added `experiments`, 9 added the document `title`. A file written before any of them is a document without them, not a broken one."
     },
     "documentId": {
       "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The user-authored document title. Files written before schema 9 open with the default title."
     },
     "revision": {
       "type": "integer",

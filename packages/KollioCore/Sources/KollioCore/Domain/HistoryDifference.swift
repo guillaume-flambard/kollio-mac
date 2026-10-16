@@ -35,6 +35,7 @@ public struct HistoryDifference: Hashable, Sendable {
         case unchanged
         case added(kind: Relationship.Kind)
         case removed(kind: Relationship.Kind)
+        case changed(from: Relationship.Kind, to: Relationship.Kind)
     }
 
     public var objectID: ObjectID
@@ -89,9 +90,13 @@ extension HistoryDifference {
         let presentConnections = connectionsOf(objectID, in: present)
         var connections: [ObjectID: Connection] = [:]
         for (other, kind) in pastConnections {
-            connections[other] = presentConnections[other] == kind
+            guard let presentKind = presentConnections[other] else {
+                connections[other] = .removed(kind: kind)
+                continue
+            }
+            connections[other] = presentKind == kind
                 ? .unchanged
-                : .removed(kind: kind)
+                : .changed(from: kind, to: presentKind)
         }
         for (other, kind) in presentConnections where pastConnections[other] == nil {
             connections[other] = .added(kind: kind)

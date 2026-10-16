@@ -92,7 +92,7 @@ struct PresentationView: View {
                 // Opening a source is reading, so it stays available in the mode
                 // that forbids changing anything.
                 ActionButton(title: L10n.presentationOpenSource, isDefault: false) {
-                    model.readingSourceID = SourceID(entry.point.id)
+                    model.openPresentedSource(entry.point)
                 }
             }
         }
@@ -113,6 +113,7 @@ struct PresentationView: View {
             ) {
                 model.rewindPresentation()
             }
+            .keyboardShortcut(.leftArrow, modifiers: [])
             ActionButton(
                 title: L10n.presentationNext,
                 isDefault: false,
@@ -120,6 +121,7 @@ struct PresentationView: View {
             ) {
                 model.advancePresentation()
             }
+            .keyboardShortcut(.rightArrow, modifiers: [])
             Spacer(minLength: 0)
             // Always reachable. A reading mode a person cannot leave is a trap, and
             // the exit is not the thing that gets hidden to keep the mode tidy.
@@ -131,9 +133,9 @@ struct PresentationView: View {
 
     private func kindLabel(_ kind: ReadingPath.Point.Kind) -> String {
         switch kind {
-        case .object: return "Object"
-        case .source: return "Source"
-        case .decision: return "Decision"
+        case .object: return L10n.presentationKindObject
+        case .source: return L10n.presentationKindSource
+        case .decision: return L10n.presentationKindDecision
         }
     }
 }

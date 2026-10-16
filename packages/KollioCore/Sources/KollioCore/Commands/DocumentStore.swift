@@ -1,6 +1,7 @@
 import Foundation
 
 public enum DocumentError: Error, Equatable, CustomStringConvertible {
+    case emptyDocumentTitle
     case unknownObject(ObjectID)
     case unknownRelationship(RelationshipID)
     case unknownInstance(InstanceID)
@@ -127,6 +128,7 @@ public enum DocumentError: Error, Equatable, CustomStringConvertible {
 
     public var description: String {
         switch self {
+        case .emptyDocumentTitle: return "Document title cannot be empty"
         case .unknownObject(let id): return "Unknown object \(id)"
         case .unknownRelationship(let id): return "Unknown relationship \(id)"
         case .unknownInstance(let id): return "Unknown instance \(id)"
@@ -262,6 +264,10 @@ public struct DocumentStore: Sendable {
 
     private static func applyCommand(_ command: Command, to document: inout KollioDocument, at date: Date) throws {
         switch command {
+        case .renameDocument(let rename):
+            let title = rename.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard title.isEmpty == false else { throw DocumentError.emptyDocumentTitle }
+            document.title = title
         case .createObject(let create):
             try createObject(create, in: &document)
         case .updateObjectText(let update):
@@ -365,7 +371,38 @@ public struct DocumentStore: Sendable {
             try proposeLearning(propose, in: &document, at: date)
         case .acceptLearning(let accept):
             try acceptLearning(accept, in: &document, at: date)
+        case .restoreDocument(let restore):
+            try restoreDocument(restore, in: &document)
         }
+    }
+
+    /// Replaces every authored and presented part of the document while keeping
+    /// the identity, revision clock and append-only journal of the live file.
+    /// Decoding happens before the inout document is changed, so malformed or
+    /// foreign snapshots leave the transaction untouched.
+    private static func restoreDocument(_ command: RestoreDocument, in document: inout KollioDocument) throws {
+        let restored: KollioDocument
+        do {
+            restored = try DocumentCodec.decode(command.snapshot)
+        } catch {
+            throw DocumentError.forbiddenOperation("restore snapshot is unreadable")
+        }
+        guard restored.documentId == document.documentId else {
+            throw DocumentError.forbiddenOperation("restore snapshot belongs to another document")
+        }
+
+        document.content = restored.content
+        document.relationships = restored.relationships
+        document.decisions = restored.decisions
+        document.contributions = restored.contributions
+        document.products = restored.products
+        document.presentation = restored.presentation
+        document.sources = restored.sources
+        document.claims = restored.claims
+        document.clarifications = restored.clarifications
+        document.comparisons = restored.comparisons
+        document.summaries = restored.summaries
+        document.experiments = restored.experiments
     }
 
     private static func createExperiment(_ command: CreateExperiment, in document: inout KollioDocument, at date: Date) throws {
@@ -1708,4 +1745,3 @@ extension DocumentStore {
         return criteria.filter { seen.insert($0.id).inserted }
     }
 }
-

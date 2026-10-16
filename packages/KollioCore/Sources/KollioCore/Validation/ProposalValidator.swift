@@ -43,6 +43,8 @@ public struct ProposalValidator: Sendable {
         var virtual: Set<ObjectID> = []
         for operation in proposal.operations {
             switch operation {
+            case .renameDocument:
+                throw DocumentError.forbiddenOperation("document identity is the user's to change")
             case .createObject(let create):
                 guard scope.allowNewObjects else {
                     throw DocumentError.forbiddenOperation("createObject outside scope")
@@ -224,6 +226,11 @@ public struct ProposalValidator: Sendable {
                 // record, propose or accept it could manufacture the whole
                 // outcome. The observation is on the person's side of the line.
                 throw DocumentError.forbiddenOperation("results and learnings are the user's to record")
+            case .restoreDocument:
+                // Restoring replaces the canonical authored state. It is a
+                // person's explicit history action, never an operation an
+                // intelligence source may smuggle into a proposal.
+                throw DocumentError.forbiddenOperation("history restoration is the user's to perform")
             }
         }
 

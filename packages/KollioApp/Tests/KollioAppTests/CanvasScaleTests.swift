@@ -117,6 +117,21 @@ struct CanvasScaleTests {
         return rects
     }
 
+    @Test("An object drawn twice contributes one current routing obstacle")
+    func duplicateObstacleUsesTheCurrentFrameOnce() {
+        let first = Rect(origin: Position(x: 0, y: 0), size: Size(width: 10, height: 10))
+        let current = Rect(origin: Position(x: 20, y: 20), size: Size(width: 10, height: 10))
+        let other = Rect(origin: Position(x: 40, y: 40), size: Size(width: 10, height: 10))
+        let obstacles = RelationshipGeometry.ObstacleSet([
+            (id: "object:a", rect: first),
+            (id: "object:a", rect: current),
+            (id: "object:b", rect: other),
+        ])
+
+        #expect(obstacles.all == [current, other])
+        #expect(obstacles.excluding("object:a", "object:a") == [other])
+    }
+
     /// A model whose canvas has already been laid out, which is the state a drag
     /// frame sees. A cold frame cache measured a linear scan of every instance
     /// per lookup and reported it as routing cost.

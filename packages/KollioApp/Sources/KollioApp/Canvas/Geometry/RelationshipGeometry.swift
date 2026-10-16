@@ -423,15 +423,15 @@ public enum RelationshipGeometry {
             var index: [ObjectID: Int] = [:]
             rects.reserveCapacity(entries.count)
             index.reserveCapacity(entries.count)
-            for (offset, entry) in entries.enumerated() {
-                rects.append(entry.rect)
+            for entry in entries {
                 // A later entry for the same object replaces the earlier one:
                 // an object drawn twice contributes one obstacle, and the last
                 // frame is the one the renderer is using.
                 if let existing = index[entry.id] {
                     rects[existing] = entry.rect
                 } else {
-                    index[entry.id] = offset
+                    index[entry.id] = rects.count
+                    rects.append(entry.rect)
                 }
             }
             self.rects = rects
@@ -447,12 +447,10 @@ public enum RelationshipGeometry {
         /// other, and the two are not necessarily in order.
         func excluding(_ from: ObjectID, _ to: ObjectID) -> [Rect] {
             var others = rects
-            if from != to {
-                let pair = [index[from], index[to]].compactMap { $0 }.sorted(by: >)
-                for position in pair where position < others.count {
-                    others.swapAt(position, others.count - 1)
-                    others.removeLast()
-                }
+            let pair = Set([index[from], index[to]].compactMap { $0 }).sorted(by: >)
+            for position in pair where position < others.count {
+                others.swapAt(position, others.count - 1)
+                others.removeLast()
             }
             return others
         }

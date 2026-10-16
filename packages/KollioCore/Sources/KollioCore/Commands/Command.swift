@@ -3,6 +3,7 @@ import Foundation
 /// Every meaningful mutation goes through a validated command. A view never
 /// mutates several pieces of state on its own.
 public enum Command: Codable, Hashable, Sendable {
+    case renameDocument(RenameDocument)
     case createObject(CreateObject)
     case updateObjectText(UpdateObjectText)
     case addRelationship(AddRelationship)
@@ -54,6 +55,7 @@ public enum Command: Codable, Hashable, Sendable {
     case recordExperimentResult(RecordExperimentResult)
     case proposeLearning(ProposeLearning)
     case acceptLearning(AcceptLearning)
+    case restoreDocument(RestoreDocument)
 
     /// Presentation-only commands never change the meaning of the document.
     public var isSemantic: Bool {
@@ -70,7 +72,7 @@ public enum Command: Codable, Hashable, Sendable {
             // what it means, so it must not move semanticRevision. A *variant* is a
             // new claim, and is deliberately not in this list.
             return false
-        case .createObject, .updateObjectText, .addRelationship, .removeRelationship,
+        case .renameDocument, .createObject, .updateObjectText, .addRelationship, .removeRelationship,
              .createScenario, .recordDecision, .revokeDecision,
              .addContributionToProduct, .applyProposal, .rejectProposal,
              .attachSource, .importSourceRevision, .addCitation, .recordVerification,
@@ -83,7 +85,8 @@ public enum Command: Codable, Hashable, Sendable {
              .setCriterionWeight, .setCriterionMeasure, .keepDirection,
              .startSummary, .setSummaryLine, .setSummarySection, .confirmSummary,
              .removeSummary, .createExperiment, .editExperiment,
-             .recordExperimentResult, .proposeLearning, .acceptLearning:
+             .recordExperimentResult, .proposeLearning, .acceptLearning,
+             .restoreDocument:
             // A comparison is a record of what a person weighed against what, and
             // a synthesis is a record of what was read and what was concluded from
             // it, so both are meaning rather than layout. A synthesis is a
@@ -105,6 +108,7 @@ public enum Command: Codable, Hashable, Sendable {
     /// A short label used as the undo label.
     public var undoLabel: String {
         switch self {
+        case .renameDocument: return "undo.renameDocument"
         case .createObject: return "undo.createObject"
         case .updateObjectText: return "undo.updateObjectText"
         case .addRelationship: return "undo.addRelationship"
@@ -156,7 +160,18 @@ public enum Command: Codable, Hashable, Sendable {
         case .recordExperimentResult: return "undo.recordResult"
         case .proposeLearning: return "undo.proposeLearning"
         case .acceptLearning: return "undo.acceptLearning"
+        case .restoreDocument: return "undo.restoreDocument"
         }
+    }
+}
+
+public struct RenameDocument: Codable, Hashable, Sendable {
+    public var title: String
+    public var provenance: Provenance
+
+    public init(title: String, provenance: Provenance) {
+        self.title = title
+        self.provenance = provenance
     }
 }
 
@@ -939,6 +954,23 @@ public struct ProposeLearning: Codable, Hashable, Sendable {
 /// covers. Accepting a learning without a decision would be a way to change
 /// the document by saying that something was learned, which is a decision in
 /// disguise.
+/// A validated replacement of the document's authored state.
+///
+/// History is deliberately excluded from the encoded snapshot. The journal is
+/// the record of how the current document was reached; restoring content must
+/// append to that record, never replace it with the older record carried by the
+/// preview. Metadata and revisions are likewise owned by `DocumentStore`, which
+/// applies this as one ordinary transaction.
+public struct RestoreDocument: Codable, Hashable, Sendable {
+    public var snapshot: Data
+
+    public init(document: KollioDocument) throws {
+        var state = document
+        state.history = HistoryLedger()
+        self.snapshot = try DocumentCodec.encode(state)
+    }
+}
+
 public struct AcceptLearning: Codable, Hashable, Sendable {
     public var id: FindingID
     public var decisionID: DecisionID

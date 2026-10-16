@@ -95,6 +95,34 @@ struct HistoryRestoreTests {
         #expect(timeline.isEmpty == false, "the timeline an object was read from must survive a restore")
     }
 
+    @Test("A restore is one undoable action")
+    func restoreIsUndoableAsOneAction() throws {
+        let model = modelWithHistory()
+        let first = try #require(model.document.history.entries.first?.id)
+
+        #expect(model.restoreHistory(to: first, label: "Rétabli"))
+        #expect(model.document.object(ObjectID("object:effect"))?.text.text == "Effet")
+
+        model.undo()
+        #expect(model.document.object(ObjectID("object:effect"))?.text.text == "Effet révisé")
+
+        model.redo()
+        #expect(model.document.object(ObjectID("object:effect"))?.text.text == "Effet")
+    }
+
+    @Test("An action after a restore previews the restored state")
+    func actionAfterRestoreHasAnHonestPreview() throws {
+        let model = modelWithHistory()
+        let first = try #require(model.document.history.entries.first?.id)
+        #expect(model.restoreHistory(to: first, label: "Rétabli"))
+        #expect(model.applyEdit(to: ObjectID("object:effect"), text: "Après restauration"))
+        let edit = try #require(model.document.history.entries.last?.id)
+
+        let preview = try #require(try model.previewHistory(at: edit))
+
+        #expect(preview.object(ObjectID("object:effect"))?.text.text == "Effet")
+    }
+
     @Test("A purge removes what it says it removes, and reports the count")
     func purgeIsExplicitAndCounted() throws {
         let model = modelWithHistory()

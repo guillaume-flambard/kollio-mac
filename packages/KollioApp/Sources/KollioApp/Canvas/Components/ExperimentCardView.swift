@@ -212,6 +212,13 @@ struct ResultComposerView: View {
                 )
                 .font(TypeScale.body)
 
+                if let source = draft.sourceObjectID {
+                    Text(L10n.presentationKindSource + " · " + model.text(of: source))
+                        .font(TypeScale.metadata)
+                        .foregroundStyle(theme.textSecondary)
+                        .lineLimit(2)
+                }
+
                 Text(L10n.resultOutcomeLabel)
                     .font(TypeScale.metadata)
                     .foregroundStyle(theme.textSecondary)
